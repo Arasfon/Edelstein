@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.Protocol", "src\Edelstein.Protocol\Edelstein.Protocol.csproj", "{1C0EC8A6-A751-439B-9795-2314A2D393F2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.Protocol.Tests", "tests\Edelstein.Protocol.Tests\Edelstein.Protocol.Tests.csproj", "{F2FD979B-2C8E-4D25-96CF-2F2D2954B8AE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{09520320-11DC-4702-98CE-C7B1C1DD6DF8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{E3F6C49D-2417-42E7-859D-E5A3BEEDBB9F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3389D3C7-76A3-4815-A4C8-233BD713AB09}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		Directory.Build.props = Directory.Build.props
+		global.json = global.json
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.GameServer", "src\Edelstein.GameServer\Edelstein.GameServer.csproj", "{73C2F08D-F6AB-4B63-A094-970ABB128E35}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.PaymentServer", "src\Edelstein.PaymentServer\Edelstein.PaymentServer.csproj", "{8649DB55-11E5-443A-AB8C-D01E0E341CFB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1C0EC8A6-A751-439B-9795-2314A2D393F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C0EC8A6-A751-439B-9795-2314A2D393F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C0EC8A6-A751-439B-9795-2314A2D393F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C0EC8A6-A751-439B-9795-2314A2D393F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2FD979B-2C8E-4D25-96CF-2F2D2954B8AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2FD979B-2C8E-4D25-96CF-2F2D2954B8AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2FD979B-2C8E-4D25-96CF-2F2D2954B8AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2FD979B-2C8E-4D25-96CF-2F2D2954B8AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73C2F08D-F6AB-4B63-A094-970ABB128E35}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73C2F08D-F6AB-4B63-A094-970ABB128E35}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73C2F08D-F6AB-4B63-A094-970ABB128E35}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73C2F08D-F6AB-4B63-A094-970ABB128E35}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8649DB55-11E5-443A-AB8C-D01E0E341CFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8649DB55-11E5-443A-AB8C-D01E0E341CFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8649DB55-11E5-443A-AB8C-D01E0E341CFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8649DB55-11E5-443A-AB8C-D01E0E341CFB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F2FD979B-2C8E-4D25-96CF-2F2D2954B8AE} = {09520320-11DC-4702-98CE-C7B1C1DD6DF8}
+		{1C0EC8A6-A751-439B-9795-2314A2D393F2} = {E3F6C49D-2417-42E7-859D-E5A3BEEDBB9F}
+		{73C2F08D-F6AB-4B63-A094-970ABB128E35} = {E3F6C49D-2417-42E7-859D-E5A3BEEDBB9F}
+		{8649DB55-11E5-443A-AB8C-D01E0E341CFB} = {E3F6C49D-2417-42E7-859D-E5A3BEEDBB9F}
+	EndGlobalSection
+EndGlobal
