@@ -28,6 +28,9 @@ public class EncryptedRequest
     public string EncryptResponse<T>(ServerResponse<T> response) =>
         DataCryptor.ServerEncrypt(JsonSerializer.Serialize(response, DefaultSerializerOptions), _requestIv);
 
-    public string EncryptNewServerResponse<T>(int code, T response) =>
+    public string EncryptNewServerResponse<T>(ErrorCode code, T response) =>
         EncryptResponse(new ServerResponse<T>(code, response));
+
+    public string EncryptNewServerResponse(ErrorCode code) =>
+        EncryptResponse(new ServerResponse<object?>(code, null));
 }
