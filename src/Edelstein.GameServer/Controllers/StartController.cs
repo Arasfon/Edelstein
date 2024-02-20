@@ -1,3 +1,4 @@
+using Edelstein.GameServer.Filters;
 using Edelstein.GameServer.Models;
 using Edelstein.GameServer.Models.Start;
 
@@ -7,6 +8,7 @@ namespace Edelstein.GameServer.Controllers;
 
 [ApiController]
 [Route("/api/start")]
+[VerifyRequestSignature]
 public class StartController : Controller
 {
     [HttpPost]
