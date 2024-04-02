@@ -1,6 +1,6 @@
-namespace Edelstein.Protocol;
+namespace Edelstein.Models;
 
-public enum ErrorCode
+public enum GameLibErrorCode
 {
     Ok = 0,
     CommonInvalidParameter = 1,

@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Cocona.Lite" Version="2.2.0" />
+      <PackageReference Include="Spectre.Console" Version="0.47.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\Edelstein.Assets.Management\Edelstein.Assets.Management.csproj" />
+      <ProjectReference Include="..\..\src\Edelstein.Models\Edelstein.Models.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="AndroidBundle.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="url.bytes">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+</Project>

@@ -13,8 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Edelstein.Models\Edelstein.Models.csproj" />
-        <ProjectReference Include="..\Edelstein.Protocol\Edelstein.Protocol.csproj"/>
+      <ProjectReference Include="..\Edelstein.Protocol\Edelstein.Protocol.csproj" />
     </ItemGroup>
 
 </Project>
