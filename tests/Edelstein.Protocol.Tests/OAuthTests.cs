@@ -1,4 +1,4 @@
-namespace Edelstein.Protocol.Tests;
+namespace Edelstein.Security.Tests;
 
 public class OAuthTests
 {
@@ -45,6 +45,6 @@ public class OAuthTests
             ["oauth_signature"] = "rkpFfAae2J3yGt5v2NKwZxhDWn0="
         };
 
-        Assert.True(OAuth.VerifyOAuthHmac(httpMethod, url, body, oauthValues));
+        Assert.True(OAuth.VerifyOAuthHmac(httpMethod, url, body, oauthValues, true));
     }
 }

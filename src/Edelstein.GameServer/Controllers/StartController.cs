@@ -1,8 +1,7 @@
+using Edelstein.Data.Transport;
 using Edelstein.GameServer.ActionResults;
-using Edelstein.GameServer.Models;
+using Edelstein.GameServer.Encryption;
 using Edelstein.GameServer.Models.Start;
-using Edelstein.Models.Protocol;
-using Edelstein.Protocol;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,25 +16,34 @@ public class StartController : Controller
 
     [HttpPost]
     [Route("assetHash")]
-    public EncryptedActionResult AssetHash(EncryptedRequest<AssetHashRequest> encryptedRequest)
+    public EncryptedResult AssetHash(EncryptedRequest<AssetHashRequestData> encryptedRequest)
     {
-        AssetHashResponse response =
+        AssetHashResponseData responseData =
             HttpContext.Request.Headers[GameRequestHeaderNames.AoharuPlatform].FirstOrDefault()?.StartsWith("Android") == true
-                ? new AssetHashResponse(AndroidAssetHash)
-                : new AssetHashResponse(IosAssetHash);
+                ? new AssetHashResponseData(AndroidAssetHash)
+                : new AssetHashResponseData(IosAssetHash);
 
-        return new EncryptedResponse<AssetHashResponse>(ErrorCode.Success, response);
+        return new EncryptedResponse<AssetHashResponseData>(ErrorCode.Success, responseData);
     }
 
     [HttpPost]
     [Route("")]
-    public EncryptedActionResult Start(EncryptedRequest<StartRequest> encryptedRequest) =>
+    public EncryptedResult Start(EncryptedRequest<StartRequestData> encryptedRequest)
+    {
         // TODO: token was ae72a65f58f0ff9d50d4bb0b3cfa71d34cfd3f94 some time ago, does it actually do something?
-        // TODO: Check platform
-        new EncryptedResponse<StartResponse>(ErrorCode.Success, new StartResponse(AndroidAssetHash, "token"));
+        // TODO: token was ae68f469da9e68ed6ce1f7c983e4c9181538336a even earlier
 
-    [HttpGet]
+        const string token = "token";
+
+        StartResponseData responseData =
+            HttpContext.Request.Headers[GameRequestHeaderNames.AoharuPlatform].FirstOrDefault()?.StartsWith("Android") == true
+                ? new StartResponseData(AndroidAssetHash, token)
+                : new StartResponseData(IosAssetHash, token);
+
+        return new EncryptedResponse<StartResponseData>(ErrorCode.Success, responseData);
+    }
+
     [Route("refundBalance")]
-    public EncryptedActionResult RefundBalance() =>
-        new EncryptedResponse<RefundBalanceResponse>(ErrorCode.Success, new RefundBalanceResponse("0", "0", "0", "payback"));
+    public EncryptedResult RefundBalance() =>
+        new EncryptedResponse<RefundBalanceResponseData>(ErrorCode.Success, new RefundBalanceResponseData("0", "0", "0", "payback"));
 }

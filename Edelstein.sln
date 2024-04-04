@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.Protocol", "src\Edelstein.Protocol\Edelstein.Protocol.csproj", "{1C0EC8A6-A751-439B-9795-2314A2D393F2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.Security", "src\Edelstein.Security\Edelstein.Security.csproj", "{1C0EC8A6-A751-439B-9795-2314A2D393F2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.Protocol.Tests", "tests\Edelstein.Protocol.Tests\Edelstein.Protocol.Tests.csproj", "{F2FD979B-2C8E-4D25-96CF-2F2D2954B8AE}"
 EndProject
@@ -22,9 +22,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.PaymentServer", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.Assets.Management", "src\Edelstein.Assets.Management\Edelstein.Assets.Management.csproj", "{A08991DB-9772-4CF7-B67F-932A4FEE1514}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.Models", "src\Edelstein.Models\Edelstein.Models.csproj", "{7EED70AC-EB58-45B8-A4DF-B4B17E09FDC5}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.Encryption", "src\Edelstein.Encryption\Edelstein.Encryption.csproj", "{57D9FDED-6B6B-4271-B575-55EA038F0B63}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.Data", "src\Edelstein.Data\Edelstein.Data.csproj", "{7EED70AC-EB58-45B8-A4DF-B4B17E09FDC5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -56,10 +54,6 @@ Global
 		{7EED70AC-EB58-45B8-A4DF-B4B17E09FDC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7EED70AC-EB58-45B8-A4DF-B4B17E09FDC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7EED70AC-EB58-45B8-A4DF-B4B17E09FDC5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{57D9FDED-6B6B-4271-B575-55EA038F0B63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{57D9FDED-6B6B-4271-B575-55EA038F0B63}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{57D9FDED-6B6B-4271-B575-55EA038F0B63}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{57D9FDED-6B6B-4271-B575-55EA038F0B63}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F2FD979B-2C8E-4D25-96CF-2F2D2954B8AE} = {09520320-11DC-4702-98CE-C7B1C1DD6DF8}
@@ -68,6 +62,5 @@ Global
 		{8649DB55-11E5-443A-AB8C-D01E0E341CFB} = {E3F6C49D-2417-42E7-859D-E5A3BEEDBB9F}
 		{A08991DB-9772-4CF7-B67F-932A4FEE1514} = {E3F6C49D-2417-42E7-859D-E5A3BEEDBB9F}
 		{7EED70AC-EB58-45B8-A4DF-B4B17E09FDC5} = {E3F6C49D-2417-42E7-859D-E5A3BEEDBB9F}
-		{57D9FDED-6B6B-4271-B575-55EA038F0B63} = {E3F6C49D-2417-42E7-859D-E5A3BEEDBB9F}
 	EndGlobalSection
 EndGlobal

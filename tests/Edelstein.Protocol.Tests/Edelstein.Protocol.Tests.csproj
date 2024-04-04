@@ -23,7 +23,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\Edelstein.Protocol\Edelstein.Protocol.csproj"/>
+        <ProjectReference Include="..\..\src\Edelstein.Security\Edelstein.Security.csproj"/>
     </ItemGroup>
 
 </Project>

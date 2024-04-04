@@ -9,11 +9,20 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.1"/>
+        <PackageReference Include="MongoDB.Driver" Version="2.24.0"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Edelstein.Protocol\Edelstein.Protocol.csproj" />
+        <ProjectReference Include="..\Edelstein.Data\Edelstein.Data.csproj"/>
+        <ProjectReference Include="..\Edelstein.Security\Edelstein.Security.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Update="wwwroot\moderation_keywords.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+        </Content>
     </ItemGroup>
 
 </Project>

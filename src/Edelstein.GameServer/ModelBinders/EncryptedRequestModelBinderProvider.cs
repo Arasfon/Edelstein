@@ -1,4 +1,4 @@
-using Edelstein.GameServer.Models;
+using Edelstein.GameServer.Encryption;
 
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 

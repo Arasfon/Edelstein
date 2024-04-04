@@ -1,4 +1,4 @@
-namespace Edelstein.Protocol.Tests;
+namespace Edelstein.Security.Tests;
 
 public class RequestSignerTests
 {
