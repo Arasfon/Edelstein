@@ -1,10 +1,10 @@
-using Edelstein.Data.Transport;
 using Edelstein.PaymentServer.Authorization;
 using Edelstein.PaymentServer.Models;
 using Edelstein.PaymentServer.Services;
-using Edelstein.Security;
 
 using Microsoft.AspNetCore.Mvc;
+
+using System.Security.Claims;
 
 namespace Edelstein.PaymentServer.Controllers;
 
@@ -40,20 +40,14 @@ public class AuthController : Controller
 
     [Route("x_uid")]
     [ServiceFilter<OAuthRsaAuthorizationFilter>]
-    public async Task<IActionResult> Xuid()
+    public IActionResult Xuid()
     {
-        if (!OAuth.TryGetUserIdFromOAuthHeader(HttpContext.Request.Headers.Authorization!, out string? userId))
-            return new BadRequestObjectResult(new ErrorResponseData(GameLibErrorCode.CommonInvalidSignature, "Invalid Signature", "NG"));
-
-        AuthenticationData? userAuthData = await _userService.GetAuthenticationDataByUserId(Guid.Parse(userId));
-
-        if (userAuthData is null)
-            return new BadRequestObjectResult(new ErrorResponseData(GameLibErrorCode.CommonInvalidSignature, "Invalid Signature", "NG"));
+        Claim? xuidClaim = HttpContext.User.FindFirst("Xuid");
 
         return Ok(new
         {
             result = "OK",
-            x_uid = $"{userAuthData.Xuid}",
+            x_uid = $"{xuidClaim!.Value}",
             x_app_id = $"{GameAppConstants.XAppId}"
         });
     }

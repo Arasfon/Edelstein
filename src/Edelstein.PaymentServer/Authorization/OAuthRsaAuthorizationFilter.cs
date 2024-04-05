@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Options;
 
+using System.Security.Claims;
+
 namespace Edelstein.PaymentServer.Authorization;
 
 public class OAuthRsaAuthorizationFilter : IAsyncAuthorizationFilter
@@ -101,5 +103,10 @@ public class OAuthRsaAuthorizationFilter : IAsyncAuthorizationFilter
                     StatusCode = StatusCodes.Status403Forbidden
                 };
         }
+
+        httpContext.User = new ClaimsPrincipal(new ClaimsIdentity([
+            new Claim("UserId", userAuthenticationData.UserIdString),
+            new Claim("Xuid", userAuthenticationData.Xuid.ToString())
+        ]));
     }
 }
