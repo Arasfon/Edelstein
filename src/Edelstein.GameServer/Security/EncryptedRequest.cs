@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using System.Text.Json;
 
-namespace Edelstein.GameServer.Encryption;
+namespace Edelstein.GameServer.Security;
 
 [ModelBinder<EncryptedRequestModelBinder>]
 public class EncryptedRequest

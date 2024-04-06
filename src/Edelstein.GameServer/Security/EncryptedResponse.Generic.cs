@@ -3,7 +3,7 @@ using Edelstein.Security;
 
 using System.Text.Json;
 
-namespace Edelstein.GameServer.Encryption;
+namespace Edelstein.GameServer.Security;
 
 public class EncryptedResponse<T> : EncryptedResponse
 {

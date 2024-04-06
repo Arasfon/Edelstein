@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Edelstein.GameServer.Encryption;
+namespace Edelstein.GameServer.Security;
 
 public abstract class EncryptedResponse
 {

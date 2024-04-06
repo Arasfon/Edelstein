@@ -1,4 +1,4 @@
-namespace Edelstein.GameServer.Encryption;
+namespace Edelstein.GameServer.Security;
 
 public class EncryptedRequest<T> : EncryptedRequest
 {
