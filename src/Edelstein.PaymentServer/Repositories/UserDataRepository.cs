@@ -25,7 +25,4 @@ public class UserDataRepository : IUserDataRepository
 
         return tutorialUserData;
     }
-
-    public async Task<UserData?> GetByXuid(ulong xuid) =>
-        await _userDataCollection.Find(x => x.User.Id == xuid).FirstOrDefaultAsync();
 }
