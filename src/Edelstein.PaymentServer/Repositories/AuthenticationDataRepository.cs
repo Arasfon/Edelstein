@@ -1,5 +1,5 @@
 using Edelstein.Data.Configuration;
-using Edelstein.PaymentServer.Models;
+using Edelstein.Data.Models;
 
 using Microsoft.Extensions.Options;
 

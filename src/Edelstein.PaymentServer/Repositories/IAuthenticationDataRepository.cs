@@ -1,4 +1,4 @@
-using Edelstein.PaymentServer.Models;
+using Edelstein.Data.Models;
 
 namespace Edelstein.PaymentServer.Repositories;
 

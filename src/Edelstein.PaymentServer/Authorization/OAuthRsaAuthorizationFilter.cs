@@ -1,3 +1,4 @@
+using Edelstein.Data.Models;
 using Edelstein.Data.Transport;
 using Edelstein.PaymentServer.Configuration.OAuth;
 using Edelstein.PaymentServer.Models;
