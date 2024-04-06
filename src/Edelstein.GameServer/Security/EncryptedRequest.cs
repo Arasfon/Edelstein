@@ -27,7 +27,7 @@ public class EncryptedRequest
     public EncryptedRequest(string encryptedData)
     {
         RawRequestBody = encryptedData;
-        DecryptedRequestBody = PayloadCryptor.Decrypt(encryptedData);
+        DecryptedRequestBody = encryptedData is "" ? "" : PayloadCryptor.Decrypt(encryptedData);
     }
 
     public T DeserializeRequestBody<T>() =>
