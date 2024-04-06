@@ -1,4 +1,4 @@
-namespace Edelstein.GameServer.Models.Start;
+namespace Edelstein.GameServer.Models.Endpoints.Start;
 
 public record RefundBalanceResponseData(
     string BalanceChargeGem,

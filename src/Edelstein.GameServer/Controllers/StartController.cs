@@ -1,7 +1,7 @@
 using Edelstein.Data.Transport;
 using Edelstein.GameServer.ActionResults;
 using Edelstein.GameServer.Security;
-using Edelstein.GameServer.Models.Start;
+using Edelstein.GameServer.Models.Endpoints.Start;
 
 using Microsoft.AspNetCore.Mvc;
 

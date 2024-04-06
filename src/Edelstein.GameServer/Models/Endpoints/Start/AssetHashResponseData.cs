@@ -1,3 +1,3 @@
-namespace Edelstein.GameServer.Models.Start;
+namespace Edelstein.GameServer.Models.Endpoints.Start;
 
 public record AssetHashResponseData(string AssetHash);
