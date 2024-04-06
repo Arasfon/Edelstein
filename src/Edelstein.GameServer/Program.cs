@@ -6,9 +6,9 @@ using Microsoft.Extensions.FileProviders;
 
 using System.Net.Mime;
 
+// Configure services
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Configure services
 // Logging
 if (builder.Environment.IsDevelopment())
     builder.Services.AddHttpLogging(_ => { });
@@ -29,9 +29,9 @@ builder.Services.AddControllers(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Configure the HTTP request pipeline
 WebApplication app = builder.Build();
 
-// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseHttpLogging();
