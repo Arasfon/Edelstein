@@ -15,10 +15,4 @@ public class EncryptedResponse<T> : EncryptedResponse
     public EncryptedResponse(ErrorCode code, T response) : this(new ServerResponse<T>(code, response)) { }
 
     public EncryptedResponse(GameLibErrorCode code, T response) : this(new ServerResponse<T>(code, response)) { }
-
-    public static EncryptedResponse<object?> CreateEmpty(ErrorCode code) =>
-        new(new ServerResponse<object?>(code, null));
-
-    public static EncryptedResponse<object?> CreateEmpty(GameLibErrorCode code) =>
-        new(new ServerResponse<object?>(code, null));
 }
