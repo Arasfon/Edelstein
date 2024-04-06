@@ -18,6 +18,12 @@ public class EncryptedRequest
     public string RawRequestBody { get; protected init; }
     public string DecryptedRequestBody { get; protected init; }
 
+    protected EncryptedRequest(string rawRequestBody, string decryptedRequestBody)
+    {
+        RawRequestBody = rawRequestBody;
+        DecryptedRequestBody = decryptedRequestBody;
+    }
+
     public EncryptedRequest(string encryptedData)
     {
         RawRequestBody = encryptedData;
