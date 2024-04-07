@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Primitives;
 
+using System.Security.Claims;
+
 namespace Edelstein.GameServer.Authorization;
 
 public class RsaSignatureAuthorizationFilter : IAsyncAuthorizationFilter
@@ -89,6 +91,14 @@ public class RsaSignatureAuthorizationFilter : IAsyncAuthorizationFilter
                 signatureStringValues!, userAuthenticationData.PublicKey);
 
         if (!isAuthorized)
+        {
             context.Result = new BadRequestObjectResult(EmptyEncryptedResponseFactory.Create(ErrorCode.ErrorUnauthorized).EncryptedString);
+            return;
+        }
+
+        httpContext.User = new ClaimsPrincipal(new ClaimsIdentity([
+            new Claim(ClaimNames.UserId, userAuthenticationData.UserIdString),
+            new Claim(ClaimNames.Xuid, userAuthenticationData.Xuid.ToString())
+        ]));
     }
 }

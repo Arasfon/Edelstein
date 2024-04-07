@@ -1,10 +1,9 @@
+using Edelstein.Data.Transport;
 using Edelstein.PaymentServer.Authorization;
 using Edelstein.PaymentServer.Models;
 using Edelstein.PaymentServer.Services;
 
 using Microsoft.AspNetCore.Mvc;
-
-using System.Security.Claims;
 
 namespace Edelstein.PaymentServer.Controllers;
 
@@ -42,12 +41,12 @@ public class AuthController : Controller
     [ServiceFilter<OAuthRsaAuthorizationFilter>]
     public IActionResult Xuid()
     {
-        Claim? xuidClaim = HttpContext.User.FindFirst("Xuid");
+        string? xuidString = HttpContext.User.FindFirst(ClaimNames.Xuid)?.Value;
 
         return Ok(new
         {
             result = "OK",
-            x_uid = $"{xuidClaim!.Value}",
+            x_uid = $"{xuidString}",
             x_app_id = $"{GameAppConstants.XAppId}"
         });
     }

@@ -132,8 +132,8 @@ public class OAuthRsaAuthorizationFilter : IAsyncAuthorizationFilter
         }
 
         httpContext.User = new ClaimsPrincipal(new ClaimsIdentity([
-            new Claim("UserId", userAuthenticationData.UserIdString),
-            new Claim("Xuid", userAuthenticationData.Xuid.ToString())
+            new Claim(ClaimNames.UserId, userAuthenticationData.UserIdString),
+            new Claim(ClaimNames.Xuid, userAuthenticationData.Xuid.ToString())
         ]));
     }
 }
