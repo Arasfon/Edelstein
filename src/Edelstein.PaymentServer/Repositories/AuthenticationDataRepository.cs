@@ -14,7 +14,7 @@ public class AuthenticationDataRepository : IAuthenticationDataRepository
     public AuthenticationDataRepository(IOptions<DatabaseOptions> databaseOptions, IMongoClient mongoClient)
     {
         IMongoDatabase mongoDatabase = mongoClient.GetDatabase(databaseOptions.Value.Name);
-        _authenticationDataCollection = mongoDatabase.GetCollection<AuthenticationData>("auth");
+        _authenticationDataCollection = mongoDatabase.GetCollection<AuthenticationData>(CollectionNames.AuthenticationData);
     }
 
     public async Task<AuthenticationData> Create(ulong xuid, string publicKey)

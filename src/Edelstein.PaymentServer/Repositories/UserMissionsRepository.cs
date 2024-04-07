@@ -14,7 +14,7 @@ public class UserMissionsRepository : IUserMissionsRepository
     public UserMissionsRepository(IOptions<DatabaseOptions> databaseOptions, IMongoClient mongoClient)
     {
         IMongoDatabase mongoDatabase = mongoClient.GetDatabase(databaseOptions.Value.Name);
-        _userMissionsCollection = mongoDatabase.GetCollection<UserMissionsDocument>("user_missions");
+        _userMissionsCollection = mongoDatabase.GetCollection<UserMissionsDocument>(CollectionNames.UserMissions);
     }
 
     public async Task Create(ulong xuid) =>

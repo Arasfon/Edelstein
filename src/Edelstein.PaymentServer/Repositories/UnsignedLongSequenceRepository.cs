@@ -14,7 +14,7 @@ public class UnsignedLongSequenceRepository : ISequenceRepository<ulong>
     public UnsignedLongSequenceRepository(IOptions<DatabaseOptions> databaseOptions, IMongoClient mongoClient)
     {
         IMongoDatabase mongoDatabase = mongoClient.GetDatabase(databaseOptions.Value.Name);
-        _sequencesCollection = mongoDatabase.GetCollection<Sequence<ulong>>("sequences");
+        _sequencesCollection = mongoDatabase.GetCollection<Sequence<ulong>>(CollectionNames.Sequences);
     }
 
     public async Task<ulong> GetNextValueById(string sequenceId, ulong initialValue = 0)

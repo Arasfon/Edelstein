@@ -14,7 +14,7 @@ public class UserHomeRepository : IUserHomeRepository
     public UserHomeRepository(IOptions<DatabaseOptions> databaseOptions, IMongoClient mongoClient)
     {
         IMongoDatabase mongoDatabase = mongoClient.GetDatabase(databaseOptions.Value.Name);
-        _userHomeCollection = mongoDatabase.GetCollection<UserHomeDocument>("user_home");
+        _userHomeCollection = mongoDatabase.GetCollection<UserHomeDocument>(CollectionNames.UserHome);
     }
 
     public async Task Create(ulong xuid) =>

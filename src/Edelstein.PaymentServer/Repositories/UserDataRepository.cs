@@ -14,7 +14,7 @@ public class UserDataRepository : IUserDataRepository
     public UserDataRepository(IOptions<DatabaseOptions> databaseOptions, IMongoClient mongoClient)
     {
         IMongoDatabase mongoDatabase = mongoClient.GetDatabase(databaseOptions.Value.Name);
-        _userDataCollection = mongoDatabase.GetCollection<UserData>("user_data");
+        _userDataCollection = mongoDatabase.GetCollection<UserData>(CollectionNames.UserData);
     }
 
     public async Task<UserData> CreateTutorialUserData(ulong xuid)
