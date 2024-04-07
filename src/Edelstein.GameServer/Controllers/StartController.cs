@@ -24,7 +24,7 @@ public class StartController : Controller
                 ? new AssetHashResponseData(AndroidAssetHash)
                 : new AssetHashResponseData(IosAssetHash);
 
-        return new EncryptedResponse<AssetHashResponseData>(ErrorCode.Success, responseData);
+        return new EncryptedResponse<AssetHashResponseData>(responseData);
     }
 
     [HttpPost]
@@ -42,11 +42,11 @@ public class StartController : Controller
                 ? new StartResponseData(AndroidAssetHash, token)
                 : new StartResponseData(IosAssetHash, token);
 
-        return new EncryptedResponse<StartResponseData>(ErrorCode.Success, responseData);
+        return new EncryptedResponse<StartResponseData>(responseData);
     }
 
     [Route("refundBalance")]
     [ServiceFilter<RsaSignatureAuthorizationFilter>]
     public EncryptedResult RefundBalance() =>
-        new EncryptedResponse<RefundBalanceResponseData>(ErrorCode.Success, new RefundBalanceResponseData("0", "0", "0", "payback"));
+        new EncryptedResponse<RefundBalanceResponseData>(new RefundBalanceResponseData("0", "0", "0", "payback"));
 }
