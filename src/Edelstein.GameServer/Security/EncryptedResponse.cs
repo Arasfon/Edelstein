@@ -1,3 +1,5 @@
+using Edelstein.Data.Serialization.Json;
+
 using System.Text.Json;
 
 namespace Edelstein.GameServer.Security;
@@ -8,6 +10,11 @@ public abstract class EncryptedResponse
 
     protected static readonly JsonSerializerOptions DefaultSerializerOptions = new()
     {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        Converters =
+        {
+            new BooleanToIntegerJsonConverter(),
+            new OneOfListOrObjectJsonConverterFactory()
+        }
     };
 }
