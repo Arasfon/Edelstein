@@ -44,6 +44,7 @@ public class OAuthRsaAuthorizationFilter : IAsyncAuthorizationFilter
                 {
                     StatusCode = StatusCodes.Status403Forbidden
                 };
+
             return;
         }
 
@@ -63,12 +64,34 @@ public class OAuthRsaAuthorizationFilter : IAsyncAuthorizationFilter
         // Make values
         Dictionary<string, string> requestOAuthValues = OAuth.BuildOAuthValuesFromHeader(requestAuthorizationHeader);
 
+        if (!requestOAuthValues.TryGetValue("oauth_body_hash", out string? oauthBodyHash))
+        {
+            context.Result =
+                new ObjectResult(new ErrorResponseData(GameLibErrorCode.CommonInvalidSignature, "Invalid Signature", "NG"))
+                {
+                    StatusCode = StatusCodes.Status403Forbidden
+                };
+
+            return;
+        }
+
         // Make response header
-        string responseOAuth = OAuth.BuildResponseOAuthHeader(httpMethod, url, requestOAuthValues["oauth_body_hash"]);
+        string responseOAuth = OAuth.BuildResponseOAuthHeader(httpMethod, url, oauthBodyHash);
         context.HttpContext.Response.Headers["X-GREE-Authorization"] = responseOAuth;
 
-        // Actual authentication
-        if (!OAuth.TryGetUserIdFromRequestorId(requestOAuthValues["xoauth_requestor_id"], out string? userId))
+        // Authentication data retrieval
+        if (!requestOAuthValues.TryGetValue("xoauth_requestor_id", out string? xoauthRequestorId))
+        {
+            context.Result =
+                new ObjectResult(new ErrorResponseData(GameLibErrorCode.CommonInvalidSignature, "Invalid Signature", "NG"))
+                {
+                    StatusCode = StatusCodes.Status403Forbidden
+                };
+
+            return;
+        }
+
+        if (!OAuth.TryGetUserIdFromRequestorId(xoauthRequestorId, out string? userId))
         {
             context.Result =
                 new ObjectResult(new ErrorResponseData(GameLibErrorCode.CommonInvalidSignature, "Invalid Signature", "NG"))
@@ -94,6 +117,7 @@ public class OAuthRsaAuthorizationFilter : IAsyncAuthorizationFilter
 
         string publicKey = userAuthenticationData.PublicKey;
 
+        // Authorization
         bool verified = OAuth.VerifyOAuthRsa(httpMethod, url, body, requestOAuthValues, publicKey);
 
         if (!verified)
@@ -103,6 +127,8 @@ public class OAuthRsaAuthorizationFilter : IAsyncAuthorizationFilter
                 {
                     StatusCode = StatusCodes.Status403Forbidden
                 };
+
+            return;
         }
 
         httpContext.User = new ClaimsPrincipal(new ClaimsIdentity([
