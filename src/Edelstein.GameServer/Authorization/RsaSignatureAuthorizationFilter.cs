@@ -4,6 +4,7 @@ using Edelstein.GameServer.Security;
 using Edelstein.GameServer.Services;
 using Edelstein.Security;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Primitives;
@@ -24,6 +25,13 @@ public class RsaSignatureAuthorizationFilter : IAsyncAuthorizationFilter
 
     public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
+        bool hasAllowAnonymous = context.ActionDescriptor.EndpointMetadata
+            .OfType<AllowAnonymousAttribute>()
+            .Any();
+
+        if (hasAllowAnonymous)
+            return;
+
         // Setup
         DateTimeOffset now = DateTimeOffset.UtcNow;
 

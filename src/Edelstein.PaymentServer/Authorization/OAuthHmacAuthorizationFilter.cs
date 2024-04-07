@@ -3,6 +3,7 @@ using Edelstein.PaymentServer.Configuration.OAuth;
 using Edelstein.PaymentServer.Models;
 using Edelstein.Security;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -19,6 +20,13 @@ public class OAuthHmacAuthorizationFilter : IAsyncAuthorizationFilter
 
     public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
+        bool hasAllowAnonymous = context.ActionDescriptor.EndpointMetadata
+            .OfType<AllowAnonymousAttribute>()
+            .Any();
+
+        if (hasAllowAnonymous)
+            return;
+
         // Setup
         HttpContext httpContext = context.HttpContext;
 

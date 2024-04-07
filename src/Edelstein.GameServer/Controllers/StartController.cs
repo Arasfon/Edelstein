@@ -4,12 +4,14 @@ using Edelstein.GameServer.Authorization;
 using Edelstein.GameServer.Models.Endpoints.Start;
 using Edelstein.GameServer.Security;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Edelstein.GameServer.Controllers;
 
 [ApiController]
 [Route("/api/start")]
+[ServiceFilter<RsaSignatureAuthorizationFilter>]
 public class StartController : Controller
 {
     private const string AndroidAssetHash = "67f8f261c16b3cca63e520a25aad6c1c";
@@ -17,6 +19,7 @@ public class StartController : Controller
 
     [HttpPost]
     [Route("assetHash")]
+    [AllowAnonymous]
     public EncryptedResult AssetHash(EncryptedRequest<AssetHashRequestData> encryptedRequest)
     {
         AssetHashResponseData responseData =
@@ -29,7 +32,6 @@ public class StartController : Controller
 
     [HttpPost]
     [Route("")]
-    [ServiceFilter<RsaSignatureAuthorizationFilter>]
     public EncryptedResult Start(EncryptedRequest<StartRequestData> encryptedRequest)
     {
         // TODO: token was ae72a65f58f0ff9d50d4bb0b3cfa71d34cfd3f94 some time ago, does it actually do something?
@@ -46,7 +48,6 @@ public class StartController : Controller
     }
 
     [Route("refundBalance")]
-    [ServiceFilter<RsaSignatureAuthorizationFilter>]
     public EncryptedResult RefundBalance() =>
         new EncryptedResponse<RefundBalanceResponseData>(new RefundBalanceResponseData("0", "0", "0", "payback"));
 }
