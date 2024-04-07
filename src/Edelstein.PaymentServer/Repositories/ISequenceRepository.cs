@@ -5,5 +5,5 @@ namespace Edelstein.PaymentServer.Repositories;
 public interface ISequenceRepository<T>
     where T : IBinaryInteger<T>
 {
-    Task<T> GetNextSequenceValue(string sequenceId, ulong initialValue = 0);
+    Task<T> GetNextValueById(string sequenceId, ulong initialValue = 0);
 }

@@ -17,7 +17,7 @@ public class UnsignedLongSequenceRepository : ISequenceRepository<ulong>
         _sequencesCollection = mongoDatabase.GetCollection<Sequence<ulong>>("sequences");
     }
 
-    public async Task<ulong> GetNextSequenceValue(string sequenceId, ulong initialValue = 0)
+    public async Task<ulong> GetNextValueById(string sequenceId, ulong initialValue = 0)
     {
         Sequence<ulong>? updatedDocument = await IncrementExistingSequence(sequenceId);
 
