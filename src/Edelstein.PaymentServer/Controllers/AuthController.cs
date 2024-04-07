@@ -41,7 +41,7 @@ public class AuthController : Controller
     [ServiceFilter<OAuthRsaAuthorizationFilter>]
     public IActionResult Xuid()
     {
-        string? xuidString = HttpContext.User.FindFirst(ClaimNames.Xuid)?.Value;
+        string? xuidString = User.FindFirst(ClaimNames.Xuid)?.Value;
 
         return Ok(new
         {
