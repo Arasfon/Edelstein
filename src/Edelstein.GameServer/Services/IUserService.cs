@@ -8,4 +8,7 @@ public interface IUserService
     public Task<UserData?> GetUserDataByXuid(ulong xuid);
 
     public Task ProgressTutorial(ulong userXuid, uint step);
+
+    Task<UserHomeDocument?> GetHomeByXuid(ulong xuid);
+    Task<UserMissionsDocument?> GetUserMissionsByXuid(ulong xuid);
 }

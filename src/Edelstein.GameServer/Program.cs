@@ -46,6 +46,8 @@ builder.Services.AddSingleton<IMongoClient>(provider =>
 // Repositories
 builder.Services.AddScoped<IAuthenticationDataRepository, AuthenticationDataRepository>();
 builder.Services.AddScoped<IUserDataRepository, UserDataRepository>();
+builder.Services.AddScoped<IUserHomeRepository, UserHomeRepository>();
+builder.Services.AddScoped<IUserMissionsRepository, UserMissionsRepository>();
 
 // Services
 builder.Services.AddScoped<IUserService, UserService>();
