@@ -1,5 +1,6 @@
 using Edelstein.Data.Transport;
 using Edelstein.GameServer.ActionResults;
+using Edelstein.GameServer.Authorization;
 using Edelstein.GameServer.Security;
 using Edelstein.GameServer.Models.Endpoints.Start;
 
@@ -28,6 +29,7 @@ public class StartController : Controller
 
     [HttpPost]
     [Route("")]
+    [ServiceFilter<RsaSignatureAuthorizationFilter>]
     public EncryptedResult Start(EncryptedRequest<StartRequestData> encryptedRequest)
     {
         // TODO: token was ae72a65f58f0ff9d50d4bb0b3cfa71d34cfd3f94 some time ago, does it actually do something?
@@ -44,6 +46,7 @@ public class StartController : Controller
     }
 
     [Route("refundBalance")]
+    [ServiceFilter<RsaSignatureAuthorizationFilter>]
     public EncryptedResult RefundBalance() =>
         new EncryptedResponse<RefundBalanceResponseData>(ErrorCode.Success, new RefundBalanceResponseData("0", "0", "0", "payback"));
 }
