@@ -92,12 +92,12 @@ app.UseStaticFiles(new StaticFileOptions
     {
         Mappings =
         {
-            { "unity3d", MediaTypeNames.Application.Octet },
-            { "ppart", MediaTypeNames.Application.Octet },
-            { "spart", MediaTypeNames.Application.Octet },
-            { "usm", MediaTypeNames.Application.Octet },
-            { "acb", MediaTypeNames.Application.Octet },
-            { "awb", MediaTypeNames.Application.Octet }
+            { ".unity3d", MediaTypeNames.Application.Octet },
+            { ".ppart", MediaTypeNames.Application.Octet },
+            { ".spart", MediaTypeNames.Application.Octet },
+            { ".usm", MediaTypeNames.Application.Octet },
+            { ".acb", MediaTypeNames.Application.Octet },
+            { ".awb", MediaTypeNames.Application.Octet }
         }
     }
 });
