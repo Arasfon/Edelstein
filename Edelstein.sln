@@ -24,6 +24,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.Assets.Management
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.Data", "src\Edelstein.Data\Edelstein.Data.csproj", "{7EED70AC-EB58-45B8-A4DF-B4B17E09FDC5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.Data.Repositories", "src\Edelstein.Data.Repositories\Edelstein.Data.Repositories.csproj", "{ACE652F2-B46B-4862-BD48-1C5E1B0E12B5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,6 +56,10 @@ Global
 		{7EED70AC-EB58-45B8-A4DF-B4B17E09FDC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7EED70AC-EB58-45B8-A4DF-B4B17E09FDC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7EED70AC-EB58-45B8-A4DF-B4B17E09FDC5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ACE652F2-B46B-4862-BD48-1C5E1B0E12B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACE652F2-B46B-4862-BD48-1C5E1B0E12B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACE652F2-B46B-4862-BD48-1C5E1B0E12B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACE652F2-B46B-4862-BD48-1C5E1B0E12B5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F2FD979B-2C8E-4D25-96CF-2F2D2954B8AE} = {09520320-11DC-4702-98CE-C7B1C1DD6DF8}
@@ -62,5 +68,6 @@ Global
 		{8649DB55-11E5-443A-AB8C-D01E0E341CFB} = {E3F6C49D-2417-42E7-859D-E5A3BEEDBB9F}
 		{A08991DB-9772-4CF7-B67F-932A4FEE1514} = {E3F6C49D-2417-42E7-859D-E5A3BEEDBB9F}
 		{7EED70AC-EB58-45B8-A4DF-B4B17E09FDC5} = {E3F6C49D-2417-42E7-859D-E5A3BEEDBB9F}
+		{ACE652F2-B46B-4862-BD48-1C5E1B0E12B5} = {E3F6C49D-2417-42E7-859D-E5A3BEEDBB9F}
 	EndGlobalSection
 EndGlobal
