@@ -4,6 +4,7 @@ using Edelstein.Data.Models;
 using Microsoft.Extensions.Options;
 
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
 namespace Edelstein.GameServer.Repositories;
 
@@ -19,4 +20,16 @@ public class UserHomeRepository : IUserHomeRepository
 
     public async Task<UserHomeDocument?> GetByXuid(ulong xuid) =>
         await _userHomeCollection.Find(x => x.Xuid == xuid).FirstOrDefaultAsync();
+
+    public async Task InitializePresets(ulong xuid, uint masterCardId)
+    {
+        FilterDefinition<UserHomeDocument> filterDefinition =
+            Builders<UserHomeDocument>.Filter.Eq(x => x.Xuid, xuid) &
+            Builders<UserHomeDocument>.Filter.ElemMatch(x => x.Home.PresetSetting, x => x.Slot == 1);
+
+        UpdateDefinition<UserHomeDocument> updateDefinition =
+            Builders<UserHomeDocument>.Update.Set(x => x.Home.PresetSetting.FirstMatchingElement().IllustMasterCardId, masterCardId);
+
+        await _userHomeCollection.UpdateOneAsync(filterDefinition, updateDefinition);
+    }
 }

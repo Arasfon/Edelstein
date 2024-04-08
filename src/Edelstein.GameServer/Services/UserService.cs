@@ -49,6 +49,7 @@ public class UserService : IUserService
         UserInitializationData userInitializationData = await _userInitializationDataRepository.GetByXuid(xuid);
 
         User updatedUser = await InitializeStartingCardAndTitle(userInitializationData);
+        await _userHomeRepository.InitializePresets(xuid, userInitializationData.FavoriteCharacterMasterCardId);
         await InitializeDeck(userInitializationData);
         await AddCharacter(xuid, userInitializationData.FavoriteCharacterMasterId);
 
