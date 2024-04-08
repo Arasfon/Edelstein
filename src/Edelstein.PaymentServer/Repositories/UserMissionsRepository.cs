@@ -18,8 +18,5 @@ public class UserMissionsRepository : IUserMissionsRepository
     }
 
     public async Task Create(ulong xuid) =>
-        await _userMissionsCollection.InsertOneAsync(new UserMissionsDocument
-        {
-            Xuid = xuid
-        });
+        await _userMissionsCollection.InsertOneAsync(new UserMissionsDocument { Xuid = xuid });
 }
