@@ -2,7 +2,7 @@ using Edelstein.Data.Models;
 
 namespace Edelstein.PaymentServer.Models;
 
-public record UserRegistrationResult(
+public readonly record struct UserRegistrationResult(
     AuthenticationData AuthenticationData,
     UserData UserData
 );
