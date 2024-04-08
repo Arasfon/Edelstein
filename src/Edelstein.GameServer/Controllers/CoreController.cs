@@ -74,4 +74,8 @@ public class CoreController : Controller
 
         return new EncryptedResponse<UserMissionsDocument?>(missions);
     }
+
+    [Route("friend")]
+    public EncryptedResult Friend() =>
+        new EncryptedResponse<FriendResponseData>(new FriendResponseData([]));
 }

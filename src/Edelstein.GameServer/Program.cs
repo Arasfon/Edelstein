@@ -56,6 +56,7 @@ builder.Services.AddScoped<IUserInitializationDataRepository, UserInitialization
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ILotteryService, LotteryService>();
 builder.Services.AddScoped<IDefaultGroupCardsFactoryService, DefaultGroupCardsFactoryService>();
+builder.Services.AddScoped<ILiveClearRateProvider, LiveClearRateProvider>();
 
 // Authorization filters
 builder.Services.AddScoped<RsaSignatureAuthorizationFilter>();
