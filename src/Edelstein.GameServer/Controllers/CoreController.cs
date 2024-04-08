@@ -1,5 +1,6 @@
 using Edelstein.Data.Extensions;
 using Edelstein.Data.Models;
+using Edelstein.Data.Models.Components;
 using Edelstein.Data.Transport;
 using Edelstein.GameServer.ActionResults;
 using Edelstein.GameServer.Authorization;
@@ -29,6 +30,18 @@ public class CoreController : Controller
         UserData? userData = await _userService.GetUserDataByXuid(xuid);
 
         return new EncryptedResponse<UserData?>(userData);
+    }
+
+    [HttpPost]
+    [Route("user/initialize")]
+    public async Task<EncryptedResult> InitializeUser(EncryptedRequest<UserInitializationRequestData> encryptedRequest)
+    {
+        ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
+
+        User updatedUser = await _userService.InitializeUserStartingCharacterAndDeck(xuid);
+        await _userService.CompleteLotteryTutorial(xuid);
+
+        return new EncryptedResponse<User>(updatedUser);
     }
 
     [HttpPost]

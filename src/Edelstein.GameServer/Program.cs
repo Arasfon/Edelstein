@@ -1,4 +1,5 @@
 using Edelstein.Data.Configuration;
+using Edelstein.Data.Repositories;
 using Edelstein.Data.Serialization.Bson;
 using Edelstein.GameServer.Authorization;
 using Edelstein.GameServer.ModelBinders;
@@ -44,13 +45,17 @@ builder.Services.AddSingleton<IMongoClient>(provider =>
 });
 
 // Repositories
+builder.Services.AddScoped<ISequenceRepository<ulong>, UnsignedLongSequenceRepository>();
 builder.Services.AddScoped<IAuthenticationDataRepository, AuthenticationDataRepository>();
 builder.Services.AddScoped<IUserDataRepository, UserDataRepository>();
 builder.Services.AddScoped<IUserHomeRepository, UserHomeRepository>();
 builder.Services.AddScoped<IUserMissionsRepository, UserMissionsRepository>();
+builder.Services.AddScoped<IUserInitializationDataRepository, UserInitializationDataRepository>();
 
 // Services
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ILotteryService, LotteryService>();
+builder.Services.AddScoped<IDefaultGroupCardsFactoryService, DefaultGroupCardsFactoryService>();
 
 // Authorization filters
 builder.Services.AddScoped<RsaSignatureAuthorizationFilter>();
