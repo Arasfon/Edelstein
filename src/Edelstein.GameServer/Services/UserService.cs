@@ -67,33 +67,44 @@ public class UserService : IUserService
 
     private async Task<User> InitializeStartingCardAndTitle(UserInitializationData userInitializationData)
     {
-        // HACK: Dummy data for Ren Hazuki
+        BandCategory group = (BandCategory)(userInitializationData.FavoriteCharacterMasterId / 1000);
 
-        // TODO: ulong masterTitleId = _titleMstProvider.GetForCharacterMasterId(tutorialData.FavoriteCharacterMasterId);
+        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+        uint masterTitleId = group switch
+        {
+            BandCategory.Muse => 0,
+            BandCategory.Aqours => 9,
+            BandCategory.Nijigaku => 9 + 9,
+            BandCategory.Liella => 9 + 9 + 12,
+            _ => throw new ArgumentException()
+        };
+
+        masterTitleId += 3000000 + userInitializationData.FavoriteCharacterMasterId % 100;
 
         // ReSharper disable once ArrangeMethodOrOperatorBody
         return (await _userDataRepository.SetStartingCard(userInitializationData.Xuid,
-            userInitializationData.FavoriteCharacterMasterCardId, 3000035)).User;
+            userInitializationData.FavoriteCharacterMasterCardId, masterTitleId)).User;
     }
 
     private async Task InitializeDeck(UserInitializationData userInitializationData)
     {
-        // HACK: Dummy data for Ren Hazuki
+        BandCategory group = (BandCategory)(userInitializationData.FavoriteCharacterMasterId / 1000);
 
-        // TODO: Query group by masterCharacterId
-        BandCategory bandCategory = BandCategory.Liella;
-
-        List<Card> groupCards = await _defaultGroupCardsFactoryService.Create(bandCategory);
+        List<Card> groupCards = await _defaultGroupCardsFactoryService.Create(group);
 
         await AddCardsToUser(userInitializationData.Xuid, groupCards);
 
-        // TODO: Remove non-UR character card duplicate and move everything out of center (shift deck, not replace)
-        List<ulong> cardIds = groupCards.Select(x => x.Id).ToList();
+        // Remove UR character duplicate
+        List<ulong> cardIds = groupCards.Select(x => x.Id)
+            .Where(x => x / 10000 != userInitializationData.FavoriteCharacterMasterId)
+            .ToList();
 
         // Set center card
-        cardIds[4] = userInitializationData.FavoriteCharacterCardId;
+        cardIds.RemoveAt((int)userInitializationData.FavoriteCharacterMasterId % 10 - 1);
+        cardIds.Insert(4, userInitializationData.FavoriteCharacterCardId);
 
-        await _userDataRepository.SetDeck(userInitializationData.Xuid, 1, cardIds);
+        // Take only 9 cards
+        await _userDataRepository.SetDeck(userInitializationData.Xuid, 1, cardIds.Take(9));
     }
 
     public async Task AddCardsToUser(ulong xuid, IEnumerable<Card> cards) =>

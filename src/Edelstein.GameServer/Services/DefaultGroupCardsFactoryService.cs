@@ -13,76 +13,30 @@ public class DefaultGroupCardsFactoryService : IDefaultGroupCardsFactoryService
 
     public async Task<List<Card>> Create(BandCategory group)
     {
-        switch (group)
+        long currentTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+        uint[] groupCardsMasterIds = group switch
         {
-            case BandCategory.Liella:
+            BandCategory.Muse => [10010001, 10020001, 10030001, 10040001, 10050001, 10060001, 10070001, 10080001, 10090001],
+            BandCategory.Aqours => [20010001, 20020001, 20030001, 20040001, 20050001, 20060001, 20070001, 20080001, 20090001],
+            BandCategory.Nijigaku =>
+            [
+                30010001, 30020001, 30030001, 30040001, 30050001, 30060001, 30070001, 30080001, 30090001, 30100001,
+                30110001
+            ],
+            BandCategory.Liella => [40010001, 40020001, 40030001, 40040001, 40050001, 40060001, 40070001, 40080001, 40090001],
+            _ => []
+        };
+
+        ulong[] cardIdRange =
+            (await _sequenceRepository.GetNextRangeById(SequenceNames.CardIds, (ulong)groupCardsMasterIds.Length)).ToArray();
+
+        return groupCardsMasterIds.Select((x, i) => new Card
             {
-                ulong[] cardIdRange = (await _sequenceRepository.GetNextRangeById(SequenceNames.CardIds, 9)).ToArray();
-
-                long currentTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-
-                List<Card> groupCards =
-                [
-                    new Card
-                    {
-                        Id = cardIdRange[0],
-                        MasterCardId = 40010001,
-                        CreatedDateTime = currentTimestamp
-                    },
-                    new Card
-                    {
-                        Id = cardIdRange[1],
-                        MasterCardId = 40020001,
-                        CreatedDateTime = currentTimestamp
-                    },
-                    new Card
-                    {
-                        Id = cardIdRange[2],
-                        MasterCardId = 40030001,
-                        CreatedDateTime = currentTimestamp
-                    },
-                    new Card
-                    {
-                        Id = cardIdRange[3],
-                        MasterCardId = 40040001,
-                        CreatedDateTime = currentTimestamp
-                    },
-                    new Card
-                    {
-                        Id = cardIdRange[4],
-                        MasterCardId = 40050001,
-                        CreatedDateTime = currentTimestamp
-                    },
-                    new Card
-                    {
-                        Id = cardIdRange[5],
-                        MasterCardId = 40060001,
-                        CreatedDateTime = currentTimestamp
-                    },
-                    new Card
-                    {
-                        Id = cardIdRange[6],
-                        MasterCardId = 40070001,
-                        CreatedDateTime = currentTimestamp
-                    },
-                    new Card
-                    {
-                        Id = cardIdRange[7],
-                        MasterCardId = 40080001,
-                        CreatedDateTime = currentTimestamp
-                    },
-                    new Card
-                    {
-                        Id = cardIdRange[8],
-                        MasterCardId = 40090001,
-                        CreatedDateTime = currentTimestamp
-                    }
-                ];
-
-                return groupCards;
-            }
-            default:
-                throw new NotImplementedException();
-        }
+                Id = cardIdRange[i],
+                MasterCardId = x,
+                CreatedDateTime = currentTimestamp
+            })
+            .ToList();
     }
 }
