@@ -102,7 +102,7 @@ public class LotteryService : ILotteryService
             }
         ];
 
-        // TODO: Note: All other cards are from other groups (can be SR, check mst)
+        // TODO: Note: All other cards are from other groups (can even be UR, check mst)
         // TODO: Note: UR favorite character card is always last
 
         ulong[] cardIdRange = (await _sequenceRepository.GetNextRangeById(SequenceNames.CardIds, 10)).ToArray();
