@@ -31,10 +31,6 @@ public class LiveController : Controller
     }
 
     [Route("guest")]
-    public async Task<EncryptedResult> Guest(EncryptedRequest<LiveGuestRequestData> encryptedRequest)
-    {
-        List<AllUserClearRate> clearRates = await _liveClearRateProvider.GetAll();
-
-        return new EncryptedResponse<LiveGuestResponseData>(new LiveGuestResponseData([Friend.GetTutorial()]));
-    }
+    public EncryptedResult Guest(EncryptedRequest<LiveGuestRequestData> encryptedRequest) =>
+        new EncryptedResponse<LiveGuestResponseData>(new LiveGuestResponseData([Friend.GetTutorial()]));
 }
