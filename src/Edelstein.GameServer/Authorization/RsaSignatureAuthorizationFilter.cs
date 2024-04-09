@@ -63,7 +63,7 @@ public class RsaSignatureAuthorizationFilter : IAsyncAuthorizationFilter
         if (!context.HttpContext.Request.Headers.TryGetValue(GameRequestHeaderNames.AoharuTimestamp,
                 out StringValues timestampStringValues) ||
             !Int64.TryParse(timestampStringValues, out long timestamp) ||
-            timestamp > now.ToUnixTimeSeconds() ||
+            timestamp > (now + TimeSpan.FromSeconds(TimeoutSeconds)).ToUnixTimeSeconds() ||
             timestamp < (now - TimeSpan.FromSeconds(TimeoutSeconds)).ToUnixTimeSeconds())
         {
             context.Result = new BadRequestObjectResult(EmptyEncryptedResponseFactory.Create(ErrorCode.ErrorBadRequest).EncryptedString);
