@@ -13,15 +13,30 @@ public class LotteryService : ILotteryService
     public LotteryService(ISequenceRepository<ulong> sequenceRepository) =>
         _sequenceRepository = sequenceRepository;
 
-    public Task<Lottery> GetTutorialLotteryByMasterCharacterId(uint masterCharacterId) =>
-        // HACK: Dummy data for Ren Hazuki
-        Task.FromResult(new Lottery
+    public Task<Lottery> GetTutorialLotteryByMasterCharacterId(uint masterCharacterId)
+    {
+        BandCategory group = (BandCategory)(masterCharacterId / 1000);
+
+        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+        uint masterLotteryId = group switch
         {
-            MasterLotteryId = 9110035,
+            BandCategory.Muse => 0,
+            BandCategory.Aqours => 9,
+            BandCategory.Nijigaku => 9 + 9,
+            BandCategory.Liella => 9 + 9 + 12,
+            _ => throw new ArgumentException()
+        };
+
+        masterLotteryId += 9110000 + masterCharacterId % 100;
+
+        return Task.FromResult(new Lottery
+        {
+            MasterLotteryId = masterLotteryId,
             MasterLotteryPriceNumber = 1,
             Count = 0,
             DailyCount = 0
         });
+    }
 
     public async Task<OneOf<LotteryDrawResult, TutorialLotteryDrawResult>> Draw(Lottery lottery)
     {
@@ -175,6 +190,5 @@ public class LotteryService : ILotteryService
     }
 
     private static bool IsTutorial(Lottery lottery) =>
-        // HACK: Dummy
-        true;
+        lottery.MasterLotteryId > 9110000;
 }
