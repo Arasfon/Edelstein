@@ -21,11 +21,13 @@ public class LotteryController : Controller
 {
     private readonly IUserService _userService;
     private readonly ILotteryService _lotteryService;
+    private readonly ITutorialService _tutorialService;
 
-    public LotteryController(IUserService userService, ILotteryService lotteryService)
+    public LotteryController(IUserService userService, ILotteryService lotteryService, ITutorialService tutorialService)
     {
         _userService = userService;
         _lotteryService = lotteryService;
+        _tutorialService = tutorialService;
     }
 
     [HttpPost]
@@ -37,7 +39,7 @@ public class LotteryController : Controller
         Lottery tutorialLottery =
             await _lotteryService.GetTutorialLotteryByMasterCharacterId(encryptedRequest.DeserializedObject.MasterCharacterId);
 
-        await _userService.InitializeLotteryTutorial(xuid, encryptedRequest.DeserializedObject.MasterCharacterId);
+        await _tutorialService.StartLotteryTutorial(xuid, encryptedRequest.DeserializedObject.MasterCharacterId);
 
         return new EncryptedResponse<LotteryTutorialResponseData>(new LotteryTutorialResponseData([tutorialLottery], []));
     }
@@ -54,7 +56,7 @@ public class LotteryController : Controller
         LotteryDrawResult lotteryDrawResult = await lotteryDrawResultUnion.Match<Task<LotteryDrawResult>>(Task.FromResult,
             async tutorialLotteryDrawResult =>
             {
-                await _userService.UpdateLotteryTutorialWithDrawnCard(xuid, tutorialLotteryDrawResult.FavoriteCardMasterId,
+                await _tutorialService.ProgressLotteryTutorialWithDrawnCard(xuid, tutorialLotteryDrawResult.FavoriteCardMasterId,
                     tutorialLotteryDrawResult.FavoriteCardId);
 
                 return tutorialLotteryDrawResult;

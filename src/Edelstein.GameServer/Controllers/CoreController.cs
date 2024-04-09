@@ -18,9 +18,13 @@ namespace Edelstein.GameServer.Controllers;
 public class CoreController : Controller
 {
     private readonly IUserService _userService;
+    private readonly ITutorialService _tutorialService;
 
-    public CoreController(IUserService userService) =>
+    public CoreController(IUserService userService, ITutorialService tutorialService)
+    {
         _userService = userService;
+        _tutorialService = tutorialService;
+    }
 
     [Route("user")]
     public async Task<EncryptedResult> GetUser()
@@ -39,7 +43,7 @@ public class CoreController : Controller
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
         User updatedUser = await _userService.InitializeUserStartingCharacterAndDeck(xuid);
-        await _userService.CompleteLotteryTutorial(xuid);
+        await _tutorialService.FinishLotteryTutorial(xuid);
 
         return new EncryptedResponse<User>(updatedUser);
     }
@@ -50,7 +54,7 @@ public class CoreController : Controller
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
-        await _userService.ProgressTutorial(xuid, encryptedRequest.DeserializedObject.Step);
+        await _tutorialService.UpdateTutorialStep(xuid, encryptedRequest.DeserializedObject.Step);
 
         return EmptyEncryptedResponseFactory.Create();
     }

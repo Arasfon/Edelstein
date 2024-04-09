@@ -56,15 +56,6 @@ public class UserService : IUserService
         return updatedUser;
     }
 
-    public async Task InitializeLotteryTutorial(ulong xuid, uint favoriteCharacterMasterId) =>
-        await _userInitializationDataRepository.CreateForCharacter(xuid, favoriteCharacterMasterId);
-
-    public async Task UpdateLotteryTutorialWithDrawnCard(ulong xuid, uint favoriteCharacterMasterCardId, ulong favoriteCharacterCardId) =>
-        await _userInitializationDataRepository.UpdateWithDrawedCard(xuid, favoriteCharacterMasterCardId, favoriteCharacterCardId);
-
-    public async Task CompleteLotteryTutorial(ulong xuid) =>
-        await _userInitializationDataRepository.Delete(xuid);
-
     private async Task<User> InitializeStartingCardAndTitle(UserInitializationData userInitializationData)
     {
         BandCategory group = (BandCategory)(userInitializationData.FavoriteCharacterMasterId / 1000);
