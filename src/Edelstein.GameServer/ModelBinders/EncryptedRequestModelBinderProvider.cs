@@ -12,7 +12,7 @@ public class EncryptedRequestModelBinderProvider : IModelBinderProvider
     {
         if (!context.Metadata.ModelType.GetTypeInfo().IsGenericType ||
             context.Metadata.ModelType.GetGenericTypeDefinition() != typeof(EncryptedRequest<>))
-            return null; // TODO: Do exception?
+            return null;
 
         Type[] types = context.Metadata.ModelType.GetGenericArguments();
         Type o = typeof(EncryptedRequestModelBinder<>).MakeGenericType(types);
