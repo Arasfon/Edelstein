@@ -9,6 +9,7 @@ namespace Edelstein.PaymentServer.Controllers;
 
 [ApiController]
 [Route("/v1.0/moderate")]
+[ServiceFilter<OAuthRsaAuthorizationFilter>]
 public class ModerationController : Controller
 {
     private readonly IWebHostEnvironment _webHostEnvironment;
@@ -21,7 +22,6 @@ public class ModerationController : Controller
     }
 
     [Route("keywordlist")]
-    [ServiceFilter<OAuthRsaAuthorizationFilter>]
     public async Task<IActionResult> KeywordList()
     {
         const string cachingKey = "ModerationKeywords";
@@ -51,7 +51,6 @@ public class ModerationController : Controller
 
     [HttpPost]
     [Route("filtering/commit")]
-    [ServiceFilter<OAuthRsaAuthorizationFilter>]
     public IActionResult FilteringCommit() =>
         Ok(new { result = "OK" });
 }

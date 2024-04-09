@@ -6,10 +6,10 @@ namespace Edelstein.PaymentServer.Controllers;
 
 [ApiController]
 [Route("/v1.0/payment")]
+[ServiceFilter<OAuthRsaAuthorizationFilter>]
 public class PaymentController : Controller
 {
     [Route("productlist")]
-    [ServiceFilter<OAuthRsaAuthorizationFilter>]
     public IActionResult ProductList() =>
         Ok(new
         {
@@ -22,7 +22,6 @@ public class PaymentController : Controller
         });
 
     [Route("ticket/status")]
-    [ServiceFilter<OAuthRsaAuthorizationFilter>]
     public IActionResult TicketStatus() =>
         Ok(new
         {
@@ -31,7 +30,6 @@ public class PaymentController : Controller
         });
 
     [Route("subscription/productlist")]
-    [ServiceFilter<OAuthRsaAuthorizationFilter>]
     public IActionResult SubscriptionProductList() =>
         Ok(new
         {
