@@ -51,21 +51,16 @@ public class LotteryController : Controller
         OneOf<LotteryDrawResult, TutorialLotteryDrawResult> lotteryDrawResultUnion =
             await _lotteryService.Draw(encryptedRequest.DeserializedObject);
 
-        LotteryDrawResult lotteryDrawResult = await lotteryDrawResultUnion.Match<Task<LotteryDrawResult>>(async lotteryDrawResult =>
-            {
-                await _userService.AddCardsToUser(xuid, lotteryDrawResult.Cards);
-
-                return lotteryDrawResult;
-            },
+        LotteryDrawResult lotteryDrawResult = await lotteryDrawResultUnion.Match<Task<LotteryDrawResult>>(Task.FromResult,
             async tutorialLotteryDrawResult =>
             {
-                await _userService.AddCardsToUser(xuid, tutorialLotteryDrawResult.Cards);
-
                 await _userService.UpdateLotteryTutorialWithDrawnCard(xuid, tutorialLotteryDrawResult.FavoriteCardMasterId,
                     tutorialLotteryDrawResult.FavoriteCardId);
 
                 return tutorialLotteryDrawResult;
             });
+
+        await _userService.AddCardsToUser(xuid, lotteryDrawResult.Cards);
 
         return new EncryptedResponse<DrawLotteryResponseData>(new DrawLotteryResponseData(lotteryDrawResult.LotteryItems,
             new UpdatedValueList { CardList = lotteryDrawResult.Cards }, [], [], []));
