@@ -1,10 +1,12 @@
 using Edelstein.GameServer.Repositories;
 
+using System.Collections.Concurrent;
+
 namespace Edelstein.GameServer.Services;
 
 public class TutorialService : ITutorialService
 {
-    private readonly HashSet<ulong> _usersInTutorial = [];
+    private static readonly ConcurrentDictionary<ulong, byte> UsersInTutorial = [];
 
     private readonly IUserDataRepository _userDataRepository;
     private readonly IUserInitializationDataRepository _userInitializationDataRepository;
@@ -16,14 +18,14 @@ public class TutorialService : ITutorialService
     }
 
     public Task<bool> IsTutorialInProgress(ulong xuid) =>
-        Task.FromResult(_usersInTutorial.Contains(xuid));
+        Task.FromResult(UsersInTutorial.ContainsKey(xuid));
 
     public async Task UpdateTutorialStep(ulong xuid, uint step)
     {
         if (step < 130)
-            _usersInTutorial.Add(xuid);
+            UsersInTutorial.TryAdd(xuid, 0);
         else
-            _usersInTutorial.Remove(xuid);
+            UsersInTutorial.TryRemove(xuid, out _);
 
         await _userDataRepository.UpdateTutorialStep(xuid, step);
     }
