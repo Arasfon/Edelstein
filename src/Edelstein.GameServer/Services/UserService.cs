@@ -100,12 +100,11 @@ public class UserService : IUserService
             currentCharacters: currentUserData.CharacterList);
 
         // Remove UR character duplicate
-        List<ulong> cardIds = groupCards.Select(x => x.Id)
-            .Where(x => x / 10000 != userInitializationData.FavoriteCharacterMasterId)
+        List<ulong> cardIds = groupCards.Where(x => x.MasterCardId / 10000 != userInitializationData.FavoriteCharacterMasterId)
+            .Select(x => x.Id)
             .ToList();
 
         // Set center card
-        cardIds.RemoveAt((int)userInitializationData.FavoriteCharacterMasterId % 10 - 1);
         cardIds.Insert(4, userInitializationData.FavoriteCharacterCardId);
 
         // Take only 9 cards
