@@ -1,6 +1,9 @@
 using Edelstein.Data.Models;
 using Edelstein.Data.Models.Components;
+using Edelstein.GameServer.Extensions;
 using Edelstein.GameServer.Repositories;
+
+using System.Diagnostics;
 
 namespace Edelstein.GameServer.Services;
 
@@ -58,15 +61,14 @@ public class UserService : IUserService
     {
         UserInitializationData userInitializationData = await _userInitializationDataRepository.GetByXuid(xuid);
 
-        User updatedUser = await InitializeStartingCardAndTitle(userInitializationData);
+        UserData updatedUserData = await InitializeStartingCardAndTitle(userInitializationData);
         await _userHomeRepository.InitializePresets(xuid, userInitializationData.FavoriteCharacterMasterCardId);
-        await InitializeDeck(userInitializationData);
-        await AddCharacter(xuid, userInitializationData.FavoriteCharacterMasterId);
+        await InitializeDeck(updatedUserData, userInitializationData);
 
-        return updatedUser;
+        return updatedUserData.User;
     }
 
-    private async Task<User> InitializeStartingCardAndTitle(UserInitializationData userInitializationData)
+    private async Task<UserData> InitializeStartingCardAndTitle(UserInitializationData userInitializationData)
     {
         BandCategory group = (BandCategory)(userInitializationData.FavoriteCharacterMasterId / 1000);
 
@@ -83,17 +85,19 @@ public class UserService : IUserService
         masterTitleId += 3000000 + userInitializationData.FavoriteCharacterMasterId % 100;
 
         // ReSharper disable once ArrangeMethodOrOperatorBody
-        return (await _userDataRepository.SetStartingCard(userInitializationData.Xuid,
-            userInitializationData.FavoriteCharacterMasterCardId, masterTitleId)).User;
+        return await _userDataRepository.SetStartingCard(userInitializationData.Xuid,
+            userInitializationData.FavoriteCharacterMasterCardId, masterTitleId);
     }
 
-    private async Task InitializeDeck(UserInitializationData userInitializationData)
+    private async Task InitializeDeck(UserData currentUserData, UserInitializationData userInitializationData)
     {
         BandCategory group = (BandCategory)(userInitializationData.FavoriteCharacterMasterId / 1000);
 
         List<Card> groupCards = await _defaultGroupCardsFactoryService.Create(group);
 
-        await AddCardsToUser(userInitializationData.Xuid, groupCards);
+        await AddCardsAndCharactersToUser(userInitializationData.Xuid, groupCards,
+            currentCards: currentUserData.CardList,
+            currentCharacters: currentUserData.CharacterList);
 
         // Remove UR character duplicate
         List<ulong> cardIds = groupCards.Select(x => x.Id)
@@ -108,11 +112,33 @@ public class UserService : IUserService
         await _userDataRepository.SetDeck(userInitializationData.Xuid, 1, cardIds.Take(9));
     }
 
-    public async Task AddCardsToUser(ulong xuid, IEnumerable<Card> cards) =>
-        await _userDataRepository.AddCards(xuid, cards);
+    public async Task AddCardsAndCharactersToUser(ulong xuid, List<Card> cards, List<Character>? characters = null,
+        List<Card>? currentCards = null, List<Character>? currentCharacters = null)
+    {
+        if (currentCards is null || currentCharacters is null)
+        {
+            UserData? userData = await GetUserDataByXuid(xuid);
+            Debug.Assert(userData is not null);
 
-    public async Task AddCharacter(ulong xuid, uint masterCharacterId) =>
-        await _userDataRepository.AddCharacter(xuid, masterCharacterId);
+            currentCards = userData.CardList;
+            currentCharacters = userData.CharacterList;
+        }
+
+        cards = cards.ExceptBy(currentCards, x => x.MasterCardId).ToList();
+
+        characters ??= cards.Select(x => x.MasterCardId / 10000)
+            .Select(x => new Character
+            {
+                MasterCharacterId = x,
+                Exp = 0,
+                BeforeExp = 0
+            })
+            .ToList();
+
+        characters = characters.ExceptBy(currentCharacters, x => x.MasterCharacterId).ToList();
+
+        await _userDataRepository.AddCardsAndCharacters(xuid, cards, characters);
+    }
 
     public async Task<User?> UpdateUser(ulong xuid, string? name, string? comment, uint? favoriteMasterCardId, uint? guestSmileMasterCardId,
         uint? guestPureMasterCardId, uint? guestCoolMasterCardId, bool? friendRequestDisabled) =>

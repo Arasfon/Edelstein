@@ -62,7 +62,7 @@ public class LotteryController : Controller
                 return tutorialLotteryDrawResult;
             });
 
-        await _userService.AddCardsToUser(xuid, lotteryDrawResult.Cards);
+        await _userService.AddCardsAndCharactersToUser(xuid, lotteryDrawResult.Cards);
 
         return new EncryptedResponse<DrawLotteryResponseData>(new DrawLotteryResponseData(lotteryDrawResult.LotteryItems,
             new UpdatedValueList { CardList = lotteryDrawResult.Cards }, [], [], []));

@@ -45,10 +45,12 @@ public class UserDataRepository : IUserDataRepository
         return await _userDataCollection.FindOneAndUpdateAsync(filterDefinition, updateDefinition, options);
     }
 
-    public async Task AddCards(ulong xuid, IEnumerable<Card> cards)
+    public async Task AddCardsAndCharacters(ulong xuid, IEnumerable<Card> cards, IEnumerable<Character> characters)
     {
         FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
-        UpdateDefinition<UserData> updateDefinition = Builders<UserData>.Update.AddToSetEach(x => x.CardList, cards);
+        UpdateDefinition<UserData> updateDefinition = Builders<UserData>.Update
+            .AddToSetEach(x => x.CardList, cards)
+            .AddToSetEach(x => x.CharacterList, characters);
 
         await _userDataCollection.UpdateOneAsync(filterDefinition, updateDefinition);
     }
