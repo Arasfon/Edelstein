@@ -64,6 +64,9 @@ public class LotteryController : Controller
 
         await _userService.AddCardsAndCharactersToUser(xuid, lotteryDrawResult.Cards);
 
+        //if (lotteryDrawResult.Lightsticks > 0)
+        //    _userService.AddItem(xuid, lightstickItemMasterId, lotteryDrawResult.Lightsticks);
+
         return new EncryptedResponse<DrawLotteryResponseData>(new DrawLotteryResponseData(lotteryDrawResult.LotteryItems,
             new UpdatedValueList { CardList = lotteryDrawResult.Cards }, [], [], []));
     }

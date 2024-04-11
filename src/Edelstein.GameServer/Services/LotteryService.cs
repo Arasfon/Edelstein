@@ -44,7 +44,7 @@ public class LotteryService : ILotteryService
             return await DrawTutorialLottery(lottery);
 
         // HACK: Dummy
-        return new LotteryDrawResult(null!, null!);
+        return new LotteryDrawResult(null!, null!, 0);
     }
 
     private async Task<TutorialLotteryDrawResult> DrawTutorialLottery(Lottery lottery)
@@ -186,7 +186,7 @@ public class LotteryService : ILotteryService
             }
         ];
 
-        return new TutorialLotteryDrawResult(lotteryItems, cards, 40050007, cardIdRange[9]);
+        return new TutorialLotteryDrawResult(lotteryItems, cards, 0, 40050007, cardIdRange[9]);
     }
 
     private static bool IsTutorial(Lottery lottery) =>
