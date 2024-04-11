@@ -59,66 +59,66 @@ public class LotteryService : ILotteryService
             {
                 MasterLotteryItemId = 100001,
                 MasterLotteryItemNumber = 70,
-                IsNew = 1
+                IsNew = true
             },
             new LotteryItem
             {
                 MasterLotteryItemId = 100001,
                 MasterLotteryItemNumber = 49,
-                IsNew = 1
+                IsNew = true
             },
             new LotteryItem
             {
                 MasterLotteryItemId = 200001,
                 MasterLotteryItemNumber = 48,
-                IsNew = 1
+                IsNew = true
             },
             new LotteryItem
             {
                 MasterLotteryItemId = 200001,
                 MasterLotteryItemNumber = 14,
-                IsNew = 1
+                IsNew = true
             },
             new LotteryItem
             {
                 MasterLotteryItemId = 300001,
                 MasterLotteryItemNumber = 13,
-                IsNew = 1
+                IsNew = true
             },
             new LotteryItem
             {
                 MasterLotteryItemId = 100001,
                 MasterLotteryItemNumber = 125,
-                IsNew = 1
+                IsNew = true
             },
             new LotteryItem
             {
                 MasterLotteryItemId = 100001,
                 MasterLotteryItemNumber = 111,
-                IsNew = 1
+                IsNew = true
             },
             new LotteryItem
             {
                 MasterLotteryItemId = 200001,
                 MasterLotteryItemNumber = 16,
-                IsNew = 1
+                IsNew = true
             },
             new LotteryItem
             {
                 MasterLotteryItemId = 100001,
                 MasterLotteryItemNumber = 58,
-                IsNew = 1
+                IsNew = true
             },
             new LotteryItem
             {
                 MasterLotteryItemId = 911003501,
                 MasterLotteryItemNumber = 1,
-                IsNew = 1
+                IsNew = true
             }
         ];
 
         // TODO: Note: All other cards are from other groups (can even be UR, check mst)
-        // TODO: Note: UR favorite character card is always last
+        // TODO: Note: UR favorite character card is always last (in 10 draws 10th is always SR or UR)
 
         ulong[] cardIdRange = (await _sequenceRepository.GetNextRangeById(SequenceNames.CardIds, 10)).ToArray();
 
