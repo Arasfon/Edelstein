@@ -20,6 +20,12 @@ public class TutorialService : ITutorialService
     public Task<bool> IsTutorialInProgress(ulong xuid) =>
         Task.FromResult(UsersInTutorial.ContainsKey(xuid));
 
+    public Task MarkInTutorial(ulong xuid)
+    {
+        UsersInTutorial.TryAdd(xuid, 0);
+        return Task.CompletedTask;
+    }
+
     public async Task UpdateTutorialStep(ulong xuid, uint step)
     {
         if (step < 130)

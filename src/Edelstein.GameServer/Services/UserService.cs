@@ -12,6 +12,7 @@ public class UserService : IUserService
     private readonly IUserMissionsRepository _userMissionsRepository;
     private readonly IUserInitializationDataRepository _userInitializationDataRepository;
     private readonly IDefaultGroupCardsFactoryService _defaultGroupCardsFactoryService;
+    private readonly ITutorialService _tutorialService;
 
     public UserService(
         IAuthenticationDataRepository authenticationDataRepository,
@@ -19,7 +20,8 @@ public class UserService : IUserService
         IUserHomeRepository userHomeRepository,
         IUserMissionsRepository userMissionsRepository,
         IUserInitializationDataRepository userInitializationDataRepository,
-        IDefaultGroupCardsFactoryService defaultGroupCardsFactoryService)
+        IDefaultGroupCardsFactoryService defaultGroupCardsFactoryService,
+        ITutorialService tutorialService)
     {
         _authenticationDataRepository = authenticationDataRepository;
         _userDataRepository = userDataRepository;
@@ -27,13 +29,21 @@ public class UserService : IUserService
         _userMissionsRepository = userMissionsRepository;
         _userInitializationDataRepository = userInitializationDataRepository;
         _defaultGroupCardsFactoryService = defaultGroupCardsFactoryService;
+        _tutorialService = tutorialService;
     }
 
     public async Task<AuthenticationData?> GetAuthenticationDataByXuid(ulong xuid) =>
         await _authenticationDataRepository.GetByXuid(xuid);
 
-    public async Task<UserData?> GetUserDataByXuid(ulong xuid) =>
-        await _userDataRepository.GetByXuid(xuid);
+    public async Task<UserData?> GetUserDataByXuid(ulong xuid)
+    {
+        UserData? userData = await _userDataRepository.GetByXuid(xuid);
+
+        if (userData?.TutorialStep < 130)
+            await _tutorialService.MarkInTutorial(xuid);
+
+        return userData;
+    }
 
     public async Task<UserHomeDocument?> GetHomeByXuid(ulong xuid) =>
         await _userHomeRepository.GetByXuid(xuid);
