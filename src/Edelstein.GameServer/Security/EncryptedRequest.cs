@@ -1,3 +1,4 @@
+using Edelstein.Data.Serialization.Json;
 using Edelstein.GameServer.ModelBinders;
 using Edelstein.Security;
 
@@ -12,7 +13,8 @@ public class EncryptedRequest
 {
     private static readonly JsonSerializerOptions DefaultSerializerOptions = new()
     {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        Converters = { new BooleanToIntegerJsonConverter() }
     };
 
     public string RawRequestBody { get; protected init; }
