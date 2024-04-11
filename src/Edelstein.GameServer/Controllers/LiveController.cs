@@ -55,21 +55,21 @@ public class LiveController : Controller
     }
 
     [Route("start")]
-    public EncryptedResult Start(EncryptedRequest<LiveStartRequestData> encryptedRequest)
+    public async Task<EncryptedResult> Start(EncryptedRequest<LiveStartRequestData> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
-        _liveService.StartLive(xuid, encryptedRequest.DeserializedObject);
+        await _liveService.StartLive(xuid, encryptedRequest.DeserializedObject);
 
         return EmptyEncryptedResponseFactory.Create();
     }
 
     [Route("retire")]
-    public EncryptedResult Retire(EncryptedRequest<LiveRetireRequestData> encryptedRequest)
+    public async Task<EncryptedResult> Retire(EncryptedRequest<LiveRetireRequestData> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
-        _liveService.RetireLive(xuid, encryptedRequest.DeserializedObject);
+        await _liveService.RetireLive(xuid, encryptedRequest.DeserializedObject);
 
         return new EncryptedResponse<LiveRetireResponseData>(new LiveRetireResponseData(new Stamina(), [], []));
     }
