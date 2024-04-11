@@ -103,4 +103,9 @@ public class UserService : IUserService
 
     public async Task AddCharacter(ulong xuid, uint masterCharacterId) =>
         await _userDataRepository.AddCharacter(xuid, masterCharacterId);
+
+    public async Task<User?> UpdateUser(ulong xuid, string? name, string? comment, uint? favoriteMasterCardId, uint? guestSmileMasterCardId,
+        uint? guestPureMasterCardId, uint? guestCoolMasterCardId, bool? friendRequestDisabled) =>
+        await _userDataRepository.UpdateUser(xuid, name, comment, favoriteMasterCardId, guestSmileMasterCardId,
+            guestPureMasterCardId, guestCoolMasterCardId, friendRequestDisabled);
 }

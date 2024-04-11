@@ -65,6 +65,43 @@ public class UserDataRepository : IUserDataRepository
         await _userDataCollection.UpdateOneAsync(filterDefinition, updateDefinition);
     }
 
+    public async Task<User> UpdateUser(ulong xuid, string? name, string? comment, uint? favoriteMasterCardId, uint? guestSmileMasterCardId,
+        uint? guestPureMasterCardId, uint? guestCoolMasterCardId, bool? friendRequestDisabled)
+    {
+        FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
+
+        UpdateDefinitionBuilder<UserData> updateBuilder = Builders<UserData>.Update;
+        List<UpdateDefinition<UserData>> updates = [];
+
+        if (name is not null)
+            updates.Add(updateBuilder.Set(x => x.User.Name, name));
+
+        if (comment is not null)
+            updates.Add(updateBuilder.Set(x => x.User.Comment, comment));
+
+        if (favoriteMasterCardId.HasValue)
+            updates.Add(updateBuilder.Set(x => x.User.FavoriteMasterCardId, favoriteMasterCardId.Value));
+
+        if (guestSmileMasterCardId.HasValue)
+            updates.Add(updateBuilder.Set(x => x.User.GuestSmileMasterCardId, guestSmileMasterCardId));
+
+        if (guestPureMasterCardId.HasValue)
+            updates.Add(updateBuilder.Set(x => x.User.GuestPureMasterCardId, guestPureMasterCardId));
+
+        if (guestCoolMasterCardId.HasValue)
+            updates.Add(updateBuilder.Set(x => x.User.GuestCoolMasterCardId, guestCoolMasterCardId));
+
+        if (friendRequestDisabled.HasValue)
+            updates.Add(updateBuilder.Set(x => x.User.FriendRequestDisabled, friendRequestDisabled));
+
+        UpdateDefinition<UserData> updateDefinition = updateBuilder.Combine(updates);
+
+        UserData userData = await _userDataCollection.FindOneAndUpdateAsync(filterDefinition, updateDefinition,
+            new FindOneAndUpdateOptions<UserData> { ReturnDocument = ReturnDocument.After });
+
+        return userData.User;
+    }
+
     public async Task AddCharacter(ulong xuid, uint masterCharacterId, uint experience = 1)
     {
         FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);

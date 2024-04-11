@@ -15,4 +15,7 @@ public interface IUserService
 
     public Task AddCardsToUser(ulong xuid, IEnumerable<Card> cards);
     public Task AddCharacter(ulong xuid, uint masterCharacterId);
+
+    public Task<User?> UpdateUser(ulong xuid, string? name, string? comment, uint? favoriteMasterCardId, uint? guestSmileMasterCardId,
+        uint? guestPureMasterCardId, uint? guestCoolMasterCardId, bool? friendRequestDisabled);
 }
