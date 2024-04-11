@@ -51,12 +51,14 @@ builder.Services.AddScoped<IUserDataRepository, UserDataRepository>();
 builder.Services.AddScoped<IUserHomeRepository, UserHomeRepository>();
 builder.Services.AddScoped<IUserMissionsRepository, UserMissionsRepository>();
 builder.Services.AddScoped<IUserInitializationDataRepository, UserInitializationDataRepository>();
+builder.Services.AddScoped<ILiveDataRepository, LiveDataRepository>();
 
 // Services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ILotteryService, LotteryService>();
 builder.Services.AddScoped<ITutorialService, TutorialService>();
 builder.Services.AddScoped<IDefaultGroupCardsFactoryService, DefaultGroupCardsFactoryService>();
+builder.Services.AddScoped<ILiveService, LiveService>();
 builder.Services.AddScoped<ILiveClearRateProvider, LiveClearRateProvider>();
 
 // Authorization filters
