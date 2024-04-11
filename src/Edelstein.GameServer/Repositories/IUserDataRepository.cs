@@ -12,4 +12,6 @@ public interface IUserDataRepository
     public Task SetDeck(ulong xuid, byte slot, IEnumerable<ulong> mainCardIds);
     public Task<User> UpdateUser(ulong xuid, string? name, string? comment, uint? favoriteMasterCardId, uint? guestSmileMasterCardId,
         uint? guestPureMasterCardId, uint? guestCoolMasterCardId, bool? friendRequestDisabled);
+
+    public Task<List<Character>> GetDeckCharactersFromUserData(UserData? userData, uint deckSlot);
 }

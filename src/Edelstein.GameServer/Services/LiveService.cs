@@ -28,12 +28,9 @@ public class LiveService : ILiveService
     {
         UserData? userData = await _userDataRepository.GetByXuid(xuid);
 
-        IEnumerable<ulong> cardIds = userData!.DeckList[(int)liveStartData.DeckSlot - 1].MainCardIds.ToHashSet();
-        IEnumerable<uint> masterCharacterIds =
-            userData.CardList.Where(x => cardIds.Contains(x.Id)).Select(x => x.MasterCardId / 10000).ToHashSet();
-        IEnumerable<Character> characters = userData.CharacterList.Where(x => masterCharacterIds.Contains(x.MasterCharacterId));
+        List<Character> characters = await _userDataRepository.GetDeckCharactersFromUserData(userData, liveStartData.DeckSlot);
 
-        CurrentLives[xuid] = (liveStartData, characters.ToList(), userData);
+        CurrentLives[xuid] = (liveStartData, characters, userData!);
     }
 
     public Task RetireLive(ulong xuid, LiveRetireRequestData liveRetireData)
