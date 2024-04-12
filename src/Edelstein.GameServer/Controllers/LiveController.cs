@@ -48,10 +48,7 @@ public class LiveController : Controller
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
         //if (await _tutorialService.IsTutorialInProgress(xuid))
-
         return new EncryptedResponse<LiveGuestResponseData>(new LiveGuestResponseData([Friend.GetTutorial()]));
-
-        //throw new NotImplementedException();
     }
 
     [Route("start")]
