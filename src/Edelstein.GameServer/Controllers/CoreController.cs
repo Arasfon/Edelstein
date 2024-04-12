@@ -96,4 +96,9 @@ public class CoreController : Controller
     [Route("friend")]
     public EncryptedResult Friend() =>
         new EncryptedResponse<FriendResponseData>(new FriendResponseData([]));
+
+    [HttpPost]
+    [Route("login_bonus")]
+    public EncryptedResult LoginBonus() =>
+        new EncryptedResponse<LoginBonusResponseData>(new LoginBonusResponseData([], 0, []));
 }
