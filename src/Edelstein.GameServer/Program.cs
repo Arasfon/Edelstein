@@ -95,10 +95,11 @@ app.UseHttpsRedirection();
 
 PhysicalFileProvider webRootFileProvider = new(app.Environment.WebRootPath);
 PhysicalFileProvider assetsFileProvider = new(app.Configuration["AssetsPath"] ?? app.Environment.WebRootPath);
+CompositeFileProvider compositeFileProvider = new(webRootFileProvider, assetsFileProvider);
 
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new CompositeFileProvider(webRootFileProvider, assetsFileProvider),
+    FileProvider = compositeFileProvider,
     ContentTypeProvider = new FileExtensionContentTypeProvider
     {
         Mappings =
