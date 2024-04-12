@@ -36,6 +36,9 @@ public class UserService : IUserService
     public async Task<AuthenticationData?> GetAuthenticationDataByUserId(Guid userId) =>
         await _authenticationDataRepository.GetByUserId(userId);
 
+    public async Task<UserData> GetUserDataByXuid(ulong xuid) =>
+        await _userDataRepository.GetByXuid(xuid);
+
     private async Task<ulong> GetNextXuid() =>
         await _sequenceRepository.GetNextValueById(SequenceNames.Xuids, 10000_00000_00000);
 }
