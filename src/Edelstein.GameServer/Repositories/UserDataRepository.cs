@@ -38,7 +38,8 @@ public class UserDataRepository : IUserDataRepository
             .Set(x => x.User.GuestSmileMasterCardId, masterCardId)
             .Set(x => x.User.GuestCoolMasterCardId, masterCardId)
             .Set(x => x.User.GuestPureMasterCardId, masterCardId)
-            .Set(x => x.User.MasterTitleIds, [masterTitleId]);
+            .Set(x => x.User.MasterTitleIds, [masterTitleId, 0])
+            .AddToSet(x => x.MasterTitleIds, masterTitleId);
 
         FindOneAndUpdateOptions<UserData> options = new() { ReturnDocument = ReturnDocument.After };
 
