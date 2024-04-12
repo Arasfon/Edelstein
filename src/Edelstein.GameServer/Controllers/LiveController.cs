@@ -21,26 +21,19 @@ public class LiveController : Controller
 {
     private readonly IUserService _userService;
     private readonly ILiveService _liveService;
-    private readonly ILiveClearRateProvider _liveClearRateProvider;
     private readonly ITutorialService _tutorialService;
 
-    public LiveController(IUserService userService, ILiveService liveService, ILiveClearRateProvider liveClearRateProvider,
-        ITutorialService tutorialService)
+    public LiveController(IUserService userService, ILiveService liveService, ITutorialService tutorialService)
     {
         _userService = userService;
         _liveService = liveService;
-        _liveClearRateProvider = liveClearRateProvider;
         _tutorialService = tutorialService;
     }
 
     [Route("clearRate")]
-    public async Task<EncryptedResult> ClearRate()
-    {
-        List<AllUserClearRate> clearRates = await _liveClearRateProvider.GetAll();
-
-        return new EncryptedResponse<LiveClearRateResponseData>(
-            new LiveClearRateResponseData(clearRates, MasterMusicIds.Get().ToList(), []));
-    }
+    public EncryptedResult ClearRate() =>
+        new EncryptedResponse<LiveClearRateResponseData>(
+            new LiveClearRateResponseData(null!, MasterMusicIds.Get().ToList(), []));
 
     [Route("guest")]
     public EncryptedResult Guest(EncryptedRequest<LiveGuestRequestData> encryptedRequest)
