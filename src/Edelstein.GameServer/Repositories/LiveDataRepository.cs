@@ -34,7 +34,7 @@ public class LiveDataRepository : ILiveDataRepository
         FilterDefinition<UserData> userDataFilter = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
         UpdateDefinition<UserData> userDataUpdate = Builders<UserData>.Update
             // Coins
-            .PushEach(x => x.PointList, updatedPoints)
+            .Set(x => x.PointList, updatedPoints)
             // Stamina
             .Inc(x => x.Stamina.StaminaValue, staminaChange)
             .Set(x => x.Stamina.LastUpdatedTime, currentTimestamp)
