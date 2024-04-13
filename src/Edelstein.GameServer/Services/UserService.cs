@@ -139,7 +139,7 @@ public class UserService : IUserService
         await _userDataRepository.AddCardsAndCharacters(xuid, cards, characters);
     }
 
-    public async Task<User?> UpdateUser(ulong xuid, string? name, string? comment, uint? favoriteMasterCardId, uint? guestSmileMasterCardId,
+    public async Task<User> UpdateUser(ulong xuid, string? name, string? comment, uint? favoriteMasterCardId, uint? guestSmileMasterCardId,
         uint? guestPureMasterCardId, uint? guestCoolMasterCardId, bool? friendRequestDisabled) =>
         await _userDataRepository.UpdateUser(xuid, name, comment, favoriteMasterCardId, guestSmileMasterCardId,
             guestPureMasterCardId, guestCoolMasterCardId, friendRequestDisabled);

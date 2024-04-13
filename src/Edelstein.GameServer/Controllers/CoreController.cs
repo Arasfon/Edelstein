@@ -42,12 +42,12 @@ public class CoreController : Controller
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
-        User? user = await _userService.UpdateUser(xuid, encryptedRequest.DeserializedObject.Name,
+        User user = await _userService.UpdateUser(xuid, encryptedRequest.DeserializedObject.Name,
             encryptedRequest.DeserializedObject.Comment, encryptedRequest.DeserializedObject.FavoriteMasterCardId,
             encryptedRequest.DeserializedObject.GuestSmileMasterCardId, encryptedRequest.DeserializedObject.GuestPureMasterCardId,
             encryptedRequest.DeserializedObject.GuestCoolMasterCardId, encryptedRequest.DeserializedObject.FriendRequestDisabled);
 
-        return new EncryptedResponse<User?>(user);
+        return new EncryptedResponse<UserUpdateResponseData>(new UserUpdateResponseData(user, []));
     }
 
     [HttpPost]
