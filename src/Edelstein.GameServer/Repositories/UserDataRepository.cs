@@ -118,11 +118,9 @@ public class UserDataRepository : IUserDataRepository
                 cardDict.TryGetValue(cardId, out uint masterCharacterId);
                 return masterCharacterId;
             })
-            .Select(masterCharacterId =>
-            {
-                characterDict.TryGetValue(masterCharacterId, out Character? character);
-                return character!;
-            })
+            .Select(masterCharacterId => characterDict.TryGetValue(masterCharacterId, out Character? character)
+                ? character
+                : new Character { MasterCharacterId = masterCharacterId })
             .ToList();
 
         return Task.FromResult(characters);

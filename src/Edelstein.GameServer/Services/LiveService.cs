@@ -1,5 +1,6 @@
 using Edelstein.Data.Models;
 using Edelstein.Data.Models.Components;
+using Edelstein.GameServer.Extensions;
 using Edelstein.GameServer.Models;
 using Edelstein.GameServer.Models.Endpoints.Live;
 using Edelstein.GameServer.Repositories;
@@ -147,7 +148,8 @@ public class LiveService : ILiveService
         // TODO: In tutorial ignore character exp & first clear reward (if failed?), events
 
         UserData responseUserData = await _liveDataRepository.UpdateAfterLive(xuid, updatedLive, points, items, staminaChange,
-            expChange, gemChange, deckCharacters, gifts, liveMission,
+            expChange, gemChange, userData.CharacterList.ExceptBy(deckCharacters, x => x.MasterCharacterId).Concat(deckCharacters).ToList(),
+            gifts, liveMission,
             clearedMissionIds, [], []);
 
         return new LiveFinishResult

@@ -46,7 +46,7 @@ public class LiveDataRepository : ILiveDataRepository
             // Live
             .Push(x => x.LiveList, updatedLive)
             // Characters
-            .PushEach(x => x.CharacterList, updatedCharacters)
+            .Set(x => x.CharacterList, updatedCharacters)
             // Items
             .PushEach(x => x.ItemList, updatedItems)
             // Live missions
