@@ -127,18 +127,4 @@ public class UserDataRepository : IUserDataRepository
 
         return Task.FromResult(characters);
     }
-
-    public async Task AddCharacter(ulong xuid, uint masterCharacterId, uint experience = 1)
-    {
-        FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
-        UpdateDefinition<UserData> updateDefinition = Builders<UserData>.Update.AddToSet(x => x.CharacterList,
-            new Character
-            {
-                MasterCharacterId = masterCharacterId,
-                Exp = experience,
-                BeforeExp = 1
-            });
-
-        await _userDataCollection.UpdateOneAsync(filterDefinition, updateDefinition);
-    }
 }
