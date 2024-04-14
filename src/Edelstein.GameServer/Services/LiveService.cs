@@ -53,7 +53,7 @@ public class LiveService : ILiveService
         List<Item> items = [];
         List<Reward> rewards = [];
         List<Gift> gifts = [];
-        List<Point> points = [];
+        List<Point> points = []; // TODO: Use user's point list
 
         int multiplier = (int)liveFinishData.UseLp / 10;
 
@@ -120,17 +120,17 @@ public class LiveService : ILiveService
         foreach (Character character in deckCharacters[..2].Concat(deckCharacters[^2..]))
         {
             character.BeforeExp = character.Exp;
-            character.Exp += 1;
+            character.Exp += 1 * (ulong)multiplier;
         }
 
         foreach (Character character in deckCharacters[2..4].Concat(deckCharacters[^4..^2]))
         {
             character.BeforeExp = character.Exp;
-            character.Exp += 2;
+            character.Exp += 2 * (ulong)multiplier;
         }
 
         deckCharacters[4].BeforeExp = deckCharacters[4].Exp;
-        deckCharacters[4].Exp += 5;
+        deckCharacters[4].Exp += 5 * (ulong)multiplier;
 
         // TODO: Calculate events
 
@@ -141,6 +141,7 @@ public class LiveService : ILiveService
             Amount = 0
         };
         updatedCoinsPoint.Amount += coinChange;
+        // TODO: Add or replace point
         points.Add(updatedCoinsPoint);
 
         // TODO: In tutorial ignore character exp & first clear reward (if failed?), events
