@@ -1,4 +1,5 @@
 using Edelstein.Data.Configuration;
+using Edelstein.Data.Msts.Persistence;
 using Edelstein.Data.Repositories;
 using Edelstein.Data.Serialization.Bson;
 using Edelstein.GameServer.Authorization;
@@ -8,6 +9,7 @@ using Edelstein.GameServer.Services;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 
@@ -24,6 +26,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Configuration
 builder.Services.Configure<DatabaseOptions>(builder.Configuration.GetSection("Database"));
+builder.Services.Configure<MstDatabaseOptions>(builder.Configuration.GetSection("MstDatabase"));
 
 // Logging
 if (builder.Environment.IsDevelopment())
@@ -42,6 +45,15 @@ builder.Services.AddSingleton<IMongoClient>(provider =>
     DatabaseOptions databaseOptions = provider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
 
     return new MongoClient(databaseOptions.ConnectionString);
+});
+
+// Mst database
+builder.Services.AddDbContext<MstDbContext>((provider, options) =>
+{
+    MstDatabaseOptions databaseOptions = provider.GetRequiredService<IOptions<MstDatabaseOptions>>().Value;
+
+    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTrackingWithIdentityResolution);
+    options.UseSqlite(databaseOptions.ConnectionString);
 });
 
 // Repositories
