@@ -141,7 +141,7 @@ public class UserService : IUserService
             cardsWithoutIds[i].Id = cardIds[i];
 
         List<Item> itemsWithoutIds = items.Where(x => x.Id == 0).ToList();
-        List<ulong> itemIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.ItemIds, (ulong)items.Count)).ToList();
+        List<ulong> itemIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.ItemIds, (ulong)itemsWithoutIds.Count)).ToList();
         for (int i = 0; i < items.Count; i++)
             items[i].Id = itemIds[i];
 
@@ -157,9 +157,9 @@ public class UserService : IUserService
             cardsWithoutIds[i].Id = cardIds[i];
 
         List<Item> itemsWithoutIds = items.Where(x => x.Id == 0).ToList();
-        List<ulong> itemIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.ItemIds, (ulong)items.Count)).ToList();
-        for (int i = 0; i < items.Count; i++)
-            items[i].Id = itemIds[i];
+        List<ulong> itemIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.ItemIds, (ulong)itemsWithoutIds.Count)).ToList();
+        for (int i = 0; i < itemsWithoutIds.Count; i++)
+            itemsWithoutIds[i].Id = itemIds[i];
 
         return await _userDataRepository.SetCardsItemsPointsLotteries(xuid, cards, items, points, lotteries);
     }
