@@ -32,8 +32,7 @@ public class LiveController : Controller
 
     [Route("clearRate")]
     public EncryptedResult ClearRate() =>
-        new EncryptedResponse<LiveClearRateResponseData>(
-            new LiveClearRateResponseData(null!, MasterMusicIds.Get().ToList(), []));
+        new EncryptedResponse<LiveClearRateResponseData>(new LiveClearRateResponseData(null!, MasterMusicIds.Get().ToList(), []));
 
     [Route("guest")]
     public EncryptedResult Guest(EncryptedRequest<LiveGuestRequestData> encryptedRequest)

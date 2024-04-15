@@ -58,9 +58,6 @@ public class UserService : IUserService
     public async Task<UserMissionsDocument?> GetUserMissionsByXuid(ulong xuid) =>
         await _userMissionsRepository.GetUserMissionsByXuid(xuid);
 
-    public async Task ProgressTutorial(ulong userXuid, uint step) =>
-        await _userDataRepository.UpdateTutorialStep(userXuid, step);
-
     public async Task<User> InitializeUserStartingCharacterAndDeck(ulong xuid)
     {
         UserInitializationData userInitializationData = await _userInitializationDataRepository.GetByXuid(xuid);
@@ -88,7 +85,6 @@ public class UserService : IUserService
 
         masterTitleId += 3000000 + userInitializationData.FavoriteCharacterMasterId % 100;
 
-        // ReSharper disable once ArrangeMethodOrOperatorBody
         return await _userDataRepository.SetStartingCard(userInitializationData.Xuid,
             userInitializationData.FavoriteCharacterMasterCardId, masterTitleId);
     }
