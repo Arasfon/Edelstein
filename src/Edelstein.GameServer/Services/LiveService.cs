@@ -18,11 +18,13 @@ public class LiveService : ILiveService
 
     private readonly ILiveDataRepository _liveDataRepository;
     private readonly IUserDataRepository _userDataRepository;
+    private readonly ITutorialService _tutorialService;
 
-    public LiveService(ILiveDataRepository liveDataRepository, IUserDataRepository userDataRepository)
+    public LiveService(ILiveDataRepository liveDataRepository, IUserDataRepository userDataRepository, ITutorialService tutorialService)
     {
         _liveDataRepository = liveDataRepository;
         _userDataRepository = userDataRepository;
+        _tutorialService = tutorialService;
     }
 
     public async Task StartLive(ulong xuid, LiveStartRequestData liveStartData)
@@ -79,7 +81,7 @@ public class LiveService : ILiveService
 
         // TODO: Use msts
         // First completion reward
-        if (updatedLive.ClearCount == 1)
+        if (updatedLive.ClearCount == 1 && !await _tutorialService.IsTutorialInProgress(xuid))
         {
             gemChange += 60;
             rewards.Add(new Reward
