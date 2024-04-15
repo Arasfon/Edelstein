@@ -10,8 +10,6 @@ using Edelstein.GameServer.Services;
 
 using Microsoft.AspNetCore.Mvc;
 
-using OneOf;
-
 namespace Edelstein.GameServer.Controllers;
 
 [ApiController]
@@ -44,30 +42,37 @@ public class LotteryController : Controller
         return new EncryptedResponse<LotteryTutorialResponseData>(new LotteryTutorialResponseData([tutorialLottery], []));
     }
 
+    [Route("")]
+    public async Task<EncryptedResult> GetLotteries()
+    {
+        ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
+
+        UserData? userData = await _userService.GetUserDataByXuid(xuid);
+
+        return new EncryptedResponse<GetLotteriesResponseData>(new GetLotteriesResponseData(userData!.LotteryList, []));
+    }
+
     [HttpPost]
     [Route("")]
     public async Task<EncryptedResult> DrawLottery(EncryptedRequest<Lottery> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
-        OneOf<LotteryDrawResult, TutorialLotteryDrawResult> lotteryDrawResultUnion =
-            await _lotteryService.Draw(encryptedRequest.DeserializedObject);
+        LotteryDrawResult lotteryDrawResult = await _lotteryService.Draw(xuid, encryptedRequest.DeserializedObject);
 
-        LotteryDrawResult lotteryDrawResult = await lotteryDrawResultUnion.Match<Task<LotteryDrawResult>>(Task.FromResult,
-            async tutorialLotteryDrawResult =>
-            {
-                await _tutorialService.ProgressLotteryTutorialWithDrawnCard(xuid, tutorialLotteryDrawResult.FavoriteCardMasterId,
-                    tutorialLotteryDrawResult.FavoriteCardId);
+        if (lotteryDrawResult.Status != LotteryDrawResultStatus.Success)
+            return EmptyEncryptedResponseFactory.Create(ErrorCode.ErrorItemShortage);
 
-                return tutorialLotteryDrawResult;
-            });
+        if (await _lotteryService.IsTutorial(encryptedRequest.DeserializedObject))
+        {
+            Card urCard = lotteryDrawResult.Updates.CardList[^1];
 
-        await _userService.AddCardsAndCharactersToUser(xuid, lotteryDrawResult.Cards);
+            await _tutorialService.ProgressLotteryTutorialWithDrawnCard(xuid, urCard.MasterCardId, urCard.Id);
 
-        //if (lotteryDrawResult.Lightsticks > 0)
-        //    _userService.AddItem(xuid, lightstickItemMasterId, lotteryDrawResult.Lightsticks);
+            await _userService.AddCharacter(xuid, urCard.MasterCardId / 10000, 1);
+        }
 
         return new EncryptedResponse<DrawLotteryResponseData>(new DrawLotteryResponseData(lotteryDrawResult.LotteryItems,
-            new UpdatedValueList { CardList = lotteryDrawResult.Cards }, [], [], []));
+            lotteryDrawResult.Updates, [], [], []));
     }
 }

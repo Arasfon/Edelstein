@@ -13,9 +13,14 @@ public interface IUserService
 
     public Task<User> InitializeUserStartingCharacterAndDeck(ulong xuid);
 
-    public Task AddCardsAndCharactersToUser(ulong xuid, List<Card> cards, List<Character>? characters = null,
-        List<Card>? currentCards = null, List<Character>? currentCharacters = null);
+    public Task AddCards(ulong xuid, List<Card> cards, List<Card>? currentCards = null);
+    public Task AddCharacter(ulong xuid, uint characterId, uint experience = 0);
 
     public Task<User> UpdateUser(ulong xuid, string? name, string? comment, uint? favoriteMasterCardId, uint? guestSmileMasterCardId,
         uint? guestPureMasterCardId, uint? guestCoolMasterCardId, bool? friendRequestDisabled);
+
+    public Task<UserData> SetCardsItemsPointsCreatingIds(ulong xuid, List<Card> cards, List<Item> items, List<Point> points);
+
+    public Task<UserData> SetCardsItemsPointsLotteriesCreatingIds(ulong xuid, List<Card> cards, List<Item> items, List<Point> points,
+        List<Lottery> lotteries);
 }

@@ -46,12 +46,25 @@ public class UserDataRepository : IUserDataRepository
         return await _userDataCollection.FindOneAndUpdateAsync(filterDefinition, updateDefinition, options);
     }
 
-    public async Task AddCardsAndCharacters(ulong xuid, IEnumerable<Card> cards, IEnumerable<Character> characters)
+    public async Task AddCards(ulong xuid, List<Card> cards)
     {
         FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
         UpdateDefinition<UserData> updateDefinition = Builders<UserData>.Update
-            .AddToSetEach(x => x.CardList, cards)
-            .AddToSetEach(x => x.CharacterList, characters);
+            .AddToSetEach(x => x.CardList, cards);
+
+        await _userDataCollection.UpdateOneAsync(filterDefinition, updateDefinition);
+    }
+
+    public async Task AddCharacter(ulong xuid, uint masterCharacterId, uint experience = 1)
+    {
+        FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
+        UpdateDefinition<UserData> updateDefinition = Builders<UserData>.Update.AddToSet(x => x.CharacterList,
+            new Character
+            {
+                MasterCharacterId = masterCharacterId,
+                Exp = experience,
+                BeforeExp = 0
+            });
 
         await _userDataCollection.UpdateOneAsync(filterDefinition, updateDefinition);
     }
@@ -124,5 +137,33 @@ public class UserDataRepository : IUserDataRepository
             .ToList();
 
         return Task.FromResult(characters);
+    }
+
+    public async Task<UserData> SetCardsItemsPoints(ulong xuid, IEnumerable<Card> cards, IEnumerable<Item> items, IEnumerable<Point> points)
+    {
+        FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
+
+        UpdateDefinition<UserData> updateDefinition = Builders<UserData>.Update
+            .Set(x => x.CardList, cards)
+            .Set(x => x.ItemList, items)
+            .Set(x => x.PointList, points);
+
+        return await _userDataCollection.FindOneAndUpdateAsync(filterDefinition, updateDefinition,
+            new FindOneAndUpdateOptions<UserData> { ReturnDocument = ReturnDocument.After });
+    }
+
+    public async Task<UserData> SetCardsItemsPointsLotteries(ulong xuid, List<Card> cards, List<Item> items, List<Point> points,
+        List<Lottery> lotteries)
+    {
+        FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
+
+        UpdateDefinition<UserData> updateDefinition = Builders<UserData>.Update
+            .Set(x => x.CardList, cards)
+            .Set(x => x.ItemList, items)
+            .Set(x => x.PointList, points)
+            .Set(x => x.LotteryList, lotteries);
+
+        return await _userDataCollection.FindOneAndUpdateAsync(filterDefinition, updateDefinition,
+            new FindOneAndUpdateOptions<UserData> { ReturnDocument = ReturnDocument.After });
     }
 }
