@@ -72,6 +72,8 @@ builder.Services.AddScoped<ITutorialService, TutorialService>();
 builder.Services.AddScoped<IDefaultGroupCardsFactoryService, DefaultGroupCardsFactoryService>();
 builder.Services.AddScoped<ILiveService, LiveService>();
 
+builder.Services.AddHostedService<ConstantsLoaderService>();
+
 // Authorization filters
 builder.Services.AddScoped<RsaSignatureAuthorizationFilter>();
 

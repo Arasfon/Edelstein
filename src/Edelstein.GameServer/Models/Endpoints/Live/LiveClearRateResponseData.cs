@@ -4,6 +4,6 @@ namespace Edelstein.GameServer.Models.Endpoints.Live;
 
 public record LiveClearRateResponseData(
     List<AllUserClearRate> AllUserClearRate,
-    List<uint> MasterMusicIds,
+    IEnumerable<uint> MasterMusicIds,
     List<EventLiveData> EventLiveList
 );
