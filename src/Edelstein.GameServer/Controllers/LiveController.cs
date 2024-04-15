@@ -19,16 +19,10 @@ namespace Edelstein.GameServer.Controllers;
 [ServiceFilter<RsaSignatureAuthorizationFilter>]
 public class LiveController : Controller
 {
-    private readonly IUserService _userService;
     private readonly ILiveService _liveService;
-    private readonly ITutorialService _tutorialService;
 
-    public LiveController(IUserService userService, ILiveService liveService, ITutorialService tutorialService)
-    {
-        _userService = userService;
+    public LiveController(ILiveService liveService) =>
         _liveService = liveService;
-        _tutorialService = tutorialService;
-    }
 
     [Route("clearRate")]
     public EncryptedResult ClearRate() =>

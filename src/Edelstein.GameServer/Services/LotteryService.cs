@@ -3,7 +3,6 @@ using Edelstein.Data.Models;
 using Edelstein.Data.Models.Components;
 using Edelstein.Data.Msts;
 using Edelstein.Data.Msts.Persistence;
-using Edelstein.Data.Repositories;
 using Edelstein.GameServer.Random;
 
 using Microsoft.EntityFrameworkCore;
@@ -17,13 +16,11 @@ namespace Edelstein.GameServer.Services;
 
 public class LotteryService : ILotteryService
 {
-    private readonly ISequenceRepository<ulong> _sequenceRepository;
     private readonly MstDbContext _mstDbContext;
     private readonly IUserService _userService;
 
-    public LotteryService(ISequenceRepository<ulong> sequenceRepository, MstDbContext mstDbContext, IUserService userService)
+    public LotteryService(MstDbContext mstDbContext, IUserService userService)
     {
-        _sequenceRepository = sequenceRepository;
         _mstDbContext = mstDbContext;
         _userService = userService;
     }
