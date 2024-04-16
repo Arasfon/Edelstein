@@ -21,7 +21,7 @@ public class ConstantsLoaderService : IHostedService
         List<uint> masterMusicIds = await mstDbContext.MusicMsts.Select(x => x.Id).Distinct().ToListAsync(cancellationToken);
         MasterMusicIds.Set(masterMusicIds);
 
-        List<uint> masterStampIds = await mstDbContext.StampMsts.Select(x => x.Id).Distinct().ToListAsync(cancellationToken);
+        List<uint> masterStampIds = await mstDbContext.ChatStampMsts.Select(x => x.Id).Distinct().ToListAsync(cancellationToken);
         MasterStampIds.Set(masterStampIds);
     }
 
