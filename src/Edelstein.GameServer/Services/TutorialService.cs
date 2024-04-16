@@ -10,11 +10,13 @@ public class TutorialService : ITutorialService
 
     private readonly IUserDataRepository _userDataRepository;
     private readonly IUserInitializationDataRepository _userInitializationDataRepository;
+    private readonly IChatService _chatService;
 
-    public TutorialService(IUserDataRepository userDataRepository, IUserInitializationDataRepository userInitializationDataRepository)
+    public TutorialService(IUserDataRepository userDataRepository, IUserInitializationDataRepository userInitializationDataRepository, IChatService chatService)
     {
         _userDataRepository = userDataRepository;
         _userInitializationDataRepository = userInitializationDataRepository;
+        _chatService = chatService;
     }
 
     public Task<bool> IsTutorialInProgress(ulong xuid) =>
@@ -28,15 +30,21 @@ public class TutorialService : ITutorialService
 
     public async Task UpdateTutorialStep(ulong xuid, uint step)
     {
+        if (await IsTutorialInProgress(xuid))
+            await _userDataRepository.UpdateTutorialStep(xuid, step);
+
         if (step < 130)
+        {
             UsersInTutorial.TryAdd(xuid, 0);
+
+            if (step == 90)
+                await _chatService.AddTutorialChat(xuid);
+        }
         else
         {
             await FinishTutorial(xuid);
             UsersInTutorial.TryRemove(xuid, out _);
         }
-
-        await _userDataRepository.UpdateTutorialStep(xuid, step);
     }
 
     public async Task InitializeUserTutorialData(ulong xuid, uint favoriteCharacterMasterId)

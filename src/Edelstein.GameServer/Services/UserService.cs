@@ -18,7 +18,6 @@ public class UserService : IUserService
     private readonly IDefaultGroupCardsFactoryService _defaultGroupCardsFactoryService;
     private readonly ITutorialService _tutorialService;
     private readonly ISequenceRepository<ulong> _sequenceRepository;
-    private readonly IChatService _chatService;
 
     public UserService(
         IAuthenticationDataRepository authenticationDataRepository,
@@ -28,8 +27,7 @@ public class UserService : IUserService
         IUserInitializationDataRepository userInitializationDataRepository,
         IDefaultGroupCardsFactoryService defaultGroupCardsFactoryService,
         ITutorialService tutorialService,
-        ISequenceRepository<ulong> sequenceRepository,
-        IChatService chatService)
+        ISequenceRepository<ulong> sequenceRepository)
     {
         _authenticationDataRepository = authenticationDataRepository;
         _userDataRepository = userDataRepository;
@@ -39,7 +37,6 @@ public class UserService : IUserService
         _defaultGroupCardsFactoryService = defaultGroupCardsFactoryService;
         _tutorialService = tutorialService;
         _sequenceRepository = sequenceRepository;
-        _chatService = chatService;
     }
 
     public async Task<AuthenticationData?> GetAuthenticationDataByXuid(ulong xuid) =>
@@ -50,12 +47,7 @@ public class UserService : IUserService
         UserData? userData = await _userDataRepository.GetByXuid(xuid);
 
         if (userData?.TutorialStep < 130)
-        {
-            if (userData.TutorialStep == 90)
-                await _chatService.AddTutorialChat(xuid);
-
             await _tutorialService.MarkInTutorial(xuid);
-        }
 
         return userData;
     }
