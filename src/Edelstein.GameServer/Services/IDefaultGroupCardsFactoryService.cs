@@ -4,5 +4,5 @@ namespace Edelstein.GameServer.Services;
 
 public interface IDefaultGroupCardsFactoryService
 {
-    public Task<List<Card>> Create(BandCategory group);
+    public Task<List<Card>> GetOrCreate(BandCategory group, List<Card> existingCards);
 }

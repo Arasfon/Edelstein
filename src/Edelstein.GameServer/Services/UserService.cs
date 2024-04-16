@@ -93,7 +93,7 @@ public class UserService : IUserService
     {
         BandCategory group = (BandCategory)(userInitializationData.FavoriteCharacterMasterId / 1000);
 
-        List<Card> groupCards = await _defaultGroupCardsFactoryService.Create(group);
+        List<Card> groupCards = await _defaultGroupCardsFactoryService.GetOrCreate(group, currentUserData.CardList);
 
         await AddCards(userInitializationData.Xuid, groupCards, currentUserData.CardList);
 
