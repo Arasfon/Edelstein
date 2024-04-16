@@ -99,11 +99,10 @@ public class LotteryService : ILotteryService
 
                 if (lotteryRecord.DailyCount > priceMst.DailyLimitCount)
                     return new LotteryDrawResult(LotteryDrawResultStatus.NotEnoughItems, [], null!);
-
-                lotteryRecord.DailyCount++;
             }
 
             lotteryRecord.Count++;
+            lotteryRecord.DailyCount++;
             lotteryRecord.LastCountDate = currentDateTimeOffset.ToString("yyyy-MM-dd HH:mm:ss");
         }
 
@@ -119,6 +118,7 @@ public class LotteryService : ILotteryService
 
                 uvl.Gem = userData.Gem;
                 uvl.Gem.Free -= priceMst.Price;
+                uvl.Gem.Total -= priceMst.Price;
                 break;
             }
             case ConsumeType.ChargeGem:
@@ -128,6 +128,7 @@ public class LotteryService : ILotteryService
 
                 uvl.Gem = userData.Gem;
                 uvl.Gem.Charge -= priceMst.Price;
+                uvl.Gem.Total -= priceMst.Price;
                 break;
             }
             case ConsumeType.Item:
@@ -188,7 +189,7 @@ public class LotteryService : ILotteryService
         if (priceMst.Count == 10)
         {
             // If there is some ensured items
-            if (bucketsByEnsurance[1].Items.Count > 0)
+            if (bucketsByEnsurance.Count > 1 && bucketsByEnsurance[1].Items.Count > 0)
             {
                 BucketRandom<JoinedLotteryItem> defaultBucketRandom = new(bucketsByEnsurance[0].Ratios, bucketsByEnsurance[0].Items);
                 BucketRandom<JoinedLotteryItem> ensuredBucketRandom = new(bucketsByEnsurance[1].Ratios, bucketsByEnsurance[1].Items);
@@ -219,39 +220,32 @@ public class LotteryService : ILotteryService
         Dictionary<uint, Item> allUserItems = userData.ItemList.ToDictionary(x => x.MasterItemId);
         Dictionary<PointType, Point> allUserPoints = userData.PointList.ToDictionary(x => x.Type);
 
-        // It is updated in UpdateRewardsAndReturnIsNew() if duplicate cards are found
+        // It is updated in AddOrUpdateReward() if duplicate cards are found
         int penlightCount = 0;
 
         // Build list of LotteryItem to return
-        List<LotteryItem> lotteryItems = drawedDefaultItems.Concat(drawedEnsuredItems)
-            .Select(x => new LotteryItem
+        List<LotteryItem> lotteryItems = [];
+
+        foreach (JoinedLotteryItem joinedLotteryItem in drawedDefaultItems.Concat(drawedEnsuredItems))
+        {
+            (bool isNew, ExchangeItem? exchangeItem) = AddOrUpdateReward(joinedLotteryItem);
+
+            lotteryItems.Add(new LotteryItem
             {
-                MasterLotteryItemId = x.Id,
-                MasterLotteryItemNumber = x.Number,
-                IsNew = UpdateRewardsAndReturnIsNew(x)
-            })
-            .ToList();
+                MasterLotteryItemId = joinedLotteryItem.Id,
+                MasterLotteryItemNumber = joinedLotteryItem.Number,
+                IsNew = isNew,
+                ExchangeItem = exchangeItem
+            });
+        }
 
         // Add penlights if they were produced
+        const uint penlightMasterItemId = 19100001;
+
         if (penlightCount != 0)
         {
-            const uint penlightId = 19100001;
-
-            if (allUserItems.TryGetValue(penlightId, out Item? item))
-            {
-                item.Amount += penlightCount;
-                uvl.ItemList.Add(item);
-            }
-            else
-            {
-                item = new Item
-                {
-                    MasterItemId = penlightId,
-                    Amount = penlightCount
-                };
-                userData.ItemList.Add(item);
-                uvl.ItemList.Add(item);
-            }
+            AddOrUpdateReward(new JoinedLotteryItem(0, 0, RewardType.Item, penlightMasterItemId, penlightCount,
+                Rarity.None, 0, 0));
         }
 
         // Update full cards, items, points and lotteries of a user, creating ids for cards and items, if they do not have it.
@@ -262,7 +256,7 @@ public class LotteryService : ILotteryService
 
         return new LotteryDrawResult(LotteryDrawResultStatus.Success, lotteryItems, uvl);
 
-        bool UpdateRewardsAndReturnIsNew(JoinedLotteryItem joinedLotteryItem)
+        (bool IsNew, ExchangeItem? ExchangeItem) AddOrUpdateReward(JoinedLotteryItem joinedLotteryItem)
         {
             switch (joinedLotteryItem.Type)
             {
@@ -274,14 +268,21 @@ public class LotteryService : ILotteryService
                     {
                         // Rarity.None is not possible in cards
                         // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
-                        penlightCount += joinedLotteryItem.Rarity switch
+                        int cardPenlightSubstitution = joinedLotteryItem.Rarity switch
                         {
                             Rarity.R => 20,
                             Rarity.Sr => 50,
                             Rarity.Ur => 500,
                             _ => throw new ArgumentOutOfRangeException()
                         };
-                        return false;
+
+                        penlightCount += cardPenlightSubstitution;
+
+                        return (false, new ExchangeItem
+                        {
+                            MasterItemId = penlightMasterItemId,
+                            Amount = cardPenlightSubstitution
+                        });
                     }
 
                     bool isNew = !allUserCards.Contains(joinedLotteryItem.Value);
@@ -300,7 +301,7 @@ public class LotteryService : ILotteryService
                     {
                         // Rarity.None is not possible in cards
                         // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
-                        penlightCount += joinedLotteryItem.Rarity switch
+                        int cardPenlightSubstitution = joinedLotteryItem.Rarity switch
                         {
                             Rarity.R => 20,
                             Rarity.Sr => 50,
@@ -308,10 +309,16 @@ public class LotteryService : ILotteryService
                             _ => throw new ArgumentOutOfRangeException()
                         };
 
-                        return false;
+                        penlightCount += cardPenlightSubstitution;
+
+                        return (false, new ExchangeItem
+                        {
+                            MasterItemId = penlightMasterItemId,
+                            Amount = cardPenlightSubstitution
+                        });
                     }
 
-                    return isNew;
+                    return (isNew, null);
                 }
                 case RewardType.Item:
                 {
@@ -320,7 +327,7 @@ public class LotteryService : ILotteryService
                     if (drawnDuplicate is not null)
                     {
                         drawnDuplicate.Amount += joinedLotteryItem.Amount;
-                        return false;
+                        return (false, null);
                     }
 
                     bool isNew = !allUserItems.TryGetValue(joinedLotteryItem.Value, out Item? item);
@@ -342,7 +349,7 @@ public class LotteryService : ILotteryService
                         uvl.ItemList.Add(item);
                     }
 
-                    return isNew;
+                    return (isNew, null);
                 }
                 case RewardType.Point:
                 {
@@ -351,7 +358,7 @@ public class LotteryService : ILotteryService
                     if (drawnDuplicate is not null)
                     {
                         drawnDuplicate.Amount += joinedLotteryItem.Amount;
-                        return false;
+                        return (false, null);
                     }
 
                     bool isNew = !allUserPoints.TryGetValue((PointType)joinedLotteryItem.Value, out Point? point);
@@ -372,7 +379,7 @@ public class LotteryService : ILotteryService
                         uvl.PointList.Add(point);
                     }
 
-                    return isNew;
+                    return (isNew, null);
                 }
                 default:
                     // Nothing else should not be possible (at least it does not exist in msts)
