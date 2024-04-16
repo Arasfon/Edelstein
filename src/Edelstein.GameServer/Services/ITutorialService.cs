@@ -6,7 +6,7 @@ public interface ITutorialService
 
     public Task MarkInTutorial(ulong xuid);
     public Task UpdateTutorialStep(ulong xuid, uint step);
-    public Task StartLotteryTutorial(ulong xuid, uint favoriteCharacterMasterId);
-    public Task ProgressLotteryTutorialWithDrawnCard(ulong xuid, uint favoriteCharacterMasterCardId, ulong favoriteCharacterCardId);
-    public Task FinishLotteryTutorial(ulong xuid);
+    public Task InitializeUserTutorialData(ulong xuid, uint favoriteCharacterMasterId);
+    public Task ProgressTutorialWithDrawnCard(ulong xuid, uint favoriteCharacterMasterCardId, ulong favoriteCharacterCardId);
+    public Task FinishTutorial(ulong xuid);
 }

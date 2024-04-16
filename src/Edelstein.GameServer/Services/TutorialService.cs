@@ -31,12 +31,15 @@ public class TutorialService : ITutorialService
         if (step < 130)
             UsersInTutorial.TryAdd(xuid, 0);
         else
+        {
+            await FinishTutorial(xuid);
             UsersInTutorial.TryRemove(xuid, out _);
+        }
 
         await _userDataRepository.UpdateTutorialStep(xuid, step);
     }
 
-    public async Task StartLotteryTutorial(ulong xuid, uint favoriteCharacterMasterId)
+    public async Task InitializeUserTutorialData(ulong xuid, uint favoriteCharacterMasterId)
     {
         if (!await IsTutorialInProgress(xuid))
             return;
@@ -44,7 +47,7 @@ public class TutorialService : ITutorialService
         await _userInitializationDataRepository.CreateForCharacter(xuid, favoriteCharacterMasterId);
     }
 
-    public async Task ProgressLotteryTutorialWithDrawnCard(ulong xuid, uint favoriteCharacterMasterCardId, ulong favoriteCharacterCardId)
+    public async Task ProgressTutorialWithDrawnCard(ulong xuid, uint favoriteCharacterMasterCardId, ulong favoriteCharacterCardId)
     {
         if (!await IsTutorialInProgress(xuid))
             return;
@@ -52,7 +55,7 @@ public class TutorialService : ITutorialService
         await _userInitializationDataRepository.UpdateWithDrawedCard(xuid, favoriteCharacterMasterCardId, favoriteCharacterCardId);
     }
 
-    public async Task FinishLotteryTutorial(ulong xuid)
+    public async Task FinishTutorial(ulong xuid)
     {
         if (!await IsTutorialInProgress(xuid))
             return;

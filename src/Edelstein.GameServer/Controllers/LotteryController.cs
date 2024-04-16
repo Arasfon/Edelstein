@@ -37,7 +37,7 @@ public class LotteryController : Controller
         Lottery tutorialLottery =
             await _lotteryService.GetTutorialLotteryByMasterCharacterId(encryptedRequest.DeserializedObject.MasterCharacterId);
 
-        await _tutorialService.StartLotteryTutorial(xuid, encryptedRequest.DeserializedObject.MasterCharacterId);
+        await _tutorialService.InitializeUserTutorialData(xuid, encryptedRequest.DeserializedObject.MasterCharacterId);
 
         return new EncryptedResponse<LotteryTutorialResponseData>(new LotteryTutorialResponseData([tutorialLottery], []));
     }
@@ -67,7 +67,7 @@ public class LotteryController : Controller
         {
             Card urCard = lotteryDrawResult.Updates.CardList[^1];
 
-            await _tutorialService.ProgressLotteryTutorialWithDrawnCard(xuid, urCard.MasterCardId, urCard.Id);
+            await _tutorialService.ProgressTutorialWithDrawnCard(xuid, urCard.MasterCardId, urCard.Id);
 
             await _userService.AddCharacter(xuid, urCard.MasterCardId / 10000, 1);
         }

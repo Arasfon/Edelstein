@@ -57,7 +57,6 @@ public class CoreController : Controller
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
         User updatedUser = await _userService.InitializeUserStartingCharacterAndDeck(xuid);
-        await _tutorialService.FinishLotteryTutorial(xuid);
 
         return new EncryptedResponse<User>(updatedUser);
     }
@@ -78,9 +77,9 @@ public class CoreController : Controller
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
-        UserHomeDocument? home = await _userService.GetHomeByXuid(xuid);
+        UserHomeDocument? homeDocument = await _userService.GetHomeByXuid(xuid);
 
-        return new EncryptedResponse<UserHomeDocument?>(home);
+        return new EncryptedResponse<HomeResponseData>(new HomeResponseData(homeDocument!.Home, []));
     }
 
     [Route("mission")]

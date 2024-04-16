@@ -58,8 +58,9 @@ public class LiveDataRepository : ILiveDataRepository
         FilterDefinition<UserHomeDocument> homeDataFilter = Builders<UserHomeDocument>.Filter.Eq(x => x.Xuid, xuid);
         UpdateDefinition<UserHomeDocument> homeDataUpdate = Builders<UserHomeDocument>.Update
             // Missions
-            .PushEach(x => x.ClearMissionIds, clearedMissionIds)
+            // TODO: Reconsider .PushEach(x => x.ClearMissionIds, clearedMissionIds)
             // Gifts
+            // TODO: Full replace?
             .PushEach(x => x.Home.GiftList, newGifts);
 
         await _userHomeCollection.UpdateOneAsync(homeDataFilter, homeDataUpdate);
