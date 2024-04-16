@@ -251,7 +251,7 @@ public class LotteryService : ILotteryService
         // Update full cards, items, points and lotteries of a user, creating ids for cards and items, if they do not have it.
         // As cards/items are updated in-place, then there is no need to make some complex adjustments after an update.
         // uvl and userData.*List store references to the same objects, so everything is updated respectively.
-        await _userService.SetCardsItemsPointsLotteriesCreatingIds(xuid, userData.CardList, userData.ItemList, userData.PointList,
+        await _userService.SetGemsCardsItemsPointsLotteriesCreatingIds(xuid, userData.Gem, userData.CardList, userData.ItemList, userData.PointList,
             userData.LotteryList);
 
         return new LotteryDrawResult(LotteryDrawResultStatus.Success, lotteryItems, uvl);

@@ -21,6 +21,6 @@ public interface IUserService
 
     public Task<UserData> SetCardsItemsPointsCreatingIds(ulong xuid, List<Card> cards, List<Item> items, List<Point> points);
 
-    public Task<UserData> SetCardsItemsPointsLotteriesCreatingIds(ulong xuid, List<Card> cards, List<Item> items, List<Point> points,
+    public Task<UserData> SetGemsCardsItemsPointsLotteriesCreatingIds(ulong xuid, Gem gems, List<Card> cards, List<Item> items, List<Point> points,
         List<Lottery> lotteries);
 }

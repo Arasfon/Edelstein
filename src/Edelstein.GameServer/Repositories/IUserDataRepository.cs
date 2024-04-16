@@ -18,6 +18,6 @@ public interface IUserDataRepository
     public Task<List<Character>> GetDeckCharactersFromUserData(UserData? userData, uint deckSlot);
     public Task<UserData> SetCardsItemsPoints(ulong xuid, IEnumerable<Card> cards, IEnumerable<Item> items, IEnumerable<Point> points);
 
-    public Task<UserData> SetCardsItemsPointsLotteries(ulong xuid, List<Card> cards, List<Item> items, List<Point> points,
+    public Task<UserData> SetGemsCardsItemsPointsLotteries(ulong xuid, Gem gems, List<Card> cards, List<Item> items, List<Point> points,
         List<Lottery> lotteries);
 }

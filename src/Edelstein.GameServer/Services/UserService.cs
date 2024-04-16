@@ -148,7 +148,7 @@ public class UserService : IUserService
         return await _userDataRepository.SetCardsItemsPoints(xuid, cards, items, points);
     }
 
-    public async Task<UserData> SetCardsItemsPointsLotteriesCreatingIds(ulong xuid, List<Card> cards, List<Item> items,
+    public async Task<UserData> SetGemsCardsItemsPointsLotteriesCreatingIds(ulong xuid, Gem gems, List<Card> cards, List<Item> items,
         List<Point> points, List<Lottery> lotteries)
     {
         List<Card> cardsWithoutIds = cards.Where(x => x.Id == 0).ToList();
@@ -161,6 +161,6 @@ public class UserService : IUserService
         for (int i = 0; i < itemsWithoutIds.Count; i++)
             itemsWithoutIds[i].Id = itemIds[i];
 
-        return await _userDataRepository.SetCardsItemsPointsLotteries(xuid, cards, items, points, lotteries);
+        return await _userDataRepository.SetGemsCardsItemsPointsLotteries(xuid, gems, cards, items, points, lotteries);
     }
 }
