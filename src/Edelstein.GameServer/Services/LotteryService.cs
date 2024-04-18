@@ -382,7 +382,7 @@ public class LotteryService : ILotteryService
                     return (isNew, null);
                 }
                 default:
-                    // Nothing else should not be possible (at least it does not exist in msts)
+                    // Nothing else should be possible (at least it does not exist in msts)
                     throw new ArgumentOutOfRangeException();
             }
         }
