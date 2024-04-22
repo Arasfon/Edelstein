@@ -22,4 +22,5 @@ public interface IUserDataRepository
 
     public Task SetCurrentLiveData(ulong xuid, CurrentLiveData? currentLiveData);
     public Task<UserData> GetByXuidRemovingCurrentLiveData(ulong xuid);
+    public Task SetStartTime(ulong xuid, long timestamp);
 }

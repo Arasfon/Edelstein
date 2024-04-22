@@ -169,4 +169,14 @@ public class UserDataRepository : IUserDataRepository
             ReturnDocument = ReturnDocument.Before
         });
     }
+
+    public async Task SetStartTime(ulong xuid, long timestamp)
+    {
+        FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
+
+        UpdateDefinition<UserData> updateDefinition = Builders<UserData>.Update
+            .Set(x => x.StartTime, timestamp);
+
+        await _userDataCollection.UpdateOneAsync(filterDefinition, updateDefinition);
+    }
 }

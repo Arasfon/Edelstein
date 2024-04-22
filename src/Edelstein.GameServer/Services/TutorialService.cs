@@ -69,5 +69,6 @@ public class TutorialService : ITutorialService
             return;
 
         await _userInitializationDataRepository.Delete(xuid);
+        await _userDataRepository.SetStartTime(xuid, DateTimeOffset.UtcNow.ToUnixTimeSeconds());
     }
 }
