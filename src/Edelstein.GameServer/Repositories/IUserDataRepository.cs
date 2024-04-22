@@ -15,9 +15,11 @@ public interface IUserDataRepository
     public Task<User> UpdateUser(ulong xuid, string? name, string? comment, uint? favoriteMasterCardId, uint? guestSmileMasterCardId,
         uint? guestPureMasterCardId, uint? guestCoolMasterCardId, bool? friendRequestDisabled);
 
-    public Task<List<Character>> GetDeckCharactersFromUserData(UserData? userData, uint deckSlot);
     public Task<UserData> SetCardsItemsPoints(ulong xuid, IEnumerable<Card> cards, IEnumerable<Item> items, IEnumerable<Point> points);
 
     public Task<UserData> SetGemsCardsItemsPointsLotteries(ulong xuid, Gem gems, List<Card> cards, List<Item> items, List<Point> points,
         List<Lottery> lotteries);
+
+    public Task SetCurrentLiveData(ulong xuid, CurrentLiveData? currentLiveData);
+    public Task<UserData> GetByXuidRemovingCurrentLiveData(ulong xuid);
 }

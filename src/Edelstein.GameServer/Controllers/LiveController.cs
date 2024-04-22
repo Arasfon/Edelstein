@@ -37,6 +37,18 @@ public class LiveController : Controller
         return new EncryptedResponse<LiveGuestResponseData>(new LiveGuestResponseData([Friend.GetTutorial()]));
     }
 
+    [Route("mission")]
+    public EncryptedResult Mission(EncryptedRequest<LiveMissionRequestData> encryptedRequest)
+    {
+        // TODO: Live mission ranking
+        //ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
+
+        //await _liveService.GetUserMissionsRanking(xuid, encryptedRequest.DeserializedObject);
+
+        // ReSharper disable once ArrangeMethodOrOperatorBody
+        return new EncryptedResponse<LiveMissionResponseData>(new LiveMissionResponseData("00.00%", "00.00%", "00.00%"));
+    }
+
     [Route("start")]
     public async Task<EncryptedResult> Start(EncryptedRequest<LiveStartRequestData> encryptedRequest)
     {
@@ -69,13 +81,13 @@ public class LiveController : Controller
             Gem = liveFinishResult.ChangedGem,
             ItemList = liveFinishResult.ChangedItems,
             PointList = liveFinishResult.ChangedPoints,
-            Live = liveFinishResult.PreviousLiveData,
+            Live = liveFinishResult.FinishedLiveData,
             ClearMasterLiveMissionIds = liveFinishResult.ClearedMasterLiveMissionIds,
             User = liveFinishResult.UpdatedUserData.User,
             Stamina = liveFinishResult.UpdatedUserData.Stamina,
-            CharacterList = liveFinishResult.DeckCharacters,
+            CharacterList = liveFinishResult.UpdatedCharacters,
             RewardList = liveFinishResult.Rewards,
-            GiftList = liveFinishResult.NewGifts,
+            GiftList = liveFinishResult.Gifts,
             ClearMissionIds = liveFinishResult.ClearedMissionIds,
             EventPointRewardList = liveFinishResult.EventPointRewards,
             RankingChange = liveFinishResult.RankingChange,

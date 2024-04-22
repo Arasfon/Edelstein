@@ -132,6 +132,27 @@ public class UserService : IUserService
         await _userDataRepository.UpdateUser(xuid, name, comment, favoriteMasterCardId, guestSmileMasterCardId,
             guestPureMasterCardId, guestCoolMasterCardId, friendRequestDisabled);
 
+    public Task<List<Character>> GetDeckCharactersFromUserData(UserData? userData, uint deckSlot)
+    {
+        IEnumerable<ulong> cardIds = userData!.DeckList[(int)deckSlot - 1].MainCardIds;
+
+        Dictionary<ulong, uint> cardDict = userData.CardList.ToDictionary(x => x.Id, x => x.MasterCardId / 10000);
+        Dictionary<uint, Character> characterDict = userData.CharacterList.ToDictionary(x => x.MasterCharacterId);
+
+        List<Character> characters = cardIds
+            .Select(cardId =>
+            {
+                cardDict.TryGetValue(cardId, out uint masterCharacterId);
+                return masterCharacterId;
+            })
+            .Select(masterCharacterId => characterDict.TryGetValue(masterCharacterId, out Character? character)
+                ? character
+                : new Character { MasterCharacterId = masterCharacterId })
+            .ToList();
+
+        return Task.FromResult(characters);
+    }
+
     public async Task<UserData> SetCardsItemsPointsCreatingIds(ulong xuid, List<Card> cards, List<Item> items,
         List<Point> points)
     {

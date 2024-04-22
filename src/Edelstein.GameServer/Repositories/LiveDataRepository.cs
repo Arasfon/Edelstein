@@ -20,51 +20,35 @@ public class LiveDataRepository : ILiveDataRepository
         _userHomeCollection = mongoDatabase.GetCollection<UserHomeDocument>(CollectionNames.UserHome);
     }
 
-    public async Task<UserData> UpdateAfterLive(ulong xuid, Live updatedLive, List<Point> updatedPoints, List<Item> updatedItems,
-        int staminaChange, int experienceChange, int gemChange, List<Character> updatedCharacters, List<Gift> newGifts,
-        LiveMission liveMission, List<uint> clearedMissionIds, List<EventPoint> eventPointUpdates, List<Reward> eventPointRewards,
-        RankingChange? rankingChange = null, EventMember? eventMember = null, EventRankingData? eventRankingData = null)
+    public async Task<UserData> UpdateAfterFinishedLive(ulong xuid, long currentTimestamp, List<Live> lives, List<Point> points, List<Item> items, Stamina stamina,
+        int experience, Gem gem, List<Character> characters, List<LiveMission> liveMissions, List<uint> stampIds, List<Gift> gifts, List<uint> clearedMissionIds)
     {
         // TODO: Transaction
-
-        // TODO: Event data
-
-        long currentTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        // TODO: Reconsider clearedMissionIds
 
         FilterDefinition<UserData> userDataFilter = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
         UpdateDefinition<UserData> userDataUpdate = Builders<UserData>.Update
-            // Coins
-            .Set(x => x.PointList, updatedPoints)
-            // Stamina
-            .Inc(x => x.Stamina.StaminaValue, staminaChange)
-            .Set(x => x.Stamina.LastUpdatedTime, currentTimestamp)
-            // Experience
-            .Inc(x => x.User.Exp, experienceChange)
-            // Gems
-            .Inc(x => x.Gem.Free, gemChange)
-            .Inc(x => x.Gem.Total, gemChange)
-            // Live
-            .Push(x => x.LiveList, updatedLive)
-            // Characters
-            .Set(x => x.CharacterList, updatedCharacters)
-            // Items
-            .PushEach(x => x.ItemList, updatedItems)
-            // Live missions
-            .Push(x => x.LiveMissionList, liveMission);
+            .Set(x => x.LiveList, lives)
+            .Set(x => x.PointList, points)
+            .Set(x => x.ItemList, items)
+            .Set(x => x.Stamina, stamina)
+            .Set(x => x.User.Exp, experience)
+            .Set(x => x.Gem, gem)
+            .Set(x => x.CharacterList, characters)
+            .Set(x => x.LiveMissionList, liveMissions)
+            .Set(x => x.User.LastLoginTime, currentTimestamp)
+            .Set(x => x.MasterStampIds, stampIds);
 
-        UserData updatedUserData = await _userDataCollection.FindOneAndUpdateAsync(userDataFilter, userDataUpdate,
+        UserData userData = await _userDataCollection.FindOneAndUpdateAsync(userDataFilter, userDataUpdate,
             new FindOneAndUpdateOptions<UserData> { ReturnDocument = ReturnDocument.After });
 
         FilterDefinition<UserHomeDocument> homeDataFilter = Builders<UserHomeDocument>.Filter.Eq(x => x.Xuid, xuid);
         UpdateDefinition<UserHomeDocument> homeDataUpdate = Builders<UserHomeDocument>.Update
-            // Missions
-            // TODO: Reconsider .PushEach(x => x.ClearMissionIds, clearedMissionIds)
-            // Gifts
-            // TODO: Full replace?
-            .PushEach(x => x.Home.GiftList, newGifts);
+            // TODO: Full replace to check for expired/old?
+            .PushEach(x => x.Home.GiftList, gifts);
 
         await _userHomeCollection.UpdateOneAsync(homeDataFilter, homeDataUpdate);
 
-        return updatedUserData;
+        return userData;
     }
 }

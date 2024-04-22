@@ -63,7 +63,7 @@ public class UserDataRepository : IUserDataRepository
             {
                 MasterCharacterId = masterCharacterId,
                 Exp = experience,
-                BeforeExp = 0
+                BeforeExp = experience
             });
 
         await _userDataCollection.UpdateOneAsync(filterDefinition, updateDefinition);
@@ -118,27 +118,6 @@ public class UserDataRepository : IUserDataRepository
         return userData.User;
     }
 
-    public Task<List<Character>> GetDeckCharactersFromUserData(UserData? userData, uint deckSlot)
-    {
-        IEnumerable<ulong> cardIds = userData!.DeckList[(int)deckSlot - 1].MainCardIds;
-
-        Dictionary<ulong, uint> cardDict = userData.CardList.ToDictionary(x => x.Id, x => x.MasterCardId / 10000);
-        Dictionary<uint, Character> characterDict = userData.CharacterList.ToDictionary(x => x.MasterCharacterId);
-
-        List<Character> characters = cardIds
-            .Select(cardId =>
-            {
-                cardDict.TryGetValue(cardId, out uint masterCharacterId);
-                return masterCharacterId;
-            })
-            .Select(masterCharacterId => characterDict.TryGetValue(masterCharacterId, out Character? character)
-                ? character
-                : new Character { MasterCharacterId = masterCharacterId })
-            .ToList();
-
-        return Task.FromResult(characters);
-    }
-
     public async Task<UserData> SetCardsItemsPoints(ulong xuid, IEnumerable<Card> cards, IEnumerable<Item> items, IEnumerable<Point> points)
     {
         FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
@@ -166,5 +145,28 @@ public class UserDataRepository : IUserDataRepository
 
         return await _userDataCollection.FindOneAndUpdateAsync(filterDefinition, updateDefinition,
             new FindOneAndUpdateOptions<UserData> { ReturnDocument = ReturnDocument.After });
+    }
+
+    public async Task SetCurrentLiveData(ulong xuid, CurrentLiveData? currentLiveData)
+    {
+        FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
+
+        UpdateDefinition<UserData> updateDefinition = Builders<UserData>.Update
+            .Set(x => x.CurrentLive, currentLiveData);
+
+        await _userDataCollection.UpdateOneAsync(filterDefinition, updateDefinition);
+    }
+
+    public async Task<UserData> GetByXuidRemovingCurrentLiveData(ulong xuid)
+    {
+        FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
+
+        UpdateDefinition<UserData> updateDefinition = Builders<UserData>.Update
+            .Set(x => x.CurrentLive, null);
+
+        return await _userDataCollection.FindOneAndUpdateAsync(filterDefinition, updateDefinition, new FindOneAndUpdateOptions<UserData>
+        {
+            ReturnDocument = ReturnDocument.Before
+        });
     }
 }

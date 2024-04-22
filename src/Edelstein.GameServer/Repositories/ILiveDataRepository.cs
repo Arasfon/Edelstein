@@ -5,8 +5,7 @@ namespace Edelstein.GameServer.Repositories;
 
 public interface ILiveDataRepository
 {
-    public Task<UserData> UpdateAfterLive(ulong xuid, Live updatedLive, List<Point> updatedPoints, List<Item> updatedItems,
-        int staminaChange, int experienceChange, int gemChange, List<Character> updatedCharacters, List<Gift> newGifts,
-        LiveMission liveMission, List<uint> clearedMissionIds, List<EventPoint> eventPointUpdates, List<Reward> eventPointRewards,
-        RankingChange? rankingChange = null, EventMember? eventMember = null, EventRankingData? eventRankingData = null);
+    public Task<UserData> UpdateAfterFinishedLive(ulong xuid, long currentTimestamp, List<Live> lives, List<Point> points, List<Item> items,
+        Stamina stamina, int experience, Gem gem, List<Character> characters, List<LiveMission> liveMissions,
+        List<uint> stampIds, List<Gift> gifts, List<uint> clearedMissionIds);
 }

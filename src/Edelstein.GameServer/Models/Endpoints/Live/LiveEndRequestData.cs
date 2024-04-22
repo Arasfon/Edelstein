@@ -4,7 +4,7 @@ namespace Edelstein.GameServer.Models.Endpoints.Live;
 
 public record LiveEndRequestData(
     uint MasterLiveId,
-    LiveLevel Level,
+    Edelstein.Data.Msts.LiveLevel Level,
     LiveScore LiveScore,
     uint UseLp,
     uint UseIcon
