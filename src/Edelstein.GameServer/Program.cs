@@ -3,6 +3,7 @@ using Edelstein.Data.Msts.Persistence;
 using Edelstein.Data.Repositories;
 using Edelstein.Data.Serialization.Bson;
 using Edelstein.GameServer.Authorization;
+using Edelstein.GameServer.Configuration;
 using Edelstein.GameServer.ModelBinders;
 using Edelstein.GameServer.Repositories;
 using Edelstein.GameServer.Services;
@@ -19,18 +20,83 @@ using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
+
+using Serilog;
+using Serilog.Events;
+using Serilog.Exceptions;
+using Serilog.Exceptions.Core;
+using Serilog.Exceptions.Destructurers;
+using Serilog.Exceptions.EntityFrameworkCore.Destructurers;
+using Serilog.Exceptions.MongoDb.Destructurers;
+
 using System.Net.Mime;
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.Console()
+    .WriteTo.File("logs/.log", rollingInterval: RollingInterval.Day)
+    .Enrich.FromLogContext()
+    .Enrich.WithExceptionDetails(new DestructuringOptionsBuilder()
+        .WithDefaultDestructurers()
+        .WithDestructurers(new IExceptionDestructurer[] { new DbUpdateExceptionDestructurer(), new MongoExceptionDestructurer() }))
+    .CreateBootstrapLogger();
 
 // Configure services
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Configuration
+builder.Services.Configure<SeqOptions>(builder.Configuration.GetSection("Seq"));
 builder.Services.Configure<DatabaseOptions>(builder.Configuration.GetSection("Database"));
 builder.Services.Configure<MstDatabaseOptions>(builder.Configuration.GetSection("MstDatabase"));
 
 // Logging
-if (builder.Environment.IsDevelopment())
-    builder.Services.AddHttpLogging(_ => { });
+builder.Services.AddSerilog((services, loggerConfiguration) =>
+{
+    SeqOptions seqOptions = services.GetRequiredService<IOptions<SeqOptions>>().Value;
+
+    if (builder.Environment.IsDevelopment())
+        loggerConfiguration.MinimumLevel.Debug();
+    else
+        loggerConfiguration.MinimumLevel.Information();
+
+    loggerConfiguration
+        .WriteTo.Console(LogEventLevel.Information)
+        .WriteTo.File("logs/.log", rollingInterval: RollingInterval.Day)
+        .Enrich.FromLogContext()
+        .Enrich.WithExceptionDetails(new DestructuringOptionsBuilder()
+            .WithDefaultDestructurers()
+            .WithDestructurers(new IExceptionDestructurer[] { new DbUpdateExceptionDestructurer(), new MongoExceptionDestructurer() }));
+
+    if (seqOptions.Url != "")
+        loggerConfiguration.WriteTo.Seq(seqOptions.Url, apiKey: seqOptions.ApiKey);
+});
+
+// Metrics
+builder.Logging.AddOpenTelemetry(options =>
+{
+    options.IncludeScopes = true;
+    options.IncludeFormattedMessage = true;
+});
+
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(meterProviderBuilder =>
+    {
+        meterProviderBuilder.AddPrometheusExporter(prometheusAspNetCoreOptions =>
+            prometheusAspNetCoreOptions.DisableTotalNameSuffixForCounters = true);
+
+        meterProviderBuilder.AddRuntimeInstrumentation()
+            .AddMeter("Microsoft.AspNetCore.Hosting", "Microsoft.AspNetCore.Server.Kestrel");
+    })
+    .WithTracing(tracerProviderBuilder =>
+    {
+        if (builder.Environment.IsDevelopment())
+            tracerProviderBuilder.SetSampler<AlwaysOnSampler>();
+
+        tracerProviderBuilder.AddAspNetCoreInstrumentation();
+        tracerProviderBuilder.AddHttpClientInstrumentation();
+    });
 
 // Database
 BsonSerializer.RegisterSerializer(new UInt64Serializer(BsonType.Int64));
@@ -97,10 +163,10 @@ builder.Services.AddSwaggerGen();
 // Configure the HTTP request pipeline
 WebApplication app = builder.Build();
 
+app.UseSerilogRequestLogging();
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseHttpLogging();
-
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -127,6 +193,8 @@ app.UseStaticFiles(new StaticFileOptions
         }
     }
 });
+
+app.MapPrometheusScrapingEndpoint();
 
 app.MapControllers();
 
