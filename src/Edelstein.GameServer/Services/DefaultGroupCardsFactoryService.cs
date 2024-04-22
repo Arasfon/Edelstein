@@ -2,6 +2,7 @@ using Edelstein.Data.Models;
 using Edelstein.Data.Models.Components;
 using Edelstein.Data.Repositories;
 using Edelstein.GameServer.Extensions;
+using Edelstein.GameServer.Models;
 
 namespace Edelstein.GameServer.Services;
 
@@ -12,7 +13,7 @@ public class DefaultGroupCardsFactoryService : IDefaultGroupCardsFactoryService
     public DefaultGroupCardsFactoryService(ISequenceRepository<ulong> sequenceRepository) =>
         _sequenceRepository = sequenceRepository;
 
-    public async Task<List<Card>> GetOrCreate(BandCategory group, List<Card> existingCards)
+    public async Task<DefaultCardRetrievalResult> GetOrCreate(BandCategory group, List<Card> existingCards)
     {
         long currentTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
@@ -38,7 +39,8 @@ public class DefaultGroupCardsFactoryService : IDefaultGroupCardsFactoryService
         ulong[] cardIdRange =
             (await _sequenceRepository.GetNextRangeById(SequenceNames.CardIds, (ulong)groupCardsToCreateMasterIds.Count)).ToArray();
 
-        return groupCardsToCreateMasterIds.Select((x, i) => new Card
+        return new DefaultCardRetrievalResult(existingDefaultCards.Count, groupCardsToCreateMasterIds
+            .Select((x, i) => new Card
             {
                 Id = cardIdRange[i],
                 MasterCardId = x,
@@ -46,6 +48,6 @@ public class DefaultGroupCardsFactoryService : IDefaultGroupCardsFactoryService
             })
             .Concat(existingDefaultCards)
             .OrderBy(x => x.MasterCardId)
-            .ToList();
+            .ToList());
     }
 }

@@ -2,6 +2,7 @@ using Edelstein.Data.Models;
 using Edelstein.Data.Models.Components;
 using Edelstein.Data.Repositories;
 using Edelstein.GameServer.Extensions;
+using Edelstein.GameServer.Models;
 using Edelstein.GameServer.Repositories;
 
 using System.Diagnostics;
@@ -93,12 +94,34 @@ public class UserService : IUserService
     {
         BandCategory group = (BandCategory)(userInitializationData.FavoriteCharacterMasterId / 1000);
 
-        List<Card> groupCards = await _defaultGroupCardsFactoryService.GetOrCreate(group, currentUserData.CardList);
+        DefaultCardRetrievalResult defaultCardsRetrievalResult = await _defaultGroupCardsFactoryService.GetOrCreate(group, currentUserData.CardList);
 
-        await AddCards(userInitializationData.Xuid, groupCards, currentUserData.CardList);
+        if (defaultCardsRetrievalResult.DuplicateCount > 0)
+        {
+            // Assuming all default characters are rare so their duplicates give 20 penlights
+            const uint penlightItemId = 19100001;
+
+            Item? penlightItem = currentUserData.ItemList.FirstOrDefault(x => x.MasterItemId == penlightItemId);
+
+            if (penlightItem is null)
+            {
+                penlightItem = new Item
+                {
+                    Id = await _sequenceRepository.GetNextValueById(SequenceNames.ItemIds),
+                    MasterItemId = penlightItemId,
+                    Amount = 20 * defaultCardsRetrievalResult.DuplicateCount,
+                    ExpireDateTime = null
+                };
+                currentUserData.ItemList.Add(penlightItem);
+            }
+            else
+                penlightItem.Amount += 20 * defaultCardsRetrievalResult.DuplicateCount;
+        }
+
+        await AddCards(userInitializationData.Xuid, defaultCardsRetrievalResult.Cards, currentUserData.CardList);
 
         // Remove UR character duplicate
-        List<ulong> cardIds = groupCards.Where(x => x.MasterCardId / 10000 != userInitializationData.FavoriteCharacterMasterId)
+        List<ulong> cardIds = defaultCardsRetrievalResult.Cards.Where(x => x.MasterCardId / 10000 != userInitializationData.FavoriteCharacterMasterId)
             .Select(x => x.Id)
             .ToList();
 
