@@ -182,6 +182,7 @@ public class UserService : IUserService
         for (int i = 0; i < itemsWithoutIds.Count; i++)
             itemsWithoutIds[i].Id = itemIds[i];
 
-        return await _userDataRepository.SetGemsCardsItemsPointsLotteries(xuid, gems, cards, items, points, lotteries);
+        return await _userDataRepository.SetGemsCardsItemsPointsLotteries(xuid, gems, cards, items, points,
+            lotteries);
     }
 }

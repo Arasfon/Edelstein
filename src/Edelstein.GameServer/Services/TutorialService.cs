@@ -12,7 +12,8 @@ public class TutorialService : ITutorialService
     private readonly IUserInitializationDataRepository _userInitializationDataRepository;
     private readonly IChatService _chatService;
 
-    public TutorialService(IUserDataRepository userDataRepository, IUserInitializationDataRepository userInitializationDataRepository, IChatService chatService)
+    public TutorialService(IUserDataRepository userDataRepository, IUserInitializationDataRepository userInitializationDataRepository,
+        IChatService chatService)
     {
         _userDataRepository = userDataRepository;
         _userInitializationDataRepository = userInitializationDataRepository;

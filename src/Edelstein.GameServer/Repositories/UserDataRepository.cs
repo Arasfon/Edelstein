@@ -131,8 +131,8 @@ public class UserDataRepository : IUserDataRepository
             new FindOneAndUpdateOptions<UserData> { ReturnDocument = ReturnDocument.After });
     }
 
-    public async Task<UserData> SetGemsCardsItemsPointsLotteries(ulong xuid, Gem gems, List<Card> cards, List<Item> items, List<Point> points,
-        List<Lottery> lotteries)
+    public async Task<UserData> SetGemsCardsItemsPointsLotteries(ulong xuid, Gem gems, List<Card> cards, List<Item> items,
+        List<Point> points, List<Lottery> lotteries)
     {
         FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
 
@@ -164,10 +164,8 @@ public class UserDataRepository : IUserDataRepository
         UpdateDefinition<UserData> updateDefinition = Builders<UserData>.Update
             .Set(x => x.CurrentLive, null);
 
-        return await _userDataCollection.FindOneAndUpdateAsync(filterDefinition, updateDefinition, new FindOneAndUpdateOptions<UserData>
-        {
-            ReturnDocument = ReturnDocument.Before
-        });
+        return await _userDataCollection.FindOneAndUpdateAsync(filterDefinition, updateDefinition,
+            new FindOneAndUpdateOptions<UserData> { ReturnDocument = ReturnDocument.Before });
     }
 
     public async Task SetStartTime(ulong xuid, long timestamp)
