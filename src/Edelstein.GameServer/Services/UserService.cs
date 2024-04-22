@@ -208,4 +208,7 @@ public class UserService : IUserService
         return await _userDataRepository.SetGemsCardsItemsPointsLotteries(xuid, gems, cards, items, points,
             lotteries);
     }
+
+    public async Task UpdateUserLotteries(ulong xuid, List<Lottery> lotteries) =>
+        await _userDataRepository.UpdateUserLotteries(xuid, lotteries);
 }

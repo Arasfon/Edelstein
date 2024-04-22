@@ -25,6 +25,32 @@ public class LotteryService : ILotteryService
         _userService = userService;
     }
 
+    public async Task<List<Lottery>> GetAndRefreshUserLotteriesData(ulong xuid)
+    {
+        UserData? userData = await _userService.GetUserDataByXuid(xuid);
+
+        DateTimeOffset lastReset = ResetDate.Last;
+
+        bool hasRefreshed = false;
+
+        foreach (Lottery lottery in userData!.LotteryList)
+        {
+            DateTimeOffset lastCountDate = DateTimeOffset.ParseExact(lottery.LastCountDate, "yyyy-MM-dd HH:mm:ss",
+                CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+
+            if (lastCountDate < lastReset && lottery.DailyCount != 0)
+            {
+                lottery.DailyCount = 0;
+                hasRefreshed = true;
+            }
+        }
+
+        if (hasRefreshed)
+            await _userService.UpdateUserLotteries(xuid, userData.LotteryList);
+
+        return userData.LotteryList;
+    }
+
     public Task<Lottery> GetTutorialLotteryByMasterCharacterId(uint masterCharacterId)
     {
         BandCategory group = (BandCategory)(masterCharacterId / 1000);
@@ -76,7 +102,7 @@ public class LotteryService : ILotteryService
                 MasterLotteryPriceNumber = lottery.MasterLotteryPriceNumber,
                 Count = 1,
                 DailyCount = 1,
-                LastCountDate = DateTimeOffset.FromUnixTimeSeconds(currentTimestamp).ToString("yyyy-MM-dd HH:mm:ss")
+                LastCountDate = currentDateTimeOffset.ToString("yyyy-MM-dd HH:mm:ss")
             };
 
             userData.LotteryList.Add(lotteryRecord);
@@ -94,7 +120,7 @@ public class LotteryService : ILotteryService
                 DateTimeOffset lastCountDate = DateTimeOffset.ParseExact(lotteryRecord.LastCountDate, "yyyy-MM-dd HH:mm:ss",
                     CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
-                if (lastCountDate < ResetDate.PreviousOf(currentDateTimeOffset))
+                if (lastCountDate < ResetDate.LastOf(currentDateTimeOffset))
                     lotteryRecord.DailyCount = 0;
 
                 if (lotteryRecord.DailyCount > priceMst.DailyLimitCount)

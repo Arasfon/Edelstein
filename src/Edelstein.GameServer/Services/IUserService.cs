@@ -25,4 +25,6 @@ public interface IUserService
 
     public Task<UserData> SetGemsCardsItemsPointsLotteriesCreatingIds(ulong xuid, Gem gems, List<Card> cards, List<Item> items,
         List<Point> points, List<Lottery> lotteries);
+
+    public Task UpdateUserLotteries(ulong xuid, List<Lottery> lotteries);
 }

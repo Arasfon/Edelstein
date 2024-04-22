@@ -177,4 +177,14 @@ public class UserDataRepository : IUserDataRepository
 
         await _userDataCollection.UpdateOneAsync(filterDefinition, updateDefinition);
     }
+
+    public async Task UpdateUserLotteries(ulong xuid, List<Lottery> lotteries)
+    {
+        FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
+
+        UpdateDefinition<UserData> updateDefinition = Builders<UserData>.Update
+            .Set(x => x.LotteryList, lotteries);
+
+        await _userDataCollection.UpdateOneAsync(filterDefinition, updateDefinition);
+    }
 }

@@ -47,9 +47,9 @@ public class LotteryController : Controller
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
-        UserData? userData = await _userService.GetUserDataByXuid(xuid);
+        List<Lottery> lotteries = await _lotteryService.GetAndRefreshUserLotteriesData(xuid);
 
-        return new EncryptedResponse<GetLotteriesResponseData>(new GetLotteriesResponseData(userData!.LotteryList, []));
+        return new EncryptedResponse<GetLotteriesResponseData>(new GetLotteriesResponseData(lotteries, []));
     }
 
     [HttpPost]
