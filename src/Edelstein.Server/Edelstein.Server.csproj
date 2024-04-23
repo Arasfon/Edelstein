@@ -5,7 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <InvariantGlobalization>true</InvariantGlobalization>
-        <RootNamespace>Edelstein.GameServer</RootNamespace>
+        <RootNamespace>Edelstein.Server</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
