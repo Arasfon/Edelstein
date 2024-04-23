@@ -87,6 +87,8 @@ builder.Services.AddOpenTelemetry()
         meterProviderBuilder.AddPrometheusExporter(prometheusAspNetCoreOptions =>
             prometheusAspNetCoreOptions.DisableTotalNameSuffixForCounters = true);
 
+        meterProviderBuilder.AddProcessInstrumentation();
+
         meterProviderBuilder.AddRuntimeInstrumentation()
             .AddMeter("Microsoft.AspNetCore.Hosting", "Microsoft.AspNetCore.Server.Kestrel");
     })
