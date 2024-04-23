@@ -33,6 +33,7 @@ using Serilog.Exceptions.MongoDb.Destructurers;
 
 using System.Net.Mime;
 
+// Bootstrap logging
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .WriteTo.Console()
@@ -43,167 +44,178 @@ Log.Logger = new LoggerConfiguration()
         .WithDestructurers(new IExceptionDestructurer[] { new DbUpdateExceptionDestructurer(), new MongoExceptionDestructurer() }))
     .CreateBootstrapLogger();
 
-// Configure services
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-
-// Configuration
-builder.Services.Configure<SeqOptions>(builder.Configuration.GetSection("Seq"));
-builder.Services.Configure<DatabaseOptions>(builder.Configuration.GetSection("Database"));
-builder.Services.Configure<MstDatabaseOptions>(builder.Configuration.GetSection("MstDatabase"));
-builder.Services.Configure<OAuthOptions>(builder.Configuration.GetSection("OAuth"));
-
-// Logging
-builder.Services.AddSerilog((services, loggerConfiguration) =>
+try
 {
-    SeqOptions seqOptions = services.GetRequiredService<IOptions<SeqOptions>>().Value;
+    // Configure services
+    WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-    if (builder.Environment.IsDevelopment())
-        loggerConfiguration.MinimumLevel.Debug();
-    else
-        loggerConfiguration.MinimumLevel.Information();
+    // Configuration
+    builder.Services.Configure<SeqOptions>(builder.Configuration.GetSection("Seq"));
+    builder.Services.Configure<DatabaseOptions>(builder.Configuration.GetSection("Database"));
+    builder.Services.Configure<MstDatabaseOptions>(builder.Configuration.GetSection("MstDatabase"));
+    builder.Services.Configure<OAuthOptions>(builder.Configuration.GetSection("OAuth"));
 
-    loggerConfiguration
-        .WriteTo.Console(LogEventLevel.Information)
-        .WriteTo.File("logs/.log", rollingInterval: RollingInterval.Day)
-        .Enrich.FromLogContext()
-        .Enrich.WithExceptionDetails(new DestructuringOptionsBuilder()
-            .WithDefaultDestructurers()
-            .WithDestructurers(new IExceptionDestructurer[] { new DbUpdateExceptionDestructurer(), new MongoExceptionDestructurer() }));
-
-    if (seqOptions.Url != "")
-        loggerConfiguration.WriteTo.Seq(seqOptions.Url, apiKey: seqOptions.ApiKey);
-});
-
-// Metrics
-builder.Logging.AddOpenTelemetry(options =>
-{
-    options.IncludeScopes = true;
-    options.IncludeFormattedMessage = true;
-});
-
-builder.Services.AddOpenTelemetry()
-    .WithMetrics(meterProviderBuilder =>
+    // Logging
+    builder.Services.AddSerilog((services, loggerConfiguration) =>
     {
-        meterProviderBuilder.AddPrometheusExporter(prometheusAspNetCoreOptions =>
-            prometheusAspNetCoreOptions.DisableTotalNameSuffixForCounters = true);
+        SeqOptions seqOptions = services.GetRequiredService<IOptions<SeqOptions>>().Value;
 
-        meterProviderBuilder.AddProcessInstrumentation();
-
-        meterProviderBuilder.AddRuntimeInstrumentation()
-            .AddMeter("Microsoft.AspNetCore.Hosting", "Microsoft.AspNetCore.Server.Kestrel");
-    })
-    .WithTracing(tracerProviderBuilder =>
-    {
         if (builder.Environment.IsDevelopment())
-            tracerProviderBuilder.SetSampler<AlwaysOnSampler>();
+            loggerConfiguration.MinimumLevel.Debug();
+        else
+            loggerConfiguration.MinimumLevel.Information();
 
-        tracerProviderBuilder.AddAspNetCoreInstrumentation();
-        tracerProviderBuilder.AddHttpClientInstrumentation();
+        loggerConfiguration
+            .WriteTo.Console(LogEventLevel.Information)
+            .WriteTo.File("logs/.log", rollingInterval: RollingInterval.Day)
+            .Enrich.FromLogContext()
+            .Enrich.WithExceptionDetails(new DestructuringOptionsBuilder()
+                .WithDefaultDestructurers()
+                .WithDestructurers(new IExceptionDestructurer[] { new DbUpdateExceptionDestructurer(), new MongoExceptionDestructurer() }));
+
+        if (seqOptions.Url != "")
+            loggerConfiguration.WriteTo.Seq(seqOptions.Url, apiKey: seqOptions.ApiKey);
     });
 
-// Database
-BsonSerializer.RegisterSerializer(new UInt64Serializer(BsonType.Int64));
-BsonSerializer.RegisterSerializer(new UInt32Serializer(BsonType.Int32));
-BsonSerializer.RegisterSerializer(new BooleanToIntegerBsonSerializer());
-
-ConventionPack camelCaseConvention = [new CamelCaseElementNameConvention()];
-ConventionRegistry.Register("CamelCase", camelCaseConvention, _ => true);
-
-builder.Services.AddSingleton<IMongoClient>(provider =>
-{
-    DatabaseOptions databaseOptions = provider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
-
-    return new MongoClient(databaseOptions.ConnectionString);
-});
-
-// Mst database
-builder.Services.AddDbContext<MstDbContext>((provider, options) =>
-{
-    MstDatabaseOptions databaseOptions = provider.GetRequiredService<IOptions<MstDatabaseOptions>>().Value;
-
-    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTrackingWithIdentityResolution);
-    options.UseSqlite(databaseOptions.ConnectionString);
-});
-
-// Repositories
-builder.Services.AddScoped<ISequenceRepository<ulong>, UnsignedLongSequenceRepository>();
-builder.Services.AddScoped<IAuthenticationDataRepository, AuthenticationDataRepository>();
-builder.Services.AddScoped<IUserDataRepository, UserDataRepository>();
-builder.Services.AddScoped<IUserHomeRepository, UserHomeRepository>();
-builder.Services.AddScoped<IUserMissionsRepository, UserMissionsRepository>();
-builder.Services.AddScoped<IUserInitializationDataRepository, UserInitializationDataRepository>();
-builder.Services.AddScoped<ILiveDataRepository, LiveDataRepository>();
-
-// Services
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<ILotteryService, LotteryService>();
-builder.Services.AddScoped<ITutorialService, TutorialService>();
-builder.Services.AddScoped<IDefaultGroupCardsFactoryService, DefaultGroupCardsFactoryService>();
-builder.Services.AddScoped<ILiveService, LiveService>();
-builder.Services.AddScoped<IChatService, ChatService>();
-
-builder.Services.AddHostedService<ConstantsLoaderService>();
-
-// Memory cache
-builder.Services.AddMemoryCache();
-
-// Authorization filters
-builder.Services.AddScoped<RsaSignatureAuthorizationFilter>();
-builder.Services.AddScoped<OAuthHmacAuthorizationFilter>();
-builder.Services.AddScoped<OAuthRsaAuthorizationFilter>();
-
-// Controllers
-builder.Services.AddControllers(options =>
-{
-    options.Filters.Add(new ResponseCacheAttribute
+    // Metrics
+    builder.Logging.AddOpenTelemetry(options =>
     {
-        NoStore = true,
-        Location = ResponseCacheLocation.None
+        options.IncludeScopes = true;
+        options.IncludeFormattedMessage = true;
     });
 
-    options.ModelBinderProviders.Insert(0, new EncryptedRequestModelBinderProvider());
-});
-
-// Swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-// Configure the HTTP request pipeline
-WebApplication app = builder.Build();
-
-app.UseSerilogRequestLogging();
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
-
-PhysicalFileProvider webRootFileProvider = new(app.Environment.WebRootPath);
-PhysicalFileProvider assetsFileProvider = new(app.Configuration["AssetsPath"] ?? app.Environment.WebRootPath);
-CompositeFileProvider compositeFileProvider = new(webRootFileProvider, assetsFileProvider);
-
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = compositeFileProvider,
-    ContentTypeProvider = new FileExtensionContentTypeProvider
-    {
-        Mappings =
+    builder.Services.AddOpenTelemetry()
+        .WithMetrics(meterProviderBuilder =>
         {
-            { ".unity3d", MediaTypeNames.Application.Octet },
-            { ".ppart", MediaTypeNames.Application.Octet },
-            { ".spart", MediaTypeNames.Application.Octet },
-            { ".usm", MediaTypeNames.Application.Octet },
-            { ".acb", MediaTypeNames.Application.Octet },
-            { ".awb", MediaTypeNames.Application.Octet }
-        }
+            meterProviderBuilder.AddPrometheusExporter(prometheusAspNetCoreOptions =>
+                prometheusAspNetCoreOptions.DisableTotalNameSuffixForCounters = true);
+
+            meterProviderBuilder.AddProcessInstrumentation();
+
+            meterProviderBuilder.AddRuntimeInstrumentation()
+                .AddMeter("Microsoft.AspNetCore.Hosting", "Microsoft.AspNetCore.Server.Kestrel");
+        })
+        .WithTracing(tracerProviderBuilder =>
+        {
+            if (builder.Environment.IsDevelopment())
+                tracerProviderBuilder.SetSampler<AlwaysOnSampler>();
+
+            tracerProviderBuilder.AddAspNetCoreInstrumentation();
+            tracerProviderBuilder.AddHttpClientInstrumentation();
+        });
+
+    // Database
+    BsonSerializer.RegisterSerializer(new UInt64Serializer(BsonType.Int64));
+    BsonSerializer.RegisterSerializer(new UInt32Serializer(BsonType.Int32));
+    BsonSerializer.RegisterSerializer(new BooleanToIntegerBsonSerializer());
+
+    ConventionPack camelCaseConvention = [new CamelCaseElementNameConvention()];
+    ConventionRegistry.Register("CamelCase", camelCaseConvention, _ => true);
+
+    builder.Services.AddSingleton<IMongoClient>(provider =>
+    {
+        DatabaseOptions databaseOptions = provider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
+
+        return new MongoClient(databaseOptions.ConnectionString);
+    });
+
+    // Mst database
+    builder.Services.AddDbContext<MstDbContext>((provider, options) =>
+    {
+        MstDatabaseOptions databaseOptions = provider.GetRequiredService<IOptions<MstDatabaseOptions>>().Value;
+
+        options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTrackingWithIdentityResolution);
+        options.UseSqlite(databaseOptions.ConnectionString);
+    });
+
+    // Repositories
+    builder.Services.AddScoped<ISequenceRepository<ulong>, UnsignedLongSequenceRepository>();
+    builder.Services.AddScoped<IAuthenticationDataRepository, AuthenticationDataRepository>();
+    builder.Services.AddScoped<IUserDataRepository, UserDataRepository>();
+    builder.Services.AddScoped<IUserHomeRepository, UserHomeRepository>();
+    builder.Services.AddScoped<IUserMissionsRepository, UserMissionsRepository>();
+    builder.Services.AddScoped<IUserInitializationDataRepository, UserInitializationDataRepository>();
+    builder.Services.AddScoped<ILiveDataRepository, LiveDataRepository>();
+
+    // Services
+    builder.Services.AddScoped<IUserService, UserService>();
+    builder.Services.AddScoped<ILotteryService, LotteryService>();
+    builder.Services.AddScoped<ITutorialService, TutorialService>();
+    builder.Services.AddScoped<IDefaultGroupCardsFactoryService, DefaultGroupCardsFactoryService>();
+    builder.Services.AddScoped<ILiveService, LiveService>();
+    builder.Services.AddScoped<IChatService, ChatService>();
+
+    builder.Services.AddHostedService<ConstantsLoaderService>();
+
+    // Memory cache
+    builder.Services.AddMemoryCache();
+
+    // Authorization filters
+    builder.Services.AddScoped<RsaSignatureAuthorizationFilter>();
+    builder.Services.AddScoped<OAuthHmacAuthorizationFilter>();
+    builder.Services.AddScoped<OAuthRsaAuthorizationFilter>();
+
+    // Controllers
+    builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add(new ResponseCacheAttribute
+        {
+            NoStore = true,
+            Location = ResponseCacheLocation.None
+        });
+
+        options.ModelBinderProviders.Insert(0, new EncryptedRequestModelBinderProvider());
+    });
+
+    // Swagger
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+
+    // Configure the HTTP request pipeline
+    WebApplication app = builder.Build();
+
+    app.UseSerilogRequestLogging();
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
     }
-});
 
-app.MapPrometheusScrapingEndpoint();
+    app.UseHttpsRedirection();
 
-app.MapControllers();
+    PhysicalFileProvider webRootFileProvider = new(app.Environment.WebRootPath);
+    PhysicalFileProvider assetsFileProvider = new(app.Configuration["AssetsPath"] ?? app.Environment.WebRootPath);
+    CompositeFileProvider compositeFileProvider = new(webRootFileProvider, assetsFileProvider);
 
-app.Run();
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = compositeFileProvider,
+        ContentTypeProvider = new FileExtensionContentTypeProvider
+        {
+            Mappings =
+            {
+                { ".unity3d", MediaTypeNames.Application.Octet },
+                { ".ppart", MediaTypeNames.Application.Octet },
+                { ".spart", MediaTypeNames.Application.Octet },
+                { ".usm", MediaTypeNames.Application.Octet },
+                { ".acb", MediaTypeNames.Application.Octet },
+                { ".awb", MediaTypeNames.Application.Octet }
+            }
+        }
+    });
+
+    app.MapPrometheusScrapingEndpoint();
+
+    app.MapControllers();
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Process terminating");
+}
+finally
+{
+    await Log.CloseAndFlushAsync();
+}
