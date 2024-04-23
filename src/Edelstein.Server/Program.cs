@@ -3,6 +3,7 @@ using Edelstein.Data.Msts.Persistence;
 using Edelstein.Data.Serialization.Bson;
 using Edelstein.Server.Authorization;
 using Edelstein.Server.Configuration;
+using Edelstein.Server.Configuration.Metrics;
 using Edelstein.Server.Configuration.OAuth;
 using Edelstein.Server.ModelBinders;
 using Edelstein.Server.Repositories;
@@ -51,6 +52,7 @@ try
 
     // Configuration
     builder.Services.Configure<SeqOptions>(builder.Configuration.GetSection("Seq"));
+    builder.Services.Configure<MetricsOptions>(builder.Configuration.GetSection("Metrics"));
     builder.Services.Configure<DatabaseOptions>(builder.Configuration.GetSection("Database"));
     builder.Services.Configure<MstDatabaseOptions>(builder.Configuration.GetSection("MstDatabase"));
     builder.Services.Configure<OAuthOptions>(builder.Configuration.GetSection("OAuth"));
@@ -155,6 +157,9 @@ try
     builder.Services.AddScoped<OAuthHmacAuthorizationFilter>();
     builder.Services.AddScoped<OAuthRsaAuthorizationFilter>();
 
+    // Authorization middleware
+    builder.Services.AddScoped<MetricsAuthorizationMiddleware>();
+
     // Controllers
     builder.Services.AddControllers(options =>
     {
@@ -203,6 +208,11 @@ try
                 { ".awb", MediaTypeNames.Application.Octet }
             }
         }
+    });
+
+    app.UseWhen(context => context.Request.Path.StartsWithSegments("/metrics"), builder =>
+    {
+        builder.UseMiddleware<MetricsAuthorizationMiddleware>();
     });
 
     app.MapPrometheusScrapingEndpoint();
