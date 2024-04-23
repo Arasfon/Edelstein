@@ -196,4 +196,15 @@ public class UserDataRepository : IUserDataRepository
 
         await _userDataCollection.UpdateOneAsync(filterDefinition, updateDefinition);
     }
+
+    public async Task UpdateLastLoginTime(ulong xuid, long timestamp)
+    {
+        FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
+
+        UpdateDefinition<UserData> updateDefinition = Builders<UserData>.Update
+            .Set(x => x.User.LastLoginTime, timestamp);
+
+        await _userDataCollection.UpdateOneAsync(filterDefinition, updateDefinition);
+    }
+
 }

@@ -25,4 +25,6 @@ public interface IUserDataRepository
     public Task<UserData> GetByXuidRemovingCurrentLiveData(ulong xuid);
     public Task SetStartTime(ulong xuid, long timestamp);
     public Task UpdateUserLotteries(ulong xuid, List<Lottery> lotteries);
+
+    public Task UpdateLastLoginTime(ulong xuid, long timestamp);
 }

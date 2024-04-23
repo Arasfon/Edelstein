@@ -226,6 +226,13 @@ public class UserService : IUserService
     public async Task UpdateUserLotteries(ulong xuid, List<Lottery> lotteries) =>
         await _userDataRepository.UpdateUserLotteries(xuid, lotteries);
 
+    public async Task UpdateLastLoginTime(ulong xuid, long? timestamp = null)
+    {
+        timestamp ??= DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+        await _userDataRepository.UpdateLastLoginTime(xuid, timestamp.Value);
+    }
+
     private async Task<ulong> GetNextXuid() =>
         await _sequenceRepository.GetNextValueById(SequenceNames.Xuids, 10000_00000_00000);
 }

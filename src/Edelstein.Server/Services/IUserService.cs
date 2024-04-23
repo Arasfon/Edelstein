@@ -32,4 +32,6 @@ public interface IUserService
         List<Point> points, List<Lottery> lotteries);
 
     public Task UpdateUserLotteries(ulong xuid, List<Lottery> lotteries);
+
+    public Task UpdateLastLoginTime(ulong xuid, long? timestamp = null);
 }
