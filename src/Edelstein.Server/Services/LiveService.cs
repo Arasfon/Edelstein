@@ -698,7 +698,8 @@ public class LiveService : ILiveService
 
         live ??= new Live { ClearCount = 0 };
 
-        List<LiveClearRewardMst> liveClearRewardMsts = await _mstDbContext.LiveClearRewardMsts.Where(x => x.MasterLiveId == masterLiveId).ToListAsync();
+        List<LiveClearRewardMst> liveClearRewardMsts =
+            await _mstDbContext.LiveClearRewardMsts.Where(x => x.MasterLiveId == masterLiveId).ToListAsync();
 
         List<LiveReward> ensuredRewards = [];
         List<LiveReward> randomRewards = [];
@@ -731,8 +732,8 @@ public class LiveService : ILiveService
                         Value = liveClearRewardMst.Value,
                         Amount = liveClearRewardMst.Amount,
                         GetableCount = liveClearRewardMst.GetableCount,
-                        ReceivedCount = (liveClearRewardMst.GetableCount -
-                            live.LimitedRewards.FirstOrDefault(x => x.MasterRewardId == liveClearRewardMst.Value)?.Remaining) ?? 0
+                        ReceivedCount = liveClearRewardMst.GetableCount -
+                            live.LimitedRewards.FirstOrDefault(x => x.MasterRewardId == liveClearRewardMst.Value)?.Remaining ?? 0
                     });
                     break;
                 }

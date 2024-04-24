@@ -206,5 +206,4 @@ public class UserDataRepository : IUserDataRepository
 
         await _userDataCollection.UpdateOneAsync(filterDefinition, updateDefinition);
     }
-
 }

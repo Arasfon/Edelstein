@@ -54,9 +54,11 @@ public class LiveController : Controller
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
-        LiveRewardsRetrievalResult liveRewardsRetrievalResult = await _liveService.GetLiveRewards(xuid, encryptedRequest.DeserializedObject.MasterLiveId);
+        LiveRewardsRetrievalResult liveRewardsRetrievalResult =
+            await _liveService.GetLiveRewards(xuid, encryptedRequest.DeserializedObject.MasterLiveId);
 
-        return new EncryptedResponse<LiveRewardsResponseData>(new LiveRewardsResponseData(liveRewardsRetrievalResult.EnsuredRewards, liveRewardsRetrievalResult.RandomRewards));
+        return new EncryptedResponse<LiveRewardsResponseData>(new LiveRewardsResponseData(liveRewardsRetrievalResult.EnsuredRewards,
+            liveRewardsRetrievalResult.RandomRewards));
     }
 
     [Route("ranking")]

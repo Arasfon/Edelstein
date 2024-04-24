@@ -37,7 +37,8 @@ public class MetricsAuthorizationMiddleware : IMiddleware
         string username = credentialItems[0];
         string password = credentialItems[1];
 
-        bool authorized = username == _metricsOptions.Value.Authentication.Username && password == _metricsOptions.Value.Authentication.Password;
+        bool authorized = username == _metricsOptions.Value.Authentication.Username &&
+            password == _metricsOptions.Value.Authentication.Password;
 
         if (!authorized)
         {
