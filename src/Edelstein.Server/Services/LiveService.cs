@@ -747,6 +747,15 @@ public class LiveService : ILiveService
         };
     }
 
+    public async Task<Gem?> ContinueLive(ulong xuid, uint masterLiveId, LiveLevel liveLevel)
+    {
+        const int gemCharge = 100;
+
+        Gem? gem = await _userService.ChargeGems(xuid, gemCharge);
+
+        return gem;
+    }
+
     private class JoinedLiveMst : LiveMst
     {
         [SetsRequiredMembers]

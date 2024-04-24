@@ -85,6 +85,19 @@ public class LiveController : Controller
         return new EncryptedResponse<LiveRetireResponseData>(new LiveRetireResponseData(new Stamina(), [], []));
     }
 
+    [Route("continue")]
+    public async Task<EncryptedResult> Continue(EncryptedRequest<LiveContinueRequestData> encryptedRequest)
+    {
+        ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
+
+        Gem? gem = await _liveService.ContinueLive(xuid, encryptedRequest.DeserializedObject.MasterLiveId, encryptedRequest.DeserializedObject.Level);
+
+        if (gem is null)
+            throw new Exception("Not enough gems available");
+
+        return new EncryptedResponse<LiveContinueResponseData>(new LiveContinueResponseData(gem));
+    }
+
     [Route("end")]
     public async Task<EncryptedResult> End(EncryptedRequest<LiveEndRequestData> encryptedRequest)
     {

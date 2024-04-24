@@ -206,4 +206,20 @@ public class UserDataRepository : IUserDataRepository
 
         await _userDataCollection.UpdateOneAsync(filterDefinition, updateDefinition);
     }
+
+    public async Task<Gem> IncrementGems(ulong xuid, int freeAmount, int paidAmount)
+    {
+        FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
+
+        UpdateDefinition<UserData> updateDefinition = Builders<UserData>.Update
+            .Inc(x => x.Gem.Free, freeAmount)
+            .Inc(x => x.Gem.Charge, paidAmount)
+            .Inc(x => x.Gem.Total, freeAmount + paidAmount);
+
+        return (await _userDataCollection.FindOneAndUpdateAsync(filterDefinition, updateDefinition,
+            new FindOneAndUpdateOptions<UserData>
+            {
+                ReturnDocument = ReturnDocument.After
+            })).Gem;
+    }
 }

@@ -1,3 +1,5 @@
+using Edelstein.Data.Models.Components;
+using Edelstein.Data.Msts;
 using Edelstein.Server.Models;
 using Edelstein.Server.Models.Endpoints.Live;
 
@@ -9,4 +11,5 @@ public interface ILiveService
     public Task RetireLive(ulong xuid, LiveRetireRequestData liveRetireData);
     public Task<LiveFinishResult> FinishLive(ulong xuid, LiveEndRequestData liveFinishData);
     public Task<LiveRewardsRetrievalResult> GetLiveRewards(ulong xuid, uint masterLiveId);
+    public Task<Gem?> ContinueLive(ulong xuid, uint masterLiveId, LiveLevel liveLevel);
 }

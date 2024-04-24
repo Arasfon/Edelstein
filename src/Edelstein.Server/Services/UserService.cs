@@ -233,6 +233,26 @@ public class UserService : IUserService
         await _userDataRepository.UpdateLastLoginTime(xuid, timestamp.Value);
     }
 
+    public async Task<Gem?> ChargeGems(ulong xuid, int gemCharge)
+    {
+        UserData userData = (await _userDataRepository.GetByXuid(xuid))!;
+
+        if (userData.Gem.Total - gemCharge < 0)
+            return null;
+
+        int freeCharge = (int)Math.Min(userData.Gem.Free, gemCharge);
+
+        gemCharge -= freeCharge;
+
+        int paidCharge = (int)Math.Min(userData.Gem.Charge, gemCharge);
+
+        gemCharge -= paidCharge;
+
+        Debug.Assert(gemCharge == 0);
+
+        return await _userDataRepository.IncrementGems(xuid, -freeCharge, -paidCharge);
+    }
+
     private async Task<ulong> GetNextXuid() =>
         await _sequenceRepository.GetNextValueById(SequenceNames.Xuids, 10000_00000_00000);
 }

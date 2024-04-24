@@ -27,4 +27,5 @@ public interface IUserDataRepository
     public Task UpdateUserLotteries(ulong xuid, List<Lottery> lotteries);
 
     public Task UpdateLastLoginTime(ulong xuid, long timestamp);
+    public Task<Gem> IncrementGems(ulong xuid, int freeAmount, int paidAmount);
 }

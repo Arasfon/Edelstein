@@ -34,4 +34,5 @@ public interface IUserService
     public Task UpdateUserLotteries(ulong xuid, List<Lottery> lotteries);
 
     public Task UpdateLastLoginTime(ulong xuid, long? timestamp = null);
+    public Task<Gem?> ChargeGems(ulong xuid, int gemCharge);
 }
