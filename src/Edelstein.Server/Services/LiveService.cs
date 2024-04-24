@@ -245,38 +245,49 @@ public class LiveService : ILiveService
 
         async Task AddRandomRewards()
         {
-            AddPenlights();
+            AddLimitedItem(19100001, 1, 100, 1, 1);
 
-            AddBooks();
+            AddItem(17001001, 1, 1, 1);
 
-            // TODO: Filter unneeded rewards based on actual logic
             List<LiveClearRewardMst> liveClearRewardMsts = await _mstDbContext.LiveClearRewardMsts
-                .Where(x => x.MasterLiveId == liveFinishData.MasterLiveId && x.MasterReleaseLabelId == 1 &&
-                    x.Type == Data.Msts.RewardType.ChatStamp)
+                .Where(x => x.MasterLiveId == liveFinishData.MasterLiveId && x.MasterReleaseLabelId == 1)
                 .ToListAsync();
 
             foreach (LiveClearRewardMst liveClearRewardMst in liveClearRewardMsts)
-                AddStamp(liveClearRewardMst.Value);
-
-            void AddPenlights()
             {
-                const uint randomPenlightItemId = 19100001;
-                const int randomPenlightItemAmount = 1;
-                const int maxDropAmount = 100;
+                switch (liveClearRewardMst.Type)
+                {
+                    case Data.Msts.RewardType.Item:
+                    {
+                        AddItem(liveClearRewardMst.Value, 1, 1, 1);
+                        break;
+                    }
+                    case Data.Msts.RewardType.ChatStamp:
+                    {
+                        AddStamp(liveClearRewardMst.Value);
+                        break;
+                    }
+                    default:
+                        // Everything else should not be possible
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
 
-                int amount = randomPenlightItemAmount * BinaryRandom.NextMultipleCount(multiplier, 1, 1);
+            void AddLimitedItem(uint itemId, int dropAmount, int maxDropAmount, int dropRateNumerator, int dropRateDenumerator)
+            {
+                int amount = dropAmount * BinaryRandom.NextMultipleCount(multiplier, dropRateNumerator, dropRateDenumerator);
 
                 if (amount == 0)
                     return;
 
-                LimitedReward? limitedReward = updatedLive.LimitedRewards.FirstOrDefault(x => x.MasterRewardId == randomPenlightItemId);
+                LimitedReward? limitedReward = updatedLive.LimitedRewards.FirstOrDefault(x => x.MasterRewardId == itemId);
 
                 if (limitedReward is null)
                 {
                     rewards.Add(new Reward
                     {
                         Type = RewardType.Item,
-                        Value = randomPenlightItemId,
+                        Value = itemId,
                         Amount = amount,
                         DropInfo = new DropInfo
                         {
@@ -288,7 +299,7 @@ public class LiveService : ILiveService
 
                     updatedLive.LimitedRewards.Add(new LimitedReward
                     {
-                        MasterRewardId = randomPenlightItemId,
+                        MasterRewardId = itemId,
                         Remaining = maxDropAmount - amount
                     });
                 }
@@ -305,7 +316,7 @@ public class LiveService : ILiveService
                     rewards.Add(new Reward
                     {
                         Type = RewardType.Item,
-                        Value = randomPenlightItemId,
+                        Value = itemId,
                         Amount = amount,
                         DropInfo = new DropInfo
                         {
@@ -316,7 +327,7 @@ public class LiveService : ILiveService
                     });
                 }
 
-                Item? itemDuplicate = uvl.ItemList.FirstOrDefault(x => x.MasterItemId == randomPenlightItemId);
+                Item? itemDuplicate = uvl.ItemList.FirstOrDefault(x => x.MasterItemId == itemId);
 
                 if (itemDuplicate is not null)
                 {
@@ -324,7 +335,7 @@ public class LiveService : ILiveService
                     return;
                 }
 
-                if (allUserItems.TryGetValue(randomPenlightItemId, out Item? item))
+                if (allUserItems.TryGetValue(itemId, out Item? item))
                 {
                     item.Amount += amount;
                     uvl.ItemList.Add(item);
@@ -333,7 +344,7 @@ public class LiveService : ILiveService
                 {
                     item = new Item
                     {
-                        MasterItemId = randomPenlightItemId,
+                        MasterItemId = itemId,
                         Amount = amount,
                         ExpireDateTime = null
                     };
@@ -342,12 +353,9 @@ public class LiveService : ILiveService
                 }
             }
 
-            void AddBooks()
+            void AddItem(uint itemId, int dropAmount, int dropRateNumerator, int dropRateDenumerator)
             {
-                const uint randomBookItemId = 17001001;
-                const int randomBookItemAmount = 1;
-
-                int amount = randomBookItemAmount * BinaryRandom.NextMultipleCount(multiplier, 1, 1);
+                int amount = dropAmount * BinaryRandom.NextMultipleCount(multiplier, dropRateNumerator, dropRateDenumerator);
 
                 if (amount == 0)
                     return;
@@ -355,11 +363,11 @@ public class LiveService : ILiveService
                 rewards.Add(new Reward
                 {
                     Type = RewardType.Item,
-                    Value = randomBookItemId,
+                    Value = itemId,
                     Amount = amount
                 });
 
-                Item? itemDuplicate = uvl.ItemList.FirstOrDefault(x => x.MasterItemId == randomBookItemId);
+                Item? itemDuplicate = uvl.ItemList.FirstOrDefault(x => x.MasterItemId == itemId);
 
                 if (itemDuplicate is not null)
                 {
@@ -367,7 +375,7 @@ public class LiveService : ILiveService
                     return;
                 }
 
-                if (allUserItems.TryGetValue(randomBookItemId, out Item? item))
+                if (allUserItems.TryGetValue(itemId, out Item? item))
                 {
                     item.Amount += amount;
                     uvl.ItemList.Add(item);
@@ -376,7 +384,7 @@ public class LiveService : ILiveService
                 {
                     item = new Item
                     {
-                        MasterItemId = randomBookItemId,
+                        MasterItemId = itemId,
                         Amount = amount,
                         ExpireDateTime = null
                     };
