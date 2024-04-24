@@ -3,6 +3,7 @@ using Edelstein.Data.Models;
 using Edelstein.Data.Models.Components;
 using Edelstein.Data.Msts;
 using Edelstein.Data.Msts.Persistence;
+using Edelstein.Server.Models;
 using Edelstein.Server.Random;
 
 using Microsoft.EntityFrameworkCore;

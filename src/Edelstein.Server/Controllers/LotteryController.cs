@@ -1,9 +1,9 @@
 using Edelstein.Data.Extensions;
-using Edelstein.Data.Models;
 using Edelstein.Data.Models.Components;
 using Edelstein.Data.Transport;
 using Edelstein.Server.ActionResults;
 using Edelstein.Server.Authorization;
+using Edelstein.Server.Models;
 using Edelstein.Server.Models.Endpoints.Lottery;
 using Edelstein.Server.Security;
 using Edelstein.Server.Services;

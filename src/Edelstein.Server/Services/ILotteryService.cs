@@ -1,5 +1,5 @@
-using Edelstein.Data.Models;
 using Edelstein.Data.Models.Components;
+using Edelstein.Server.Models;
 
 namespace Edelstein.Server.Services;
 
