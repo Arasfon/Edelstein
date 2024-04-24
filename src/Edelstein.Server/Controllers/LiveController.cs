@@ -49,6 +49,20 @@ public class LiveController : Controller
         return new EncryptedResponse<LiveMissionResponseData>(new LiveMissionResponseData("00.00%", "00.00%", "00.00%"));
     }
 
+    [Route("reward")]
+    public async Task<EncryptedResult> Rewards(EncryptedRequest<LiveRewardsRequestData> encryptedRequest)
+    {
+        ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
+
+        LiveRewardsRetrievalResult liveRewardsRetrievalResult = await _liveService.GetLiveRewards(xuid, encryptedRequest.DeserializedObject.MasterLiveId);
+
+        return new EncryptedResponse<LiveRewardsResponseData>(new LiveRewardsResponseData(liveRewardsRetrievalResult.EnsuredRewards, liveRewardsRetrievalResult.RandomRewards));
+    }
+
+    [Route("ranking")]
+    public EncryptedResult Ranking(EncryptedRequest<LiveRankingRequestData> encryptedRequest) =>
+        new EncryptedResponse<LiveRankingResponseData>(new LiveRankingResponseData([]));
+
     [Route("start")]
     public async Task<EncryptedResult> Start(EncryptedRequest<LiveStartRequestData> encryptedRequest)
     {

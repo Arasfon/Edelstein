@@ -280,6 +280,7 @@ public class LiveService : ILiveService
                 if (amount == 0)
                     return;
 
+                // TODO: Use actual live clear reward ids
                 LimitedReward? limitedReward = updatedLive.LimitedRewards.FirstOrDefault(x => x.MasterRewardId == itemId);
 
                 if (limitedReward is null)
@@ -684,6 +685,65 @@ public class LiveService : ILiveService
             userData.Gem.Total += gemChange;
             uvl.Gem = userData.Gem;
         }
+    }
+
+    public async Task<LiveRewardsRetrievalResult> GetLiveRewards(ulong xuid, uint masterLiveId)
+    {
+        UserData? userData = await _userService.GetUserDataByXuid(xuid);
+
+        if (userData is null)
+            return new LiveRewardsRetrievalResult();
+
+        Live? live = userData.LiveList.FirstOrDefault(x => x.MasterLiveId == masterLiveId);
+
+        live ??= new Live { ClearCount = 0 };
+
+        List<LiveClearRewardMst> liveClearRewardMsts = await _mstDbContext.LiveClearRewardMsts.Where(x => x.MasterLiveId == masterLiveId).ToListAsync();
+
+        List<LiveReward> ensuredRewards = [];
+        List<LiveReward> randomRewards = [];
+
+        foreach (LiveClearRewardMst liveClearRewardMst in liveClearRewardMsts)
+        {
+            switch (liveClearRewardMst.Type)
+            {
+                case Data.Msts.RewardType.Gem:
+                {
+                    ensuredRewards.Add(new LiveReward
+                    {
+                        MasterLiveClearRewardId = liveClearRewardMst.Id,
+                        Type = liveClearRewardMst.Type,
+                        Value = liveClearRewardMst.Value,
+                        Amount = liveClearRewardMst.Amount,
+                        GetableCount = liveClearRewardMst.GetableCount,
+                        ReceivedCount = live.ClearCount > 0 ? 1 : 0
+                    });
+                    break;
+                }
+                case Data.Msts.RewardType.Item when liveClearRewardMst.MasterReleaseLabelId == 1:
+                case Data.Msts.RewardType.ChatStamp:
+                {
+                    // TODO: Use actual live clear reward ids
+                    randomRewards.Add(new LiveReward
+                    {
+                        MasterLiveClearRewardId = liveClearRewardMst.Id,
+                        Type = liveClearRewardMst.Type,
+                        Value = liveClearRewardMst.Value,
+                        Amount = liveClearRewardMst.Amount,
+                        GetableCount = liveClearRewardMst.GetableCount,
+                        ReceivedCount = (liveClearRewardMst.GetableCount -
+                            live.LimitedRewards.FirstOrDefault(x => x.MasterRewardId == liveClearRewardMst.Value)?.Remaining) ?? 0
+                    });
+                    break;
+                }
+            }
+        }
+
+        return new LiveRewardsRetrievalResult
+        {
+            EnsuredRewards = ensuredRewards,
+            RandomRewards = randomRewards
+        };
     }
 
     private class JoinedLiveMst : LiveMst
