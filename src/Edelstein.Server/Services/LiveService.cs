@@ -257,16 +257,14 @@ public class LiveService : ILiveService
             {
                 switch (liveClearRewardMst.Type)
                 {
-                    case Data.Msts.RewardType.Item:
-                    {
-                        AddItem(liveClearRewardMst.Value, 1, 1, 1);
-                        break;
-                    }
                     case Data.Msts.RewardType.ChatStamp:
                     {
-                        AddStamp(liveClearRewardMst.Value);
+                        AddChatStamp(liveClearRewardMst.Value);
                         break;
                     }
+                    case Data.Msts.RewardType.Item:
+                    case Data.Msts.RewardType.Gem:
+                        break;
                     default:
                         // Everything else should not be possible
                         throw new ArgumentOutOfRangeException();
@@ -394,7 +392,7 @@ public class LiveService : ILiveService
                 }
             }
 
-            void AddStamp(uint stampId)
+            void AddChatStamp(uint chatStampId)
             {
                 const int maxDropAmount = 1;
 
@@ -406,14 +404,14 @@ public class LiveService : ILiveService
                 // Can be dropped only once
                 amount = 1;
 
-                LimitedReward? limitedReward = updatedLive.LimitedRewards.FirstOrDefault(x => x.MasterRewardId == stampId);
+                LimitedReward? limitedReward = updatedLive.LimitedRewards.FirstOrDefault(x => x.MasterRewardId == chatStampId);
 
                 if (limitedReward is null)
                 {
                     rewards.Add(new Reward
                     {
-                        Type = RewardType.Item,
-                        Value = stampId,
+                        Type = RewardType.ChatStamp,
+                        Value = chatStampId,
                         Amount = amount,
                         DropInfo = new DropInfo
                         {
@@ -425,7 +423,7 @@ public class LiveService : ILiveService
 
                     updatedLive.LimitedRewards.Add(new LimitedReward
                     {
-                        MasterRewardId = stampId,
+                        MasterRewardId = chatStampId,
                         Remaining = maxDropAmount - amount
                     });
                 }
@@ -441,8 +439,8 @@ public class LiveService : ILiveService
 
                     rewards.Add(new Reward
                     {
-                        Type = RewardType.Item,
-                        Value = stampId,
+                        Type = RewardType.ChatStamp,
+                        Value = chatStampId,
                         Amount = amount,
                         DropInfo = new DropInfo
                         {
@@ -453,13 +451,13 @@ public class LiveService : ILiveService
                     });
                 }
 
-                if (userData.MasterStampIds.Contains(stampId))
+                if (userData.MasterStampIds.Contains(chatStampId))
                     return;
 
-                if (!uvl.MasterStampIds.Contains(stampId))
-                    uvl.MasterStampIds.Add(stampId);
+                if (!uvl.MasterStampIds.Contains(chatStampId))
+                    uvl.MasterStampIds.Add(chatStampId);
 
-                userData.MasterStampIds.Add(stampId);
+                userData.MasterStampIds.Add(chatStampId);
             }
         }
 
