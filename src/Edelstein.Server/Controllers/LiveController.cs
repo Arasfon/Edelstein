@@ -75,6 +75,32 @@ public class LiveController : Controller
         return EmptyEncryptedResponseFactory.Create();
     }
 
+    [Route("skip")]
+    public async Task<EncryptedResult> Skip(EncryptedRequest<LiveSkipRequestData> encryptedRequest)
+    {
+        ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
+
+        // TODO: Fix separation of concerns (replace passing request data with parameters)
+        LiveFinishResult liveFinishResult = await _liveService.SkipLive(xuid, encryptedRequest.DeserializedObject);
+
+        return new EncryptedResponse<LiveSkipResponseData>(new LiveSkipResponseData
+        {
+            ItemList = liveFinishResult.ChangedItems,
+            PointList = liveFinishResult.ChangedPoints,
+            Live = liveFinishResult.FinishedLiveData,
+            ClearMasterLiveMissionIds = liveFinishResult.ClearedMasterLiveMissionIds,
+            User = liveFinishResult.UpdatedUserData.User,
+            Stamina = liveFinishResult.UpdatedUserData.Stamina,
+            CharacterList = liveFinishResult.UpdatedCharacters,
+            RewardList = liveFinishResult.Rewards,
+            GiftList = liveFinishResult.Gifts,
+            ClearMissionIds = liveFinishResult.ClearedMissionIds,
+            EventPointRewardList = liveFinishResult.EventPointRewards,
+            RankingChange = liveFinishResult.RankingChange,
+            EventRankingData = liveFinishResult.EventRankingData
+        });
+    }
+
     [Route("retire")]
     public async Task<EncryptedResult> Retire(EncryptedRequest<LiveRetireRequestData> encryptedRequest)
     {
@@ -103,6 +129,7 @@ public class LiveController : Controller
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
+        // TODO: Fix separation of concerns (replace passing request data with parameters)
         LiveFinishResult liveFinishResult = await _liveService.FinishLive(xuid, encryptedRequest.DeserializedObject);
 
         return new EncryptedResponse<LiveEndResponseData>(new LiveEndResponseData

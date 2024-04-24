@@ -43,6 +43,481 @@ public class LiveService : ILiveService
     public async Task RetireLive(ulong xuid, LiveRetireRequestData liveRetireData) =>
         await _userDataRepository.SetCurrentLiveData(xuid, null);
 
+    public async Task<LiveFinishResult> SkipLive(ulong xuid, LiveSkipRequestData liveSkipData)
+    {
+        UserData userData = (await _userDataRepository.GetByXuid(xuid))!;
+
+        DateTimeOffset currentDateTimeOffset = DateTimeOffset.UtcNow;
+        long currentTimestamp = currentDateTimeOffset.ToUnixTimeSeconds();
+
+        UpdatedValueList uvl = new();
+        List<Reward> rewards = [];
+        List<Gift> gifts = [];
+        List<uint> clearedMissionIds = [];
+
+        // Build item dictionary for efficient lookup
+        Dictionary<uint, Item> allUserItems = userData.ItemList.ToDictionary(x => x.MasterItemId);
+
+        int multiplier = liveSkipData.LiveBoost;
+
+        int coinChange = 750 * multiplier;
+        int expChange = 10 * multiplier;
+        int nextUserExp = userData.User.Exp + expChange;
+
+        // Calculate stamina
+        (_, Stamina updatedStamina) = await CalculateStamina(userData.User.Exp,
+            nextUserExp, userData.Stamina, 10 * multiplier, currentTimestamp);
+
+        List<Character> deckCharacters = await _userService.GetDeckCharactersFromUserData(userData, liveSkipData.DeckSlot);
+
+        ChargeSkipTickets();
+
+        // Guaranteed reward
+        AddGuaranteedRewards();
+
+        // Live
+        Live updatedLive = UpdateLive();
+
+        // Add random rewards
+        await AddRandomRewards();
+
+        // Live missions
+        LiveMission? storedliveMissionData = userData.LiveMissionList.FirstOrDefault(x => x.MasterLiveId == liveSkipData.MasterLiveId);
+
+        if (storedliveMissionData is null)
+        {
+            storedliveMissionData = new LiveMission { MasterLiveId = liveSkipData.MasterLiveId };
+
+            userData.LiveMissionList.Add(storedliveMissionData);
+        }
+
+        await AddLiveMissionRewards();
+
+        // Character experience
+        UpdateCharacterExperience();
+
+        // Update coins
+        UpdateCoins();
+
+        UserData resultUserData =
+            await UpdateUserDataAfterLiveCreatingGiftIds(xuid, currentTimestamp,
+                userData.LiveList, userData.PointList, userData.ItemList,
+                updatedStamina, nextUserExp, userData.Gem,
+                userData.CharacterList, userData.LiveMissionList, userData.MasterStampIds,
+                gifts, clearedMissionIds);
+
+        return new LiveFinishResult
+        {
+            Status = LiveFinishResultStatus.Success,
+            ChangedGem = userData.Gem,
+            ChangedItems = uvl.ItemList,
+            ChangedPoints = uvl.PointList,
+            FinishedLiveData = updatedLive,
+            ClearedMasterLiveMissionIds = storedliveMissionData.ClearMasterLiveMissionIds,
+            UpdatedUserData = resultUserData,
+            UpdatedCharacters = deckCharacters,
+            Rewards = rewards,
+            Gifts = gifts,
+            ClearedMissionIds = [],
+            EventPointRewards = [],
+            RankingChange = null!,
+            EventMember = null,
+            EventRankingData = null!
+        };
+
+        void ChargeSkipTickets()
+        {
+            const uint ticketItemId = 21000001;
+            int ticketChargeAmount = liveSkipData.LiveBoost;
+
+            Item? itemDuplicate = uvl.ItemList.FirstOrDefault(x => x.MasterItemId == ticketItemId);
+
+            if (itemDuplicate is not null)
+            {
+                itemDuplicate.Amount -= ticketChargeAmount;
+
+                if (itemDuplicate.Amount < 0)
+                    throw new Exception("Not enough tickets");
+
+                return;
+            }
+
+            if (allUserItems.TryGetValue(ticketItemId, out Item? item))
+            {
+                item.Amount -= ticketChargeAmount;
+
+                if (item.Amount < 0)
+                    throw new Exception("Not enough tickets");
+
+                uvl.ItemList.Add(item);
+            }
+            else
+                throw new Exception("No tickets found");
+        }
+
+        Live UpdateLive()
+        {
+            Live? live = userData.LiveList.FirstOrDefault(x => x.MasterLiveId == liveSkipData.MasterLiveId);
+
+            if (live is null)
+                throw new Exception("Skip is not available before initial live completion");
+
+            live.ClearCount += liveSkipData.LiveBoost;
+            live.UpdatedTime = (int)currentTimestamp;
+
+            return live;
+        }
+
+        void AddGuaranteedRewards()
+        {
+            const uint guaranteedItemId = 16005001;
+            int guaranteedItemAmount = 5 * multiplier;
+
+            rewards.Add(new Reward
+            {
+                Type = RewardType.Item,
+                Value = guaranteedItemId,
+                Amount = guaranteedItemAmount
+            });
+
+            Item? itemDuplicate = uvl.ItemList.FirstOrDefault(x => x.MasterItemId == guaranteedItemId);
+
+            if (itemDuplicate is not null)
+            {
+                itemDuplicate.Amount += guaranteedItemAmount;
+                return;
+            }
+
+            if (allUserItems.TryGetValue(guaranteedItemId, out Item? item))
+            {
+                item.Amount += guaranteedItemAmount;
+                uvl.ItemList.Add(item);
+            }
+            else
+            {
+                item = new Item
+                {
+                    MasterItemId = guaranteedItemId,
+                    Amount = guaranteedItemAmount,
+                    ExpireDateTime = null
+                };
+                userData.ItemList.Add(item);
+                uvl.ItemList.Add(item);
+            }
+        }
+
+        async Task AddRandomRewards()
+        {
+            AddLimitedItem(19100001, 1, 100, 1, 1);
+
+            AddItem(17001001, 1, 1, 1);
+
+            List<LiveClearRewardMst> liveClearRewardMsts = await _mstDbContext.LiveClearRewardMsts
+                .Where(x => x.MasterLiveId == liveSkipData.MasterLiveId && x.MasterReleaseLabelId == 1)
+                .ToListAsync();
+
+            foreach (LiveClearRewardMst liveClearRewardMst in liveClearRewardMsts)
+            {
+                switch (liveClearRewardMst.Type)
+                {
+                    case Data.Msts.RewardType.ChatStamp:
+                    {
+                        AddChatStamp(liveClearRewardMst.Value);
+                        break;
+                    }
+                    case Data.Msts.RewardType.Item:
+                    case Data.Msts.RewardType.Gem:
+                        break;
+                    default:
+                        // Everything else should not be possible
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            void AddLimitedItem(uint itemId, int dropAmount, int maxDropAmount, int dropRateNumerator, int dropRateDenumerator)
+            {
+                int amount = dropAmount * BinaryRandom.NextMultipleCount(multiplier, dropRateNumerator, dropRateDenumerator);
+
+                if (amount == 0)
+                    return;
+
+                // TODO: Use actual live clear reward ids
+                LimitedReward? limitedReward = updatedLive.LimitedRewards.FirstOrDefault(x => x.MasterRewardId == itemId);
+
+                if (limitedReward is null)
+                {
+                    rewards.Add(new Reward
+                    {
+                        Type = RewardType.Item,
+                        Value = itemId,
+                        Amount = amount,
+                        DropInfo = new DropInfo
+                        {
+                            FirstReward = 0,
+                            GetableCount = amount,
+                            RemainingGetableCount = maxDropAmount - amount
+                        }
+                    });
+
+                    updatedLive.LimitedRewards.Add(new LimitedReward
+                    {
+                        MasterRewardId = itemId,
+                        Remaining = maxDropAmount - amount
+                    });
+                }
+                else
+                {
+                    if (limitedReward.Remaining == 0)
+                        return;
+
+                    if (limitedReward.Remaining - amount < 0)
+                        amount = limitedReward.Remaining;
+
+                    limitedReward.Remaining -= amount;
+
+                    rewards.Add(new Reward
+                    {
+                        Type = RewardType.Item,
+                        Value = itemId,
+                        Amount = amount,
+                        DropInfo = new DropInfo
+                        {
+                            FirstReward = 0,
+                            GetableCount = maxDropAmount - limitedReward.Remaining,
+                            RemainingGetableCount = limitedReward.Remaining
+                        }
+                    });
+                }
+
+                Item? itemDuplicate = uvl.ItemList.FirstOrDefault(x => x.MasterItemId == itemId);
+
+                if (itemDuplicate is not null)
+                {
+                    itemDuplicate.Amount += amount;
+                    return;
+                }
+
+                if (allUserItems.TryGetValue(itemId, out Item? item))
+                {
+                    item.Amount += amount;
+                    uvl.ItemList.Add(item);
+                }
+                else
+                {
+                    item = new Item
+                    {
+                        MasterItemId = itemId,
+                        Amount = amount,
+                        ExpireDateTime = null
+                    };
+                    userData.ItemList.Add(item);
+                    uvl.ItemList.Add(item);
+                }
+            }
+
+            void AddItem(uint itemId, int dropAmount, int dropRateNumerator, int dropRateDenumerator)
+            {
+                int amount = dropAmount * BinaryRandom.NextMultipleCount(multiplier, dropRateNumerator, dropRateDenumerator);
+
+                if (amount == 0)
+                    return;
+
+                rewards.Add(new Reward
+                {
+                    Type = RewardType.Item,
+                    Value = itemId,
+                    Amount = amount
+                });
+
+                Item? itemDuplicate = uvl.ItemList.FirstOrDefault(x => x.MasterItemId == itemId);
+
+                if (itemDuplicate is not null)
+                {
+                    itemDuplicate.Amount += amount;
+                    return;
+                }
+
+                if (allUserItems.TryGetValue(itemId, out Item? item))
+                {
+                    item.Amount += amount;
+                    uvl.ItemList.Add(item);
+                }
+                else
+                {
+                    item = new Item
+                    {
+                        MasterItemId = itemId,
+                        Amount = amount,
+                        ExpireDateTime = null
+                    };
+                    userData.ItemList.Add(item);
+                    uvl.ItemList.Add(item);
+                }
+            }
+
+            void AddChatStamp(uint chatStampId)
+            {
+                const int maxDropAmount = 1;
+
+                int amount = BinaryRandom.NextMultipleCount(multiplier, 1, 1);
+
+                if (amount == 0)
+                    return;
+
+                // Can be dropped only once
+                amount = 1;
+
+                LimitedReward? limitedReward = updatedLive.LimitedRewards.FirstOrDefault(x => x.MasterRewardId == chatStampId);
+
+                if (limitedReward is null)
+                {
+                    rewards.Add(new Reward
+                    {
+                        Type = RewardType.ChatStamp,
+                        Value = chatStampId,
+                        Amount = amount,
+                        DropInfo = new DropInfo
+                        {
+                            FirstReward = 0,
+                            GetableCount = amount,
+                            RemainingGetableCount = maxDropAmount - amount
+                        }
+                    });
+
+                    updatedLive.LimitedRewards.Add(new LimitedReward
+                    {
+                        MasterRewardId = chatStampId,
+                        Remaining = maxDropAmount - amount
+                    });
+                }
+                else
+                {
+                    if (limitedReward.Remaining == 0)
+                        return;
+
+                    if (limitedReward.Remaining - amount < 0)
+                        amount = limitedReward.Remaining;
+
+                    limitedReward.Remaining -= amount;
+
+                    rewards.Add(new Reward
+                    {
+                        Type = RewardType.ChatStamp,
+                        Value = chatStampId,
+                        Amount = amount,
+                        DropInfo = new DropInfo
+                        {
+                            FirstReward = 0,
+                            GetableCount = maxDropAmount - limitedReward.Remaining,
+                            RemainingGetableCount = limitedReward.Remaining
+                        }
+                    });
+                }
+
+                if (userData.MasterStampIds.Contains(chatStampId))
+                    return;
+
+                if (!uvl.MasterStampIds.Contains(chatStampId))
+                    uvl.MasterStampIds.Add(chatStampId);
+
+                userData.MasterStampIds.Add(chatStampId);
+            }
+        }
+
+        async Task AddLiveMissionRewards()
+        {
+            // TODO: Consider loading to consts
+            List<LiveMissionMst> liveMissionsMsts = await _mstDbContext.LiveMissionMsts.ToListAsync();
+
+            Dictionary<uint, LiveMissionRewardMst> liveMissionsRewardsMsts = (await _mstDbContext.LiveMissionRewardMsts.ToListAsync())
+                .ToDictionary(x => x.Id);
+
+            CalculateClearCountMissions();
+
+            void CalculateClearCountMissions()
+            {
+                List<LiveMissionMst> remainingMissions = liveMissionsMsts
+                    .Where(x => x.Type == LiveMissionType.ClearCount)
+                    .OrderBy(x => x.Id)
+                    .ExceptBy(storedliveMissionData.ClearMasterLiveMissionIds, x => x.Id)
+                    .ToList();
+
+                if (remainingMissions.Count == 0)
+                    return;
+
+                foreach (LiveMissionMst liveMissionMst in remainingMissions)
+                {
+                    if (updatedLive.ClearCount < Int32.Parse(liveMissionMst.Value))
+                        continue;
+
+                    AddLiveMissionReward(liveMissionsRewardsMsts[liveMissionMst.MasterLiveMissionRewardId]);
+                    storedliveMissionData.ClearMasterLiveMissionIds.Add(liveMissionMst.Id);
+                }
+            }
+
+            void AddLiveMissionReward(LiveMissionRewardMst liveMissionRewardMst)
+            {
+                if (liveMissionRewardMst.GiveType == GiveType.Gift)
+                {
+                    Gift gift = new()
+                    {
+                        IsReceive = false,
+                        ReasonText = "Live mission completion reward",
+                        Value = liveMissionRewardMst.Value,
+                        Amount = liveMissionRewardMst.Amount,
+                        RewardType = liveMissionRewardMst.Type,
+                        CreatedDateTime = currentTimestamp,
+                        ExpireDateTime = currentDateTimeOffset.AddYears(1).ToUnixTimeSeconds()
+                    };
+
+                    gifts.Add(gift);
+                }
+                else
+                    throw new NotImplementedException();
+            }
+        }
+
+        void UpdateCharacterExperience()
+        {
+            Dictionary<uint, (ulong ExpIncrease, Character Character)> characterIdToExpIncreaseMap = new();
+
+            foreach (Character character in deckCharacters[..2].Concat(deckCharacters[^2..]))
+                characterIdToExpIncreaseMap[character.MasterCharacterId] = (1 * (ulong)multiplier, character);
+
+            foreach (Character character in deckCharacters[2..4].Concat(deckCharacters[^4..^2]))
+                characterIdToExpIncreaseMap[character.MasterCharacterId] = (2 * (ulong)multiplier, character);
+
+            characterIdToExpIncreaseMap[deckCharacters[4].MasterCharacterId] = (5 * (ulong)multiplier, deckCharacters[4]);
+
+            deckCharacters = characterIdToExpIncreaseMap.Values.Select(x =>
+                {
+                    x.Character.BeforeExp = x.Character.Exp;
+                    x.Character.Exp += x.ExpIncrease;
+                    return x.Character;
+                })
+                .ToList();
+        }
+
+        void UpdateCoins()
+        {
+            Point? coinsPoint = userData.PointList.FirstOrDefault(x => x.Type == PointType.Coin);
+
+            if (coinsPoint is null)
+            {
+                coinsPoint = new Point
+                {
+                    Type = PointType.Coin,
+                    Amount = 0
+                };
+
+                userData.PointList.Add(coinsPoint);
+            }
+
+            coinsPoint.Amount += coinChange;
+            uvl.PointList.Add(coinsPoint);
+        }
+    }
+
     public async Task<LiveFinishResult> FinishLive(ulong xuid, LiveEndRequestData liveFinishData)
     {
         UserData userData = await _userDataRepository.GetByXuidRemovingCurrentLiveData(xuid);
