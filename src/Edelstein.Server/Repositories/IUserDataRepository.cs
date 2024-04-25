@@ -11,7 +11,7 @@ public interface IUserDataRepository
     public Task<UserData> SetStartingCard(ulong xuid, uint masterCardId, uint masterTitleId);
     public Task AddCards(ulong xuid, List<Card> cards);
     public Task AddCharacter(ulong xuid, uint characterId, uint experience = 0);
-    public Task SetDeck(ulong xuid, byte slot, IEnumerable<ulong> mainCardIds);
+    public Task<Deck> SetDeck(ulong xuid, byte slot, IEnumerable<ulong> mainCardIds);
 
     public Task<User> UpdateUser(ulong xuid, string? name, string? comment, uint? favoriteMasterCardId, uint? guestSmileMasterCardId,
         uint? guestPureMasterCardId, uint? guestCoolMasterCardId, bool? friendRequestDisabled);

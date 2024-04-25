@@ -100,4 +100,15 @@ public class CoreController : Controller
     [Route("login_bonus")]
     public EncryptedResult LoginBonus() =>
         new EncryptedResponse<LoginBonusResponseData>(new LoginBonusResponseData([], 0, []));
+
+    [HttpPost]
+    [Route("deck")]
+    public async Task<EncryptedResult> SetDeck(EncryptedRequest<DeckRequestData> encryptedRequest)
+    {
+        ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
+
+        Deck deck = await _userService.UpdateDeck(xuid, encryptedRequest.DeserializedObject.Slot, encryptedRequest.DeserializedObject.MainCardIds);
+
+        return new EncryptedResponse<DeckResponseData>(new DeckResponseData(deck, []));
+    }
 }

@@ -35,4 +35,5 @@ public interface IUserService
 
     public Task UpdateLastLoginTime(ulong xuid, long? timestamp = null);
     public Task<Gem?> ChargeGems(ulong xuid, int gemCharge);
+    public Task<Deck> UpdateDeck(ulong xuid, byte slot, IEnumerable<ulong> mainCardIds);
 }

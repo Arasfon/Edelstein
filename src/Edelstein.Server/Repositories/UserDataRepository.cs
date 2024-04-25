@@ -78,7 +78,7 @@ public class UserDataRepository : IUserDataRepository
         await _userDataCollection.UpdateOneAsync(filterDefinition, updateDefinition);
     }
 
-    public async Task SetDeck(ulong xuid, byte slot, IEnumerable<ulong> mainCardIds)
+    public async Task<Deck> SetDeck(ulong xuid, byte slot, IEnumerable<ulong> mainCardIds)
     {
         FilterDefinition<UserData> filterDefinition =
             Builders<UserData>.Filter.Eq(x => x.User.Id, xuid) &
@@ -87,7 +87,10 @@ public class UserDataRepository : IUserDataRepository
         UpdateDefinition<UserData> updateDefinition =
             Builders<UserData>.Update.Set(x => x.DeckList.FirstMatchingElement().MainCardIds, mainCardIds);
 
-        await _userDataCollection.UpdateOneAsync(filterDefinition, updateDefinition);
+        return (await _userDataCollection.FindOneAndUpdateAsync(filterDefinition, updateDefinition, new FindOneAndUpdateOptions<UserData>
+        {
+            ReturnDocument = ReturnDocument.After
+        })).DeckList.First(x => x.Slot == slot);
     }
 
     public async Task<User> UpdateUser(ulong xuid, string? name, string? comment, uint? favoriteMasterCardId, uint? guestSmileMasterCardId,

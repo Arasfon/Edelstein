@@ -253,6 +253,9 @@ public class UserService : IUserService
         return await _userDataRepository.IncrementGems(xuid, -freeCharge, -paidCharge);
     }
 
+    public async Task<Deck> UpdateDeck(ulong xuid, byte slot, IEnumerable<ulong> mainCardIds) =>
+        await _userDataRepository.SetDeck(xuid, slot, mainCardIds);
+
     private async Task<ulong> GetNextXuid() =>
         await _sequenceRepository.GetNextValueById(SequenceNames.Xuids, 10000_00000_00000);
 }
