@@ -25,6 +25,7 @@ public interface IUserService
         uint? guestPureMasterCardId, uint? guestCoolMasterCardId, bool? friendRequestDisabled);
 
     public Task<List<Character>> GetDeckCharactersFromUserData(UserData? userData, uint deckSlot);
+    public Task<List<Character>> GetDeckCharactersFromUserData(UserData userData, Deck deck);
 
     public Task<UserData> SetCardsItemsPointsCreatingIds(ulong xuid, List<Card> cards, List<Item> items, List<Point> points);
 
@@ -35,5 +36,5 @@ public interface IUserService
 
     public Task UpdateLastLoginTime(ulong xuid, long? timestamp = null);
     public Task<Gem?> ChargeGems(ulong xuid, int gemCharge);
-    public Task<Deck> UpdateDeck(ulong xuid, byte slot, IEnumerable<ulong> mainCardIds);
+    public Task<Deck> UpdateDeck(ulong xuid, byte slot, List<ulong> mainCardIds);
 }

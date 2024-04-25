@@ -169,9 +169,12 @@ public class UserService : IUserService
         await _userDataRepository.UpdateUser(xuid, name, comment, favoriteMasterCardId, guestSmileMasterCardId,
             guestPureMasterCardId, guestCoolMasterCardId, friendRequestDisabled);
 
-    public Task<List<Character>> GetDeckCharactersFromUserData(UserData? userData, uint deckSlot)
+    public async Task<List<Character>> GetDeckCharactersFromUserData(UserData? userData, uint deckSlot) =>
+        await GetDeckCharactersFromUserData(userData!, userData!.DeckList.First(x => x.Slot == deckSlot));
+
+    public Task<List<Character>> GetDeckCharactersFromUserData(UserData userData, Deck deck)
     {
-        IEnumerable<ulong> cardIds = userData!.DeckList[(int)deckSlot - 1].MainCardIds;
+        List<ulong> cardIds = deck.MainCardIds;
 
         Dictionary<ulong, uint> cardDict = userData.CardList.ToDictionary(x => x.Id, x => x.MasterCardId / 10000);
         Dictionary<uint, Character> characterDict = userData.CharacterList.ToDictionary(x => x.MasterCharacterId);
@@ -253,8 +256,14 @@ public class UserService : IUserService
         return await _userDataRepository.IncrementGems(xuid, -freeCharge, -paidCharge);
     }
 
-    public async Task<Deck> UpdateDeck(ulong xuid, byte slot, IEnumerable<ulong> mainCardIds) =>
-        await _userDataRepository.SetDeck(xuid, slot, mainCardIds);
+    public async Task<Deck> UpdateDeck(ulong xuid, byte slot, List<ulong> mainCardIds)
+    {
+        List<ulong> nonZeroes = mainCardIds.Where(x => x != 0).ToList();
+        if (mainCardIds.Count != 9 || nonZeroes.Count != nonZeroes.Distinct().Count())
+            throw new Exception("Invalid card ids");
+
+        return await _userDataRepository.SetDeck(xuid, slot, mainCardIds);
+    }
 
     private async Task<ulong> GetNextXuid() =>
         await _sequenceRepository.GetNextValueById(SequenceNames.Xuids, 10000_00000_00000);

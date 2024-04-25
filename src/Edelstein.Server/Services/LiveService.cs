@@ -47,9 +47,32 @@ public class LiveService : ILiveService
     {
         UserData userData = (await _userDataRepository.GetByXuid(xuid))!;
 
+        Deck? deck = userData.DeckList.FirstOrDefault(x => x.Slot == liveSkipData.DeckSlot);
+
+        if (deck is null || deck.MainCardIds.Contains(0))
+            throw new Exception("Invalid deck");
+
+        List<Character> deckCharacters = await _userService.GetDeckCharactersFromUserData(userData, deck);
+
         DateTimeOffset currentDateTimeOffset = DateTimeOffset.UtcNow;
         long currentTimestamp = currentDateTimeOffset.ToUnixTimeSeconds();
 
+        // Simple values and their initialization
+        int multiplier = liveSkipData.LiveBoost;
+
+        int staminaDecrease = 10 * multiplier;
+        int coinChange = 750 * multiplier;
+        int expChange = 10 * multiplier;
+        int nextUserExp = userData.User.Exp + expChange;
+
+        // Calculate stamina
+        (bool isEnoughStamina, Stamina updatedStamina) = await CalculateStamina(userData.User.Exp,
+            nextUserExp, userData.Stamina, staminaDecrease, currentTimestamp);
+
+        if (!isEnoughStamina)
+            return new LiveFinishResult(LiveFinishResultStatus.NotEnoughStamina);
+
+        // Updates lists
         UpdatedValueList uvl = new();
         List<Reward> rewards = [];
         List<Gift> gifts = [];
@@ -58,18 +81,7 @@ public class LiveService : ILiveService
         // Build item dictionary for efficient lookup
         Dictionary<uint, Item> allUserItems = userData.ItemList.ToDictionary(x => x.MasterItemId);
 
-        int multiplier = liveSkipData.LiveBoost;
-
-        int coinChange = 750 * multiplier;
-        int expChange = 10 * multiplier;
-        int nextUserExp = userData.User.Exp + expChange;
-
-        // Calculate stamina
-        (_, Stamina updatedStamina) = await CalculateStamina(userData.User.Exp,
-            nextUserExp, userData.Stamina, 10 * multiplier, currentTimestamp);
-
-        List<Character> deckCharacters = await _userService.GetDeckCharactersFromUserData(userData, liveSkipData.DeckSlot);
-
+        // Charge skip tickets
         ChargeSkipTickets();
 
         // Guaranteed reward
@@ -531,21 +543,20 @@ public class LiveService : ILiveService
         if (userData.CurrentLive.Level != liveFinishData.Level)
             throw new Exception("Wrong live level finished");
 
+        Deck? deck = userData.DeckList.FirstOrDefault(x => x.Slot == userData.CurrentLive.DeckSlot);
+
+        if (deck is null || deck.MainCardIds.Contains(0))
+            throw new Exception("Invalid deck");
+
+        List<Character> deckCharacters = await _userService.GetDeckCharactersFromUserData(userData, deck);
+
         DateTimeOffset currentDateTimeOffset = DateTimeOffset.UtcNow;
         long currentTimestamp = currentDateTimeOffset.ToUnixTimeSeconds();
 
         bool isInTutorial = await _tutorialService.IsTutorialInProgress(xuid);
 
-        UpdatedValueList uvl = new();
-        List<Reward> rewards = [];
-        List<Gift> gifts = [];
-        List<uint> clearedMissionIds = [];
-
-        // Build item dictionary for efficient lookup
-        Dictionary<uint, Item> allUserItems = userData.ItemList.ToDictionary(x => x.MasterItemId);
-
         // Simple values and their initialization
-        int multiplier = (int)liveFinishData.UseLp / 10;
+        int multiplier = userData.CurrentLive.LiveBoost;
 
         int staminaDecrease = isInTutorial ? 0 : (int)liveFinishData.UseLp;
         int coinChange = 750 * multiplier;
@@ -560,7 +571,14 @@ public class LiveService : ILiveService
         if (!isEnoughStamina)
             return new LiveFinishResult(LiveFinishResultStatus.NotEnoughStamina);
 
-        List<Character> deckCharacters = await _userService.GetDeckCharactersFromUserData(userData, userData.CurrentLive!.DeckSlot);
+        // Updates lists
+        UpdatedValueList uvl = new();
+        List<Reward> rewards = [];
+        List<Gift> gifts = [];
+        List<uint> clearedMissionIds = [];
+
+        // Build item dictionary for efficient lookup
+        Dictionary<uint, Item> allUserItems = userData.ItemList.ToDictionary(x => x.MasterItemId);
 
         // Guaranteed reward
         AddGuaranteedRewards();
