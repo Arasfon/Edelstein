@@ -13,7 +13,6 @@ public class UserService : IUserService
     private readonly IAuthenticationDataRepository _authenticationDataRepository;
     private readonly IUserDataRepository _userDataRepository;
     private readonly IUserHomeRepository _userHomeRepository;
-    private readonly IUserMissionsRepository _userMissionsRepository;
     private readonly IUserInitializationDataRepository _userInitializationDataRepository;
     private readonly IDefaultGroupCardsFactoryService _defaultGroupCardsFactoryService;
     private readonly ITutorialService _tutorialService;
@@ -23,7 +22,6 @@ public class UserService : IUserService
         IAuthenticationDataRepository authenticationDataRepository,
         IUserDataRepository userDataRepository,
         IUserHomeRepository userHomeRepository,
-        IUserMissionsRepository userMissionsRepository,
         IUserInitializationDataRepository userInitializationDataRepository,
         IDefaultGroupCardsFactoryService defaultGroupCardsFactoryService,
         ITutorialService tutorialService,
@@ -32,7 +30,6 @@ public class UserService : IUserService
         _authenticationDataRepository = authenticationDataRepository;
         _userDataRepository = userDataRepository;
         _userHomeRepository = userHomeRepository;
-        _userMissionsRepository = userMissionsRepository;
         _userInitializationDataRepository = userInitializationDataRepository;
         _defaultGroupCardsFactoryService = defaultGroupCardsFactoryService;
         _tutorialService = tutorialService;
@@ -44,7 +41,6 @@ public class UserService : IUserService
         AuthenticationData authenticationData = await _authenticationDataRepository.Create(await GetNextXuid(), publicKey);
         UserData userData = await _userDataRepository.CreateTutorialUserData(authenticationData.Xuid);
         await _userHomeRepository.Create(authenticationData.Xuid);
-        await _userMissionsRepository.Create(authenticationData.Xuid);
 
         return new UserRegistrationResult(authenticationData, userData);
     }
@@ -67,9 +63,6 @@ public class UserService : IUserService
 
     public async Task<UserHomeDocument?> GetHomeByXuid(ulong xuid) =>
         await _userHomeRepository.GetByXuid(xuid);
-
-    public async Task<UserMissionsDocument?> GetUserMissionsByXuid(ulong xuid) =>
-        await _userMissionsRepository.GetUserMissionsByXuid(xuid);
 
     public async Task<User> InitializeUserStartingCharacterAndDeck(ulong xuid)
     {

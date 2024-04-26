@@ -135,7 +135,6 @@ try
     builder.Services.AddScoped<IAuthenticationDataRepository, AuthenticationDataRepository>();
     builder.Services.AddScoped<IUserDataRepository, UserDataRepository>();
     builder.Services.AddScoped<IUserHomeRepository, UserHomeRepository>();
-    builder.Services.AddScoped<IUserMissionsRepository, UserMissionsRepository>();
     builder.Services.AddScoped<IUserInitializationDataRepository, UserInitializationDataRepository>();
     builder.Services.AddScoped<ILiveDataRepository, LiveDataRepository>();
 

@@ -83,13 +83,14 @@ public class CoreController : Controller
     }
 
     [Route("mission")]
-    public async Task<EncryptedResult> Mission()
+    public EncryptedResult Mission()
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
-        UserMissionsDocument? missions = await _userService.GetUserMissionsByXuid(xuid);
-
-        return new EncryptedResponse<UserMissionsDocument?>(missions);
+        return new EncryptedResponse<UserMissionsDocument?>(new UserMissionsDocument
+        {
+            MissionList = []
+        });
     }
 
     [Route("friend")]

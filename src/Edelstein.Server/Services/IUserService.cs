@@ -14,7 +14,6 @@ public interface IUserService
     public Task<UserData?> GetUserDataByXuid(ulong xuid);
 
     public Task<UserHomeDocument?> GetHomeByXuid(ulong xuid);
-    public Task<UserMissionsDocument?> GetUserMissionsByXuid(ulong xuid);
 
     public Task<User> InitializeUserStartingCharacterAndDeck(ulong xuid);
 
