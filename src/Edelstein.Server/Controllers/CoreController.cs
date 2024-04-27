@@ -77,9 +77,28 @@ public class CoreController : Controller
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
-        UserHomeDocument? homeDocument = await _userService.GetHomeByXuid(xuid);
+        UserHomeDocument homeDocument = (await _userService.GetHomeByXuid(xuid))!;
 
-        return new EncryptedResponse<HomeResponseData>(new HomeResponseData(homeDocument!.Home, []));
+        IEnumerable<Gift> gifts = await _userService.GetAllGifts(xuid);
+
+        Home home = new()
+        {
+            GiftList = gifts,
+            PendingFriendCount = 0,
+            ClearMissionCount = 0,
+            ClearBeginnerMissionCount = 0,
+            BeginnerMissionComplete = false,
+            NewAnnouncementFlag = homeDocument.HasUnreadAnnouncements,
+            InformationList = [],
+            PresetSetting = homeDocument.Presets,
+            NotClearedDailyMissionCount = 0,
+            UnreadStoryCount = 0,
+            UnreadChatCount = homeDocument.ChatStorage.Chats.Count(x => !x.ChatProgress.IsRead),
+            ActiveFriend = 0,
+            SerialCodeIdList = []
+        };
+
+        return new EncryptedResponse<HomeResponseData>(new HomeResponseData(home, []));
     }
 
     [Route("mission")]

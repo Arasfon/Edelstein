@@ -17,6 +17,7 @@ public class UserService : IUserService
     private readonly IDefaultGroupCardsFactoryService _defaultGroupCardsFactoryService;
     private readonly ITutorialService _tutorialService;
     private readonly ISequenceRepository<ulong> _sequenceRepository;
+    private readonly IUserGiftsRepository _userGiftsRepository;
 
     public UserService(
         IAuthenticationDataRepository authenticationDataRepository,
@@ -25,7 +26,8 @@ public class UserService : IUserService
         IUserInitializationDataRepository userInitializationDataRepository,
         IDefaultGroupCardsFactoryService defaultGroupCardsFactoryService,
         ITutorialService tutorialService,
-        ISequenceRepository<ulong> sequenceRepository)
+        ISequenceRepository<ulong> sequenceRepository,
+        IUserGiftsRepository userGiftsRepository)
     {
         _authenticationDataRepository = authenticationDataRepository;
         _userDataRepository = userDataRepository;
@@ -34,6 +36,7 @@ public class UserService : IUserService
         _defaultGroupCardsFactoryService = defaultGroupCardsFactoryService;
         _tutorialService = tutorialService;
         _sequenceRepository = sequenceRepository;
+        _userGiftsRepository = userGiftsRepository;
     }
 
     public async Task<UserRegistrationResult> RegisterUser(string publicKey)
@@ -257,6 +260,9 @@ public class UserService : IUserService
 
         return await _userDataRepository.SetDeck(xuid, slot, mainCardIds);
     }
+
+    public async Task<IEnumerable<Gift>> GetAllGifts(ulong xuid) =>
+        await _userGiftsRepository.GetAllByXuid(xuid);
 
     private async Task<ulong> GetNextXuid() =>
         await _sequenceRepository.GetNextValueById(SequenceNames.Xuids, 10000_00000_00000);

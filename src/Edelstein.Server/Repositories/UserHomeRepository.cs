@@ -22,8 +22,7 @@ public class UserHomeRepository : IUserHomeRepository
     public async Task Create(ulong xuid) =>
         await _userHomeCollection.InsertOneAsync(new UserHomeDocument
         {
-            Xuid = xuid,
-            Home = Home.CreateEmpty()
+            Xuid = xuid
         });
 
     public async Task<UserHomeDocument?> GetByXuid(ulong xuid) =>
@@ -33,10 +32,10 @@ public class UserHomeRepository : IUserHomeRepository
     {
         FilterDefinition<UserHomeDocument> filterDefinition =
             Builders<UserHomeDocument>.Filter.Eq(x => x.Xuid, xuid) &
-            Builders<UserHomeDocument>.Filter.ElemMatch(x => x.Home.PresetSetting, x => x.Slot == 1);
+            Builders<UserHomeDocument>.Filter.ElemMatch(x => x.Presets, x => x.Slot == 1);
 
         UpdateDefinition<UserHomeDocument> updateDefinition =
-            Builders<UserHomeDocument>.Update.Set(x => x.Home.PresetSetting.FirstMatchingElement().IllustMasterCardId, masterCardId);
+            Builders<UserHomeDocument>.Update.Set(x => x.Presets.FirstMatchingElement().IllustMasterCardId, masterCardId);
 
         await _userHomeCollection.UpdateOneAsync(filterDefinition, updateDefinition);
     }
@@ -64,8 +63,7 @@ public class UserHomeRepository : IUserHomeRepository
 
         UpdateDefinition<UserHomeDocument> updateDefinition = Builders<UserHomeDocument>.Update
             .AddToSet(x => x.ChatStorage.Chats, chatProgressDocument)
-            .AddToSet(x => x.ChatStorage.ChatRoomIds, masterChatRoomId)
-            .Inc(x => x.Home.UnreadChatCount, 1);
+            .AddToSet(x => x.ChatStorage.ChatRoomIds, masterChatRoomId);
 
         return await _userHomeCollection.FindOneAndUpdateAsync(filterDefinition, updateDefinition,
             new FindOneAndUpdateOptions<UserHomeDocument> { ReturnDocument = ReturnDocument.After });
@@ -88,8 +86,7 @@ public class UserHomeRepository : IUserHomeRepository
 
         UpdateDefinition<UserHomeDocument> updateDefinition =
             Builders<UserHomeDocument>.Update.Set(x => x.ChatStorage.Chats.FirstMatchingElement().SelectTalkIdList, selectTalkIdList)
-                .Set(x => x.ChatStorage.Chats.FirstMatchingElement().ChatProgress.IsRead, true)
-                .Inc(x => x.Home.UnreadChatCount, -1);
+                .Set(x => x.ChatStorage.Chats.FirstMatchingElement().ChatProgress.IsRead, true);
 
         await _userHomeCollection.UpdateOneAsync(filterDefinition, updateDefinition);
     }

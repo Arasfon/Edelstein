@@ -1,3 +1,4 @@
+using Edelstein.Data.Models;
 using Edelstein.Data.Models.Components;
 
 namespace Edelstein.Server.Models.Endpoints.Live;

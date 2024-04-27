@@ -10,22 +10,25 @@ namespace Edelstein.Server.Repositories;
 
 public class LiveDataRepository : ILiveDataRepository
 {
+    private readonly IMongoClient _mongoClient;
     private readonly IMongoCollection<UserData> _userDataCollection;
-    private readonly IMongoCollection<UserHomeDocument> _userHomeCollection;
+    private readonly IMongoCollection<Gift> _giftsCollection;
 
     public LiveDataRepository(IOptions<DatabaseOptions> databaseOptions, IMongoClient mongoClient)
     {
-        IMongoDatabase mongoDatabase = mongoClient.GetDatabase(databaseOptions.Value.Name);
+        _mongoClient = mongoClient;
+        IMongoDatabase mongoDatabase = _mongoClient.GetDatabase(databaseOptions.Value.Name);
         _userDataCollection = mongoDatabase.GetCollection<UserData>(CollectionNames.UserData);
-        _userHomeCollection = mongoDatabase.GetCollection<UserHomeDocument>(CollectionNames.UserHome);
+        _giftsCollection = mongoDatabase.GetCollection<Gift>(CollectionNames.Gifts);
     }
 
     public async Task<UserData> UpdateAfterFinishedLive(ulong xuid, long currentTimestamp, List<Live> lives, List<Point> points,
         List<Item> items, Stamina stamina, int experience, Gem gem, List<Character> characters,
         List<LiveMission> liveMissions, List<uint> stampIds, List<Gift> gifts, List<uint> clearedMissionIds)
     {
-        // TODO: Transaction
-        // TODO: Reconsider clearedMissionIds
+        using IClientSessionHandle session = await _mongoClient.StartSessionAsync();
+
+        session.StartTransaction();
 
         FilterDefinition<UserData> userDataFilter = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
         UpdateDefinition<UserData> userDataUpdate = Builders<UserData>.Update
@@ -40,15 +43,12 @@ public class LiveDataRepository : ILiveDataRepository
             .Set(x => x.User.LastLoginTime, currentTimestamp)
             .Set(x => x.MasterStampIds, stampIds);
 
-        UserData userData = await _userDataCollection.FindOneAndUpdateAsync(userDataFilter, userDataUpdate,
+        UserData userData = await _userDataCollection.FindOneAndUpdateAsync(session, userDataFilter, userDataUpdate,
             new FindOneAndUpdateOptions<UserData> { ReturnDocument = ReturnDocument.After });
 
-        FilterDefinition<UserHomeDocument> homeDataFilter = Builders<UserHomeDocument>.Filter.Eq(x => x.Xuid, xuid);
-        UpdateDefinition<UserHomeDocument> homeDataUpdate = Builders<UserHomeDocument>.Update
-            // TODO: Full replace to check for expired/old?
-            .PushEach(x => x.Home.GiftList, gifts);
+        await _giftsCollection.InsertManyAsync(session, gifts);
 
-        await _userHomeCollection.UpdateOneAsync(homeDataFilter, homeDataUpdate);
+        await session.CommitTransactionAsync();
 
         return userData;
     }

@@ -137,6 +137,7 @@ try
     builder.Services.AddScoped<IUserHomeRepository, UserHomeRepository>();
     builder.Services.AddScoped<IUserInitializationDataRepository, UserInitializationDataRepository>();
     builder.Services.AddScoped<ILiveDataRepository, LiveDataRepository>();
+    builder.Services.AddScoped<IUserGiftsRepository, UserGiftsRepository>();
 
     // Services
     builder.Services.AddScoped<IUserService, UserService>();
