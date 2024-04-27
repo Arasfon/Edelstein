@@ -1341,6 +1341,9 @@ public class LiveService : ILiveService
         for (int i = 0; i < giftsWithoutIds.Count; i++)
             giftsWithoutIds[i].Id = giftIds[i];
 
+        foreach (Gift gift in gifts)
+            gift.UserId = xuid;
+
         return await _liveDataRepository.UpdateAfterFinishedLive(xuid, currentTimestamp, lives, points, items,
             stamina, experience, gem, characters, liveMissions,
             stampIds, gifts, clearedMissionIds);
