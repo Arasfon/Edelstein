@@ -11,7 +11,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 
 using BandCategory = Edelstein.Data.Msts.BandCategory;
-using RewardType = Edelstein.Data.Msts.RewardType;
 
 namespace Edelstein.Server.Services;
 

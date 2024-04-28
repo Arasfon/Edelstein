@@ -11,8 +11,6 @@ using Microsoft.EntityFrameworkCore;
 
 using System.Diagnostics.CodeAnalysis;
 
-using RewardType = Edelstein.Data.Models.Components.RewardType;
-
 namespace Edelstein.Server.Services;
 
 public class LiveService : ILiveService
@@ -232,13 +230,13 @@ public class LiveService : ILiveService
             {
                 switch (liveClearRewardMst.Type)
                 {
-                    case Data.Msts.RewardType.ChatStamp:
+                    case RewardType.ChatStamp:
                     {
                         AddChatStamp(liveClearRewardMst.Value);
                         break;
                     }
-                    case Data.Msts.RewardType.Item:
-                    case Data.Msts.RewardType.Gem:
+                    case RewardType.Item:
+                    case RewardType.Gem:
                         break;
                     default:
                         // Everything else should not be possible
@@ -750,13 +748,13 @@ public class LiveService : ILiveService
             {
                 switch (liveClearRewardMst.Type)
                 {
-                    case Data.Msts.RewardType.ChatStamp:
+                    case RewardType.ChatStamp:
                     {
                         AddChatStamp(liveClearRewardMst.Value);
                         break;
                     }
-                    case Data.Msts.RewardType.Item:
-                    case Data.Msts.RewardType.Gem:
+                    case RewardType.Item:
+                    case RewardType.Gem:
                         break;
                     default:
                         // Everything else should not be possible
@@ -1199,7 +1197,7 @@ public class LiveService : ILiveService
         {
             switch (liveClearRewardMst.Type)
             {
-                case Data.Msts.RewardType.Gem:
+                case RewardType.Gem:
                 {
                     ensuredRewards.Add(new LiveReward
                     {
@@ -1212,8 +1210,8 @@ public class LiveService : ILiveService
                     });
                     break;
                 }
-                case Data.Msts.RewardType.Item when liveClearRewardMst.MasterReleaseLabelId == 1:
-                case Data.Msts.RewardType.ChatStamp:
+                case RewardType.Item when liveClearRewardMst.MasterReleaseLabelId == 1:
+                case RewardType.ChatStamp:
                 {
                     // TODO: Use actual live clear reward ids
                     randomRewards.Add(new LiveReward
