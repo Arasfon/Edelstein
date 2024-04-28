@@ -122,7 +122,7 @@ public class UserService : IUserService
                     Amount = 20 * defaultCardsRetrievalResult.DuplicateCount,
                     ExpireDateTime = null
                 };
-                currentUserData.ItemList.Add(penlightItem);
+                currentUserData.ItemList.AddLast(penlightItem);
             }
             else
                 penlightItem.Amount += 20 * defaultCardsRetrievalResult.DuplicateCount;

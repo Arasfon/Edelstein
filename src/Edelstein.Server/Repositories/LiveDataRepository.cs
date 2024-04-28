@@ -10,45 +10,56 @@ namespace Edelstein.Server.Repositories;
 
 public class LiveDataRepository : ILiveDataRepository
 {
-    private readonly IMongoClient _mongoClient;
     private readonly IMongoCollection<UserData> _userDataCollection;
     private readonly IMongoCollection<Gift> _giftsCollection;
 
     public LiveDataRepository(IOptions<DatabaseOptions> databaseOptions, IMongoClient mongoClient)
     {
-        _mongoClient = mongoClient;
-        IMongoDatabase mongoDatabase = _mongoClient.GetDatabase(databaseOptions.Value.Name);
+        IMongoDatabase mongoDatabase = mongoClient.GetDatabase(databaseOptions.Value.Name);
         _userDataCollection = mongoDatabase.GetCollection<UserData>(CollectionNames.UserData);
         _giftsCollection = mongoDatabase.GetCollection<Gift>(CollectionNames.Gifts);
     }
 
-    public async Task<UserData> UpdateAfterFinishedLive(ulong xuid, long currentTimestamp, List<Live> lives, List<Point> points,
-        List<Item> items, Stamina stamina, int experience, Gem gem, List<Character> characters,
-        List<LiveMission> liveMissions, List<uint> stampIds, List<Gift> gifts, List<uint> clearedMissionIds)
+    public async Task<UserData> UpdateAfterFinishedLive(ulong xuid, long currentTimestamp, List<Live> lives,
+        LinkedList<Point> points, LinkedList<Item> items, Stamina stamina, int experience, Gem gem,
+        List<Character> characters, List<LiveMission> liveMissions, HashSet<uint> newStampIds, LinkedList<Gift> gifts)
     {
-        using IClientSessionHandle session = await _mongoClient.StartSessionAsync();
-
-        session.StartTransaction();
-
         FilterDefinition<UserData> userDataFilter = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
-        UpdateDefinition<UserData> userDataUpdate = Builders<UserData>.Update
-            .Set(x => x.LiveList, lives)
-            .Set(x => x.PointList, points)
-            .Set(x => x.ItemList, items)
-            .Set(x => x.Stamina, stamina)
-            .Set(x => x.User.Exp, experience)
-            .Set(x => x.Gem, gem)
-            .Set(x => x.CharacterList, characters)
-            .Set(x => x.LiveMissionList, liveMissions)
-            .Set(x => x.User.LastLoginTime, currentTimestamp)
-            .Set(x => x.MasterStampIds, stampIds);
 
-        UserData userData = await _userDataCollection.FindOneAndUpdateAsync(session, userDataFilter, userDataUpdate,
+        UpdateDefinitionBuilder<UserData> updateBuilder = Builders<UserData>.Update;
+        List<UpdateDefinition<UserData>> updates = [];
+
+        if(lives.Count > 0)
+            updates.Add(updateBuilder.Set(x => x.LiveList, lives));
+
+        if(points.Count > 0)
+            updates.Add(updateBuilder.Set(x => x.PointList, points));
+
+        if(items.Count > 0)
+            updates.Add(updateBuilder.Set(x => x.ItemList, items));
+
+        updates.Add(updateBuilder.Set(x => x.Stamina, stamina));
+
+        updates.Add(updateBuilder.Set(x => x.User.Exp, experience));
+
+        updates.Add(updateBuilder.Set(x => x.Gem, gem));
+
+        if(characters.Count > 0)
+            updates.Add(updateBuilder.Set(x => x.CharacterList, characters));
+
+        if(liveMissions.Count > 0)
+            updates.Add(updateBuilder.Set(x => x.LiveMissionList, liveMissions));
+
+        updates.Add(updateBuilder.Set(x => x.User.LastLoginTime, currentTimestamp));
+
+        if(newStampIds.Count > 0)
+            updates.Add(updateBuilder.PushEach(x => x.MasterStampIds, newStampIds));
+
+        UserData userData = await _userDataCollection.FindOneAndUpdateAsync(userDataFilter, updateBuilder.Combine(updates),
             new FindOneAndUpdateOptions<UserData> { ReturnDocument = ReturnDocument.After });
 
-        await _giftsCollection.InsertManyAsync(session, gifts);
-
-        await session.CommitTransactionAsync();
+        if (gifts.Count > 0)
+            await _giftsCollection.InsertManyAsync(gifts);
 
         return userData;
     }

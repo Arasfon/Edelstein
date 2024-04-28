@@ -27,8 +27,8 @@ public class ResourceConsumptionBuilder : IResourceConsumptionBuilder
         AllExistingUserItems = AllItems.ToDictionary(x => x.MasterItemId);
     }
 
-    public ResourceConsumptionBuilder(UserData userData) : this(new LinkedList<Point>(userData.PointList),
-        new LinkedList<Item>(userData.ItemList), userData.Gem) { }
+    public ResourceConsumptionBuilder(UserData userData) : this(userData.PointList,
+        userData.ItemList, userData.Gem) { }
 
     public bool TryDistributeConsumeGems(int amount)
     {

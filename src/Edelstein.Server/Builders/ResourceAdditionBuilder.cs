@@ -21,7 +21,8 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
     protected readonly HashSet<uint> AllExistingUserCardIds;
     protected readonly HashSet<uint> AllExistingChatStampIds;
 
-    public long CurrentTimestamp { get; } = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+    public DateTimeOffset CurrentDateTimeOffset { get; } = DateTimeOffset.UtcNow;
+    public long CurrentTimestamp { get; }
 
     public ResourceAdditionBuilder(EfficientUpdatedValueList updatedValueList, LinkedList<Point> allPoints,
         Dictionary<PointType, Point> allExistingUserPoints, LinkedList<Item> allItems, Dictionary<uint, Item> allExistingUserItems, Gem gem,
@@ -39,7 +40,9 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         AllExistingChatStampIds = userData.MasterStampIds.Select(x => x).ToHashSet();
 
         if (currentTimestamp is not null)
-            CurrentTimestamp = currentTimestamp.Value;
+            CurrentDateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(currentTimestamp.Value);
+
+        CurrentTimestamp = CurrentDateTimeOffset.ToUnixTimeSeconds();
 
         if (calculateRewards)
             Rewards = [];
@@ -47,8 +50,8 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
 
     public ResourceAdditionBuilder(UserData userData, long? currentTimestamp = null, bool calculateRewards = false)
     {
-        AllPoints = new LinkedList<Point>(userData.PointList);
-        AllItems = new LinkedList<Item>(userData.ItemList);
+        AllPoints = userData.PointList;
+        AllItems = userData.ItemList;
         AllCards = new LinkedList<Card>(userData.CardList);
         Gem = userData.Gem;
 
@@ -58,16 +61,18 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         AllExistingChatStampIds = userData.MasterStampIds.Select(x => x).ToHashSet();
 
         if (currentTimestamp is not null)
-            CurrentTimestamp = currentTimestamp.Value;
+            CurrentDateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(currentTimestamp.Value);
+
+        CurrentTimestamp = CurrentDateTimeOffset.ToUnixTimeSeconds();
 
         if (calculateRewards)
             Rewards = [];
     }
 
-    public ResourceConfigurer AddCoinPoints(int amount) =>
-        AddPoints(PointType.Coin, amount);
+    public ResourceConfigurer AddCoinPoints(int amount, bool hidden = false) =>
+        AddPoints(PointType.Coin, amount, hidden);
 
-    public ResourceConfigurer AddPoints(PointType type, int amount)
+    public ResourceConfigurer AddPoints(PointType type, int amount, bool hidden = false)
     {
         if (amount == 0)
             return new NullResourceConfigurer();
@@ -79,7 +84,8 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             Amount = amount
         };
 
-        Rewards?.AddLast(reward);
+        if (!hidden)
+            Rewards?.AddLast(reward);
 
         if (UpdatedValueList.PointList.TryGetValue(type, out Point? point))
         {
@@ -346,20 +352,32 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         }
     }
 
-    public void AddCoinPointsAsGift(int amount, long? expirationTimestamp = null) =>
-        throw new NotImplementedException();
+    public void AddGemsAsGift(string reason, int amount, long? expirationTimestamp = null) =>
+        AddGift(reason, RewardType.Gem, 1, amount, expirationTimestamp);
 
-    public void AddPointsAsGift(PointType type, int amount, long? expirationTimestamp = null) =>
-        throw new NotImplementedException();
+    public void AddCoinPointsAsGift(string reason, int amount, long? expirationTimestamp = null) =>
+        AddPointsAsGift(reason, PointType.Coin, amount, expirationTimestamp);
 
-    public void AddGemsAsGift(int amount, long? expirationTimestamp = null) =>
-        throw new NotImplementedException();
+    public void AddPointsAsGift(string reason, PointType type, int amount, long? expirationTimestamp = null) =>
+        AddGift(reason, RewardType.Point, (uint)type, amount, expirationTimestamp);
 
-    public void AddItemAsGift(uint itemId, int amount, long? expirationTimestamp = null) =>
-        throw new NotImplementedException();
+    public void AddItemAsGift(string reason, uint itemId, int amount, long? expirationTimestamp = null) =>
+        AddGift(reason, RewardType.Item, itemId, amount, expirationTimestamp);
 
-    public void AddCardAsGift(uint cardId, long? expirationTimestamp = null) =>
-        throw new NotImplementedException();
+    public void AddCardAsGift(string reason, uint cardId, long? expirationTimestamp = null) =>
+        AddGift(reason, RewardType.Card, cardId, 1, expirationTimestamp);
+
+    public void AddGift(string reason, RewardType type, uint itemId, int amount, long? expirationTimestamp = null) =>
+        Gifts.AddLast(new Gift
+        {
+            IsReceive = false,
+            ReasonText = reason,
+            RewardType = type,
+            Value = itemId,
+            Amount = amount,
+            CreatedDateTime = CurrentTimestamp,
+            ExpireDateTime = expirationTimestamp ?? CurrentDateTimeOffset.AddYears(1).ToUnixTimeSeconds()
+        });
 
     public ResourceConfigurer FinishDeferred(DeferredResourceConfigurer deferredResourceConfigurer)
     {

@@ -2,6 +2,7 @@ using Edelstein.Data.Models;
 using Edelstein.Data.Models.Components;
 using Edelstein.Data.Msts;
 using Edelstein.Data.Msts.Persistence;
+using Edelstein.Server.Builders;
 using Edelstein.Server.Models;
 using Edelstein.Server.Models.Endpoints.Live;
 using Edelstein.Server.Random;
@@ -59,7 +60,6 @@ public class LiveService : ILiveService
         int multiplier = liveSkipData.LiveBoost;
 
         int staminaDecrease = 10 * multiplier;
-        int coinChange = 750 * multiplier;
         int expChange = 10 * multiplier;
         int nextUserExp = userData.User.Exp + expChange;
 
@@ -68,22 +68,26 @@ public class LiveService : ILiveService
             nextUserExp, userData.Stamina, staminaDecrease, currentTimestamp);
 
         if (!isEnoughStamina)
-            return new LiveFinishResult(LiveFinishResultStatus.NotEnoughStamina);
+            return new LiveFinishResult(LiveFinishResultStatus.NotEnoughResources);
 
-        // Updates lists
-        UpdatedValueList uvl = new();
-        List<Reward> rewards = [];
-        List<Gift> gifts = [];
-        List<uint> clearedMissionIds = [];
-
-        // Build item dictionary for efficient lookup
-        Dictionary<uint, Item> allUserItems = userData.ItemList.ToDictionary(x => x.MasterItemId);
+        // Consume tickets
+        ResourceConsumptionBuilder resourceConsumptionBuilder = new(userData);
 
         // Charge skip tickets
-        ChargeSkipTickets();
+        const uint ticketItemId = 21000001;
+        if (!resourceConsumptionBuilder.TryConsumeItems(ticketItemId, liveSkipData.LiveBoost))
+            return new LiveFinishResult(LiveFinishResultStatus.NotEnoughResources);
+
+        // Create resource addition builder
+        ResourceAdditionBuilder resourceAdditionBuilder = resourceConsumptionBuilder.ToResourceAdditionBuilder(userData, currentTimestamp, true);
+
+        // Update coins
+        resourceAdditionBuilder.AddCoinPoints(750 * multiplier, true);
 
         // Guaranteed reward
-        AddGuaranteedRewards();
+        const uint guaranteedItemId = 16005001;
+        int guaranteedItemAmount = 5 * multiplier;
+        resourceAdditionBuilder.AddItem(guaranteedItemId, guaranteedItemAmount);
 
         // Live
         Live updatedLive = UpdateLive();
@@ -92,6 +96,8 @@ public class LiveService : ILiveService
         await AddRandomRewards();
 
         // Live missions
+        HashSet<uint> newCompletedLiveMissions = [];
+
         LiveMission? storedliveMissionData = userData.LiveMissionList.FirstOrDefault(x => x.MasterLiveId == liveSkipData.MasterLiveId);
 
         if (storedliveMissionData is null)
@@ -106,64 +112,34 @@ public class LiveService : ILiveService
         // Character experience
         UpdateCharacterExperience();
 
-        // Update coins
-        UpdateCoins();
+        // Build modifications
+        ResourcesModificationResult resourcesModificationResult = resourceAdditionBuilder.Build();
 
         UserData resultUserData =
             await UpdateUserDataAfterLiveCreatingGiftIds(xuid, currentTimestamp,
-                userData.LiveList, userData.PointList, userData.ItemList,
-                updatedStamina, nextUserExp, userData.Gem,
-                userData.CharacterList, userData.LiveMissionList, userData.MasterStampIds,
-                gifts, clearedMissionIds);
+                userData.LiveList, resourcesModificationResult.Points, resourcesModificationResult.Items,
+                updatedStamina, nextUserExp, resourcesModificationResult.Gem ?? userData.Gem,
+                userData.CharacterList, userData.LiveMissionList, resourcesModificationResult.Updates.MasterStampIds,
+                resourcesModificationResult.Gifts ?? []);
 
         return new LiveFinishResult
         {
             Status = LiveFinishResultStatus.Success,
-            ChangedGem = userData.Gem,
-            ChangedItems = uvl.ItemList,
-            ChangedPoints = uvl.PointList,
+            ChangedGem = resourcesModificationResult.Gem,
+            ChangedItems = resourcesModificationResult.Updates.ItemList,
+            ChangedPoints = resourcesModificationResult.Updates.PointList,
             FinishedLiveData = updatedLive,
-            ClearedMasterLiveMissionIds = storedliveMissionData.ClearMasterLiveMissionIds,
+            ClearedMasterLiveMissionIds = newCompletedLiveMissions,
             UpdatedUserData = resultUserData,
             UpdatedCharacters = deckCharacters,
-            Rewards = rewards,
-            Gifts = gifts,
+            Rewards = resourcesModificationResult.Rewards ?? [],
+            Gifts = resourcesModificationResult.Gifts ?? [],
             ClearedMissionIds = [],
             EventPointRewards = [],
             RankingChange = null!,
             EventMember = null,
             EventRankingData = null!
         };
-
-        void ChargeSkipTickets()
-        {
-            const uint ticketItemId = 21000001;
-            int ticketChargeAmount = liveSkipData.LiveBoost;
-
-            Item? itemDuplicate = uvl.ItemList.FirstOrDefault(x => x.MasterItemId == ticketItemId);
-
-            if (itemDuplicate is not null)
-            {
-                itemDuplicate.Amount -= ticketChargeAmount;
-
-                if (itemDuplicate.Amount < 0)
-                    throw new Exception("Not enough tickets");
-
-                return;
-            }
-
-            if (allUserItems.TryGetValue(ticketItemId, out Item? item))
-            {
-                item.Amount -= ticketChargeAmount;
-
-                if (item.Amount < 0)
-                    throw new Exception("Not enough tickets");
-
-                uvl.ItemList.Add(item);
-            }
-            else
-                throw new Exception("No tickets found");
-        }
 
         Live UpdateLive()
         {
@@ -178,49 +154,13 @@ public class LiveService : ILiveService
             return live;
         }
 
-        void AddGuaranteedRewards()
-        {
-            const uint guaranteedItemId = 16005001;
-            int guaranteedItemAmount = 5 * multiplier;
-
-            rewards.Add(new Reward
-            {
-                Type = RewardType.Item,
-                Value = guaranteedItemId,
-                Amount = guaranteedItemAmount
-            });
-
-            Item? itemDuplicate = uvl.ItemList.FirstOrDefault(x => x.MasterItemId == guaranteedItemId);
-
-            if (itemDuplicate is not null)
-            {
-                itemDuplicate.Amount += guaranteedItemAmount;
-                return;
-            }
-
-            if (allUserItems.TryGetValue(guaranteedItemId, out Item? item))
-            {
-                item.Amount += guaranteedItemAmount;
-                uvl.ItemList.Add(item);
-            }
-            else
-            {
-                item = new Item
-                {
-                    MasterItemId = guaranteedItemId,
-                    Amount = guaranteedItemAmount,
-                    ExpireDateTime = null
-                };
-                userData.ItemList.Add(item);
-                uvl.ItemList.Add(item);
-            }
-        }
-
         async Task AddRandomRewards()
         {
-            AddLimitedItem(19100001, 1, 100, 1, 1);
+            resourceAdditionBuilder.AddItemDeferred(19100001, BinaryRandom.NextMultipleCount(multiplier, 1, 1))
+                .MakeLimited(updatedLive.LimitedRewards, 100)
+                .Finish();
 
-            AddItem(17001001, 1, 1, 1);
+            resourceAdditionBuilder.AddItem(17001001, BinaryRandom.NextMultipleCount(multiplier, 1, 1));
 
             List<LiveClearRewardMst> liveClearRewardMsts = await _mstDbContext.LiveClearRewardMsts
                 .Where(x => x.MasterLiveId == liveSkipData.MasterLiveId && x.MasterReleaseLabelId == 1)
@@ -228,11 +168,18 @@ public class LiveService : ILiveService
 
             foreach (LiveClearRewardMst liveClearRewardMst in liveClearRewardMsts)
             {
+                int amount = BinaryRandom.NextMultipleCount(multiplier, 1, 1);
+
+                if (amount == 0)
+                    continue;
+
                 switch (liveClearRewardMst.Type)
                 {
                     case RewardType.ChatStamp:
                     {
-                        AddChatStamp(liveClearRewardMst.Value);
+                        resourceAdditionBuilder.AddChatStampDeferred(liveClearRewardMst.Value)
+                            .MakeLimited(updatedLive.LimitedRewards, 1)
+                            .Finish();
                         break;
                     }
                     case RewardType.Item:
@@ -242,195 +189,6 @@ public class LiveService : ILiveService
                         // Everything else should not be possible
                         throw new ArgumentOutOfRangeException();
                 }
-            }
-
-            void AddLimitedItem(uint itemId, int dropAmount, int maxDropAmount, int dropRateNumerator, int dropRateDenumerator)
-            {
-                int amount = dropAmount * BinaryRandom.NextMultipleCount(multiplier, dropRateNumerator, dropRateDenumerator);
-
-                if (amount == 0)
-                    return;
-
-                // TODO: Use actual live clear reward ids
-                LimitedReward? limitedReward = updatedLive.LimitedRewards.FirstOrDefault(x => x.MasterRewardId == itemId);
-
-                if (limitedReward is null)
-                {
-                    rewards.Add(new Reward
-                    {
-                        Type = RewardType.Item,
-                        Value = itemId,
-                        Amount = amount,
-                        DropInfo = new DropInfo
-                        {
-                            FirstReward = 0,
-                            GetableCount = amount,
-                            RemainingGetableCount = maxDropAmount - amount
-                        }
-                    });
-
-                    updatedLive.LimitedRewards.Add(new LimitedReward
-                    {
-                        MasterRewardId = itemId,
-                        Remaining = maxDropAmount - amount
-                    });
-                }
-                else
-                {
-                    if (limitedReward.Remaining == 0)
-                        return;
-
-                    if (limitedReward.Remaining - amount < 0)
-                        amount = limitedReward.Remaining;
-
-                    limitedReward.Remaining -= amount;
-
-                    rewards.Add(new Reward
-                    {
-                        Type = RewardType.Item,
-                        Value = itemId,
-                        Amount = amount,
-                        DropInfo = new DropInfo
-                        {
-                            FirstReward = 0,
-                            GetableCount = maxDropAmount - limitedReward.Remaining,
-                            RemainingGetableCount = limitedReward.Remaining
-                        }
-                    });
-                }
-
-                Item? itemDuplicate = uvl.ItemList.FirstOrDefault(x => x.MasterItemId == itemId);
-
-                if (itemDuplicate is not null)
-                {
-                    itemDuplicate.Amount += amount;
-                    return;
-                }
-
-                if (allUserItems.TryGetValue(itemId, out Item? item))
-                {
-                    item.Amount += amount;
-                    uvl.ItemList.Add(item);
-                }
-                else
-                {
-                    item = new Item
-                    {
-                        MasterItemId = itemId,
-                        Amount = amount,
-                        ExpireDateTime = null
-                    };
-                    userData.ItemList.Add(item);
-                    uvl.ItemList.Add(item);
-                }
-            }
-
-            void AddItem(uint itemId, int dropAmount, int dropRateNumerator, int dropRateDenumerator)
-            {
-                int amount = dropAmount * BinaryRandom.NextMultipleCount(multiplier, dropRateNumerator, dropRateDenumerator);
-
-                if (amount == 0)
-                    return;
-
-                rewards.Add(new Reward
-                {
-                    Type = RewardType.Item,
-                    Value = itemId,
-                    Amount = amount
-                });
-
-                Item? itemDuplicate = uvl.ItemList.FirstOrDefault(x => x.MasterItemId == itemId);
-
-                if (itemDuplicate is not null)
-                {
-                    itemDuplicate.Amount += amount;
-                    return;
-                }
-
-                if (allUserItems.TryGetValue(itemId, out Item? item))
-                {
-                    item.Amount += amount;
-                    uvl.ItemList.Add(item);
-                }
-                else
-                {
-                    item = new Item
-                    {
-                        MasterItemId = itemId,
-                        Amount = amount,
-                        ExpireDateTime = null
-                    };
-                    userData.ItemList.Add(item);
-                    uvl.ItemList.Add(item);
-                }
-            }
-
-            void AddChatStamp(uint chatStampId)
-            {
-                const int maxDropAmount = 1;
-
-                int amount = BinaryRandom.NextMultipleCount(multiplier, 1, 1);
-
-                if (amount == 0)
-                    return;
-
-                // Can be dropped only once
-                amount = 1;
-
-                LimitedReward? limitedReward = updatedLive.LimitedRewards.FirstOrDefault(x => x.MasterRewardId == chatStampId);
-
-                if (limitedReward is null)
-                {
-                    rewards.Add(new Reward
-                    {
-                        Type = RewardType.ChatStamp,
-                        Value = chatStampId,
-                        Amount = amount,
-                        DropInfo = new DropInfo
-                        {
-                            FirstReward = 0,
-                            GetableCount = amount,
-                            RemainingGetableCount = maxDropAmount - amount
-                        }
-                    });
-
-                    updatedLive.LimitedRewards.Add(new LimitedReward
-                    {
-                        MasterRewardId = chatStampId,
-                        Remaining = maxDropAmount - amount
-                    });
-                }
-                else
-                {
-                    if (limitedReward.Remaining == 0)
-                        return;
-
-                    if (limitedReward.Remaining - amount < 0)
-                        amount = limitedReward.Remaining;
-
-                    limitedReward.Remaining -= amount;
-
-                    rewards.Add(new Reward
-                    {
-                        Type = RewardType.ChatStamp,
-                        Value = chatStampId,
-                        Amount = amount,
-                        DropInfo = new DropInfo
-                        {
-                            FirstReward = 0,
-                            GetableCount = maxDropAmount - limitedReward.Remaining,
-                            RemainingGetableCount = limitedReward.Remaining
-                        }
-                    });
-                }
-
-                if (userData.MasterStampIds.Contains(chatStampId))
-                    return;
-
-                if (!uvl.MasterStampIds.Contains(chatStampId))
-                    uvl.MasterStampIds.Add(chatStampId);
-
-                userData.MasterStampIds.Add(chatStampId);
             }
         }
 
@@ -460,30 +218,15 @@ public class LiveService : ILiveService
                     if (updatedLive.ClearCount < Int32.Parse(liveMissionMst.Value))
                         continue;
 
-                    AddLiveMissionReward(liveMissionsRewardsMsts[liveMissionMst.MasterLiveMissionRewardId]);
+                    LiveMissionRewardMst rewardMst = liveMissionsRewardsMsts[liveMissionMst.MasterLiveMissionRewardId];
+                    if (rewardMst.GiveType == GiveType.Gift)
+                        resourceAdditionBuilder.AddGift("Live mission completion reward", rewardMst.Type, rewardMst.Value, rewardMst.Amount);
+                    else
+                        throw new NotImplementedException();
+
                     storedliveMissionData.ClearMasterLiveMissionIds.Add(liveMissionMst.Id);
+                    newCompletedLiveMissions.Add(liveMissionMst.Id);
                 }
-            }
-
-            void AddLiveMissionReward(LiveMissionRewardMst liveMissionRewardMst)
-            {
-                if (liveMissionRewardMst.GiveType == GiveType.Gift)
-                {
-                    Gift gift = new()
-                    {
-                        IsReceive = false,
-                        ReasonText = "Live mission completion reward",
-                        Value = liveMissionRewardMst.Value,
-                        Amount = liveMissionRewardMst.Amount,
-                        RewardType = liveMissionRewardMst.Type,
-                        CreatedDateTime = currentTimestamp,
-                        ExpireDateTime = currentDateTimeOffset.AddYears(1).ToUnixTimeSeconds()
-                    };
-
-                    gifts.Add(gift);
-                }
-                else
-                    throw new NotImplementedException();
             }
         }
 
@@ -506,25 +249,6 @@ public class LiveService : ILiveService
                     return x.Character;
                 })
                 .ToList();
-        }
-
-        void UpdateCoins()
-        {
-            Point? coinsPoint = userData.PointList.FirstOrDefault(x => x.Type == PointType.Coin);
-
-            if (coinsPoint is null)
-            {
-                coinsPoint = new Point
-                {
-                    Type = PointType.Coin,
-                    Amount = 0
-                };
-
-                userData.PointList.Add(coinsPoint);
-            }
-
-            coinsPoint.Amount += coinChange;
-            uvl.PointList.Add(coinsPoint);
         }
     }
 
@@ -557,53 +281,50 @@ public class LiveService : ILiveService
         int multiplier = userData.CurrentLive.LiveBoost;
 
         int staminaDecrease = isInTutorial ? 0 : (int)liveFinishData.UseLp;
-        int coinChange = 750 * multiplier;
         int expChange = 10 * multiplier;
         int nextUserExp = userData.User.Exp + expChange;
-        int gemChange = 0;
 
         // Calculate stamina
         (bool isEnoughStamina, Stamina updatedStamina) = await CalculateStamina(userData.User.Exp,
             nextUserExp, userData.Stamina, staminaDecrease, currentTimestamp);
 
         if (!isEnoughStamina)
-            return new LiveFinishResult(LiveFinishResultStatus.NotEnoughStamina);
-
-        // Updates lists
-        UpdatedValueList uvl = new();
-        List<Reward> rewards = [];
-        List<Gift> gifts = [];
-        List<uint> clearedMissionIds = [];
+            return new LiveFinishResult(LiveFinishResultStatus.NotEnoughResources);
 
         // Build item dictionary for efficient lookup
-        Dictionary<uint, Item> allUserItems = userData.ItemList.ToDictionary(x => x.MasterItemId);
+        ResourceAdditionBuilder resourceAdditionBuilder = new(userData, currentTimestamp, true);
+
+        // Update coins
+        resourceAdditionBuilder.AddCoinPoints(750 * multiplier, true);
 
         // Guaranteed reward
-        AddGuaranteedRewards();
+        const uint guaranteedItemId = 16005001;
+        int guaranteedItemAmount = 5 * multiplier;
+        resourceAdditionBuilder.AddItem(guaranteedItemId, guaranteedItemAmount);
 
         if (isInTutorial)
         {
-            UpdateCoins();
+            ResourcesModificationResult tutorialResourcesModificationResult = resourceAdditionBuilder.Build();
 
             UserData tutorialResultUserData =
                 await UpdateUserDataAfterLiveCreatingGiftIds(xuid, currentTimestamp,
-                    userData.LiveList, userData.PointList, userData.ItemList,
-                    updatedStamina, nextUserExp, userData.Gem,
-                    userData.CharacterList, userData.LiveMissionList, userData.MasterStampIds,
-                    gifts, clearedMissionIds);
+                    userData.LiveList, tutorialResourcesModificationResult.Points, tutorialResourcesModificationResult.Items,
+                    updatedStamina, nextUserExp, tutorialResourcesModificationResult.Gem ?? userData.Gem,
+                    userData.CharacterList, userData.LiveMissionList, tutorialResourcesModificationResult.Updates.MasterStampIds,
+                    tutorialResourcesModificationResult.Gifts ?? []);
 
             return new LiveFinishResult
             {
                 Status = LiveFinishResultStatus.Success,
-                ChangedGem = null,
-                ChangedItems = uvl.ItemList,
-                ChangedPoints = uvl.PointList,
+                ChangedGem = tutorialResourcesModificationResult.Gem,
+                ChangedItems = tutorialResourcesModificationResult.Updates.ItemList,
+                ChangedPoints = tutorialResourcesModificationResult.Updates.PointList,
                 FinishedLiveData = null,
                 ClearedMasterLiveMissionIds = [],
                 UpdatedUserData = tutorialResultUserData,
                 UpdatedCharacters = deckCharacters,
-                Rewards = rewards,
-                Gifts = gifts,
+                Rewards = tutorialResourcesModificationResult.Rewards ?? [],
+                Gifts = tutorialResourcesModificationResult.Gifts ?? [],
                 ClearedMissionIds = [],
                 EventPointRewards = [],
                 RankingChange = null!,
@@ -615,10 +336,15 @@ public class LiveService : ILiveService
         // Live
         Live updatedLive = UpdateLive();
 
+        // Guaranteed first clear gem reward
+        AddFirstClearRewards();
+
         // Add random rewards
         await AddRandomRewards();
 
         // Live missions
+        HashSet<uint> newCompletedLiveMissions = [];
+
         LiveMission? storedliveMissionData = userData.LiveMissionList.FirstOrDefault(x => x.MasterLiveId == liveFinishData.MasterLiveId);
 
         if (storedliveMissionData is null)
@@ -630,9 +356,6 @@ public class LiveService : ILiveService
 
         await AddLiveMissionRewards();
 
-        // Guaranteed first clear gem reward
-        AddFirstClearRewards();
-
         // TODO: Missions
 
         // TODO: Events
@@ -640,31 +363,28 @@ public class LiveService : ILiveService
         // Character experience
         UpdateCharacterExperience();
 
-        // Update coins
-        UpdateCoins();
-
-        // Update gems
-        UpdateGems();
+        // Build modifications
+        ResourcesModificationResult resourcesModificationResult = resourceAdditionBuilder.Build();
 
         UserData resultUserData =
             await UpdateUserDataAfterLiveCreatingGiftIds(xuid, currentTimestamp,
-                userData.LiveList, userData.PointList, userData.ItemList,
-                updatedStamina, nextUserExp, userData.Gem,
-                userData.CharacterList, userData.LiveMissionList, userData.MasterStampIds,
-                gifts, clearedMissionIds);
+                userData.LiveList, resourcesModificationResult.Points, resourcesModificationResult.Items,
+                updatedStamina, nextUserExp, resourcesModificationResult.Gem ?? userData.Gem,
+                userData.CharacterList, userData.LiveMissionList, resourcesModificationResult.Updates.MasterStampIds,
+                resourcesModificationResult.Gifts ?? []);
 
         return new LiveFinishResult
         {
             Status = LiveFinishResultStatus.Success,
-            ChangedGem = userData.Gem,
-            ChangedItems = uvl.ItemList,
-            ChangedPoints = uvl.PointList,
+            ChangedGem = resourcesModificationResult.Gem,
+            ChangedItems = resourcesModificationResult.Updates.ItemList,
+            ChangedPoints = resourcesModificationResult.Updates.PointList,
             FinishedLiveData = updatedLive,
-            ClearedMasterLiveMissionIds = storedliveMissionData.ClearMasterLiveMissionIds,
+            ClearedMasterLiveMissionIds = newCompletedLiveMissions,
             UpdatedUserData = resultUserData,
             UpdatedCharacters = deckCharacters,
-            Rewards = rewards,
-            Gifts = gifts,
+            Rewards = resourcesModificationResult.Rewards ?? [],
+            Gifts = resourcesModificationResult.Gifts ?? [],
             ClearedMissionIds = [],
             EventPointRewards = [],
             RankingChange = null!,
@@ -696,49 +416,13 @@ public class LiveService : ILiveService
             return live;
         }
 
-        void AddGuaranteedRewards()
-        {
-            const uint guaranteedItemId = 16005001;
-            int guaranteedItemAmount = 5 * multiplier;
-
-            rewards.Add(new Reward
-            {
-                Type = RewardType.Item,
-                Value = guaranteedItemId,
-                Amount = guaranteedItemAmount
-            });
-
-            Item? itemDuplicate = uvl.ItemList.FirstOrDefault(x => x.MasterItemId == guaranteedItemId);
-
-            if (itemDuplicate is not null)
-            {
-                itemDuplicate.Amount += guaranteedItemAmount;
-                return;
-            }
-
-            if (allUserItems.TryGetValue(guaranteedItemId, out Item? item))
-            {
-                item.Amount += guaranteedItemAmount;
-                uvl.ItemList.Add(item);
-            }
-            else
-            {
-                item = new Item
-                {
-                    MasterItemId = guaranteedItemId,
-                    Amount = guaranteedItemAmount,
-                    ExpireDateTime = null
-                };
-                userData.ItemList.Add(item);
-                uvl.ItemList.Add(item);
-            }
-        }
-
         async Task AddRandomRewards()
         {
-            AddLimitedItem(19100001, 1, 100, 1, 1);
+            resourceAdditionBuilder.AddItemDeferred(19100001, BinaryRandom.NextMultipleCount(multiplier, 1, 1))
+                .MakeLimited(updatedLive.LimitedRewards, 100)
+                .Finish();
 
-            AddItem(17001001, 1, 1, 1);
+            resourceAdditionBuilder.AddItem(17001001, BinaryRandom.NextMultipleCount(multiplier, 1, 1));
 
             List<LiveClearRewardMst> liveClearRewardMsts = await _mstDbContext.LiveClearRewardMsts
                 .Where(x => x.MasterLiveId == liveFinishData.MasterLiveId && x.MasterReleaseLabelId == 1)
@@ -746,11 +430,18 @@ public class LiveService : ILiveService
 
             foreach (LiveClearRewardMst liveClearRewardMst in liveClearRewardMsts)
             {
+                int amount = BinaryRandom.NextMultipleCount(multiplier, 1, 1);
+
+                if (amount == 0)
+                    continue;
+
                 switch (liveClearRewardMst.Type)
                 {
                     case RewardType.ChatStamp:
                     {
-                        AddChatStamp(liveClearRewardMst.Value);
+                        resourceAdditionBuilder.AddChatStampDeferred(liveClearRewardMst.Value)
+                            .MakeLimited(updatedLive.LimitedRewards, 1)
+                            .Finish();
                         break;
                     }
                     case RewardType.Item:
@@ -761,195 +452,6 @@ public class LiveService : ILiveService
                         throw new ArgumentOutOfRangeException();
                 }
             }
-
-            void AddLimitedItem(uint itemId, int dropAmount, int maxDropAmount, int dropRateNumerator, int dropRateDenumerator)
-            {
-                int amount = dropAmount * BinaryRandom.NextMultipleCount(multiplier, dropRateNumerator, dropRateDenumerator);
-
-                if (amount == 0)
-                    return;
-
-                // TODO: Use actual live clear reward ids
-                LimitedReward? limitedReward = updatedLive.LimitedRewards.FirstOrDefault(x => x.MasterRewardId == itemId);
-
-                if (limitedReward is null)
-                {
-                    rewards.Add(new Reward
-                    {
-                        Type = RewardType.Item,
-                        Value = itemId,
-                        Amount = amount,
-                        DropInfo = new DropInfo
-                        {
-                            FirstReward = 0,
-                            GetableCount = amount,
-                            RemainingGetableCount = maxDropAmount - amount
-                        }
-                    });
-
-                    updatedLive.LimitedRewards.Add(new LimitedReward
-                    {
-                        MasterRewardId = itemId,
-                        Remaining = maxDropAmount - amount
-                    });
-                }
-                else
-                {
-                    if (limitedReward.Remaining == 0)
-                        return;
-
-                    if (limitedReward.Remaining - amount < 0)
-                        amount = limitedReward.Remaining;
-
-                    limitedReward.Remaining -= amount;
-
-                    rewards.Add(new Reward
-                    {
-                        Type = RewardType.Item,
-                        Value = itemId,
-                        Amount = amount,
-                        DropInfo = new DropInfo
-                        {
-                            FirstReward = 0,
-                            GetableCount = maxDropAmount - limitedReward.Remaining,
-                            RemainingGetableCount = limitedReward.Remaining
-                        }
-                    });
-                }
-
-                Item? itemDuplicate = uvl.ItemList.FirstOrDefault(x => x.MasterItemId == itemId);
-
-                if (itemDuplicate is not null)
-                {
-                    itemDuplicate.Amount += amount;
-                    return;
-                }
-
-                if (allUserItems.TryGetValue(itemId, out Item? item))
-                {
-                    item.Amount += amount;
-                    uvl.ItemList.Add(item);
-                }
-                else
-                {
-                    item = new Item
-                    {
-                        MasterItemId = itemId,
-                        Amount = amount,
-                        ExpireDateTime = null
-                    };
-                    userData.ItemList.Add(item);
-                    uvl.ItemList.Add(item);
-                }
-            }
-
-            void AddItem(uint itemId, int dropAmount, int dropRateNumerator, int dropRateDenumerator)
-            {
-                int amount = dropAmount * BinaryRandom.NextMultipleCount(multiplier, dropRateNumerator, dropRateDenumerator);
-
-                if (amount == 0)
-                    return;
-
-                rewards.Add(new Reward
-                {
-                    Type = RewardType.Item,
-                    Value = itemId,
-                    Amount = amount
-                });
-
-                Item? itemDuplicate = uvl.ItemList.FirstOrDefault(x => x.MasterItemId == itemId);
-
-                if (itemDuplicate is not null)
-                {
-                    itemDuplicate.Amount += amount;
-                    return;
-                }
-
-                if (allUserItems.TryGetValue(itemId, out Item? item))
-                {
-                    item.Amount += amount;
-                    uvl.ItemList.Add(item);
-                }
-                else
-                {
-                    item = new Item
-                    {
-                        MasterItemId = itemId,
-                        Amount = amount,
-                        ExpireDateTime = null
-                    };
-                    userData.ItemList.Add(item);
-                    uvl.ItemList.Add(item);
-                }
-            }
-
-            void AddChatStamp(uint chatStampId)
-            {
-                const int maxDropAmount = 1;
-
-                int amount = BinaryRandom.NextMultipleCount(multiplier, 1, 1);
-
-                if (amount == 0)
-                    return;
-
-                // Can be dropped only once
-                amount = 1;
-
-                LimitedReward? limitedReward = updatedLive.LimitedRewards.FirstOrDefault(x => x.MasterRewardId == chatStampId);
-
-                if (limitedReward is null)
-                {
-                    rewards.Add(new Reward
-                    {
-                        Type = RewardType.ChatStamp,
-                        Value = chatStampId,
-                        Amount = amount,
-                        DropInfo = new DropInfo
-                        {
-                            FirstReward = 0,
-                            GetableCount = amount,
-                            RemainingGetableCount = maxDropAmount - amount
-                        }
-                    });
-
-                    updatedLive.LimitedRewards.Add(new LimitedReward
-                    {
-                        MasterRewardId = chatStampId,
-                        Remaining = maxDropAmount - amount
-                    });
-                }
-                else
-                {
-                    if (limitedReward.Remaining == 0)
-                        return;
-
-                    if (limitedReward.Remaining - amount < 0)
-                        amount = limitedReward.Remaining;
-
-                    limitedReward.Remaining -= amount;
-
-                    rewards.Add(new Reward
-                    {
-                        Type = RewardType.ChatStamp,
-                        Value = chatStampId,
-                        Amount = amount,
-                        DropInfo = new DropInfo
-                        {
-                            FirstReward = 0,
-                            GetableCount = maxDropAmount - limitedReward.Remaining,
-                            RemainingGetableCount = limitedReward.Remaining
-                        }
-                    });
-                }
-
-                if (userData.MasterStampIds.Contains(chatStampId))
-                    return;
-
-                if (!uvl.MasterStampIds.Contains(chatStampId))
-                    uvl.MasterStampIds.Add(chatStampId);
-
-                userData.MasterStampIds.Add(chatStampId);
-            }
         }
 
         void AddFirstClearRewards()
@@ -957,19 +459,13 @@ public class LiveService : ILiveService
             if (updatedLive.ClearCount != 1)
                 return;
 
-            gemChange += 60;
-            rewards.Add(new Reward
-            {
-                Type = RewardType.Gem,
-                Value = 1,
-                Amount = 60,
-                DropInfo = new DropInfo
+            resourceAdditionBuilder.AddFreeGems(60)
+                .SetDropInfo(new DropInfo
                 {
                     GetableCount = 1,
                     FirstReward = 1,
                     RemainingGetableCount = 0
-                }
-            });
+                });
         }
 
         async Task AddLiveMissionRewards()
@@ -1034,6 +530,7 @@ public class LiveService : ILiveService
 
                     AddLiveMissionReward(liveMissionsRewardsMsts[liveMissionMst.MasterLiveMissionRewardId]);
                     storedliveMissionData.ClearMasterLiveMissionIds.Add(liveMissionMst.Id);
+                    newCompletedLiveMissions.Add(liveMissionMst.Id);
                 }
             }
 
@@ -1055,6 +552,7 @@ public class LiveService : ILiveService
 
                     AddLiveMissionReward(liveMissionsRewardsMsts[liveMissionMst.MasterLiveMissionRewardId]);
                     storedliveMissionData.ClearMasterLiveMissionIds.Add(liveMissionMst.Id);
+                    newCompletedLiveMissions.Add(liveMissionMst.Id);
                 }
             }
 
@@ -1089,6 +587,7 @@ public class LiveService : ILiveService
 
                     AddLiveMissionReward(liveMissionsRewardsMsts[liveMissionMst.MasterLiveMissionRewardId]);
                     storedliveMissionData.ClearMasterLiveMissionIds.Add(liveMissionMst.Id);
+                    newCompletedLiveMissions.Add(liveMissionMst.Id);
                 }
             }
 
@@ -1109,20 +608,7 @@ public class LiveService : ILiveService
             void AddLiveMissionReward(LiveMissionRewardMst liveMissionRewardMst)
             {
                 if (liveMissionRewardMst.GiveType == GiveType.Gift)
-                {
-                    Gift gift = new()
-                    {
-                        IsReceive = false,
-                        ReasonText = "Live mission completion reward",
-                        Value = liveMissionRewardMst.Value,
-                        Amount = liveMissionRewardMst.Amount,
-                        RewardType = liveMissionRewardMst.Type,
-                        CreatedDateTime = currentTimestamp,
-                        ExpireDateTime = currentDateTimeOffset.AddYears(1).ToUnixTimeSeconds()
-                    };
-
-                    gifts.Add(gift);
-                }
+                    resourceAdditionBuilder.AddGift("Live mission completion reward", liveMissionRewardMst.Type, liveMissionRewardMst.Value, liveMissionRewardMst.Amount);
                 else
                     throw new NotImplementedException();
             }
@@ -1147,32 +633,6 @@ public class LiveService : ILiveService
                     return x.Character;
                 })
                 .ToList();
-        }
-
-        void UpdateCoins()
-        {
-            Point? coinsPoint = userData.PointList.FirstOrDefault(x => x.Type == PointType.Coin);
-
-            if (coinsPoint is null)
-            {
-                coinsPoint = new Point
-                {
-                    Type = PointType.Coin,
-                    Amount = 0
-                };
-
-                userData.PointList.Add(coinsPoint);
-            }
-
-            coinsPoint.Amount += coinChange;
-            uvl.PointList.Add(coinsPoint);
-        }
-
-        void UpdateGems()
-        {
-            userData.Gem.Free += gemChange;
-            userData.Gem.Total += gemChange;
-            uvl.Gem = userData.Gem;
         }
     }
 
@@ -1322,8 +782,8 @@ public class LiveService : ILiveService
     );
 
     private async Task<UserData> UpdateUserDataAfterLiveCreatingGiftIds(ulong xuid, long currentTimestamp, List<Live> lives,
-        List<Point> points, List<Item> items, Stamina stamina, int experience, Gem gem,
-        List<Character> characters, List<LiveMission> liveMissions, List<uint> stampIds, List<Gift> gifts, List<uint> clearedMissionIds)
+        LinkedList<Point> points, LinkedList<Item> items, Stamina stamina, int experience, Gem gem,
+        List<Character> characters, List<LiveMission> liveMissions, HashSet<uint> newStampIds, LinkedList<Gift> gifts)
     {
         // Add item ids for new items
         List<Item> itemsWithoutIds = items.Where(x => x.Id == 0).ToList();
@@ -1335,13 +795,13 @@ public class LiveService : ILiveService
         List<Gift> giftsWithoutIds = gifts.Where(x => x.Id == 0).ToList();
         ulong[] giftIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.GiftIds, (ulong)giftsWithoutIds.Count)).ToArray();
         for (int i = 0; i < giftsWithoutIds.Count; i++)
+        {
+            giftsWithoutIds[i].UserId = xuid;
             giftsWithoutIds[i].Id = giftIds[i];
-
-        foreach (Gift gift in gifts)
-            gift.UserId = xuid;
+        }
 
         return await _liveDataRepository.UpdateAfterFinishedLive(xuid, currentTimestamp, lives, points, items,
             stamina, experience, gem, characters, liveMissions,
-            stampIds, gifts, clearedMissionIds);
+            newStampIds, gifts);
     }
 }

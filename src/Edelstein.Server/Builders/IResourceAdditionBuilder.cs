@@ -5,8 +5,8 @@ namespace Edelstein.Server.Builders;
 
 public interface IResourceAdditionBuilder
 {
-    public ResourceConfigurer AddCoinPoints(int amount);
-    public ResourceConfigurer AddPoints(PointType type, int amount);
+    public ResourceConfigurer AddCoinPoints(int amount, bool hidden = false);
+    public ResourceConfigurer AddPoints(PointType type, int amount, bool hidden = false);
 
     public ResourceConfigurer AddFreeGems(int amount);
     public ResourceConfigurer AddPaidGems(int amount);
@@ -22,14 +22,15 @@ public interface IResourceAdditionBuilder
     public ResourceConfigurer AddChatStamp(uint chatStampId);
     public DeferredResourceConfigurer AddChatStampDeferred(uint chatStampId);
 
-    public void AddCoinPointsAsGift(int amount, long? expirationTimestamp = null);
-    public void AddPointsAsGift(PointType type, int amount, long? expirationTimestamp = null);
+    public void AddGemsAsGift(string reason, int amount, long? expirationTimestamp = null);
 
-    public void AddGemsAsGift(int amount, long? expirationTimestamp = null);
+    public void AddCoinPointsAsGift(string reason, int amount, long? expirationTimestamp = null);
+    public void AddPointsAsGift(string reason, PointType type, int amount, long? expirationTimestamp = null);
 
-    public void AddItemAsGift(uint itemId, int amount, long? expirationTimestamp = null);
+    public void AddItemAsGift(string reason, uint itemId, int amount, long? expirationTimestamp = null);
+    public void AddCardAsGift(string reason, uint cardId, long? expirationTimestamp = null);
 
-    public void AddCardAsGift(uint cardId, long? expirationTimestamp = null);
+    public void AddGift(string reason, RewardType type, uint itemId, int amount, long? expirationTimestamp = null);
 
     public ResourceConfigurer FinishDeferred(DeferredResourceConfigurer deferredResourceConfigurer);
 

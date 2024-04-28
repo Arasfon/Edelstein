@@ -7,7 +7,7 @@ public class LiveEndResponseData
 {
     public Data.Models.Components.Live? Live { get; set; }
     public Gem? Gem { get; set; }
-    public List<uint> ClearMasterLiveMissionIds { get; set; } = [];
+    public HashSet<uint> ClearMasterLiveMissionIds { get; set; } = [];
     public required User User { get; set; }
     public required Stamina Stamina { get; set; }
     public List<Character> CharacterList { get; set; } = [];
@@ -16,8 +16,8 @@ public class LiveEndResponseData
     public List<Item> ItemList { get; set; } = [];
     public List<Point> PointList { get; set; } = [];
     public List<Group> GroupList { get; set; } = [];
-    public List<Reward> RewardList { get; set; } = [];
-    public List<Gift> GiftList { get; set; } = [];
+    public IEnumerable<Reward> RewardList { get; set; } = [];
+    public IEnumerable<Gift> GiftList { get; set; } = [];
     public List<uint> ClearMissionIds { get; set; } = [];
     public List<EventPoint> EventPointList { get; set; } = [];
     public List<Reward> EventPointRewardList { get; set; } = [];

@@ -26,9 +26,9 @@ public class LiveFinishResult
     public List<Item> ChangedItems { get; init; } = [];
     public List<Point> ChangedPoints { get; init; } = [];
     public List<Character> UpdatedCharacters { get; init; } = [];
-    public List<uint> ClearedMasterLiveMissionIds { get; init; } = [];
-    public List<Reward> Rewards { get; init; } = [];
-    public List<Gift> Gifts { get; init; } = [];
+    public HashSet<uint> ClearedMasterLiveMissionIds { get; init; } = [];
+    public IEnumerable<Reward> Rewards { get; init; } = [];
+    public IEnumerable<Gift> Gifts { get; init; } = [];
     public List<uint> ClearedMissionIds { get; init; } = [];
     public List<Reward> EventPointRewards { get; init; } = [];
     public required RankingChange RankingChange { get; init; }
