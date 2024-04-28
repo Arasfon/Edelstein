@@ -1291,8 +1291,6 @@ public class LiveService : ILiveService
         if (rankUps.Count > 0)
             newStaminaValue += rankUps.Sum(x => x.MaxLp);
 
-        Console.WriteLine($"{storedStamina.StaminaValue} | {storedStamina.LastUpdatedTime} | {newStaminaValue} | {atTimestamp.Value}");
-
         return (true, new Stamina
         {
             StaminaValue = newStaminaValue,
