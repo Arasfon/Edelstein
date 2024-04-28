@@ -26,10 +26,10 @@ public interface IUserService
     public Task<List<Character>> GetDeckCharactersFromUserData(UserData? userData, uint deckSlot);
     public Task<List<Character>> GetDeckCharactersFromUserData(UserData userData, Deck deck);
 
-    public Task<UserData> SetCardsItemsPointsCreatingIds(ulong xuid, List<Card> cards, List<Item> items, List<Point> points);
+    public Task<UserData> SetCardsItemsPointsCreatingIds(ulong xuid, List<Card> cards, List<Item> items, IEnumerable<Point> points);
 
-    public Task<UserData> SetGemsCardsItemsPointsLotteriesCreatingIds(ulong xuid, Gem gems, List<Card> cards, List<Item> items,
-        List<Point> points, List<Lottery> lotteries);
+    public Task<UserData> SetGemsCardsItemsPointsLotteriesCreatingIds(ulong xuid, Gem gem, LinkedList<Card> cards, LinkedList<Item> items,
+        IEnumerable<Point> points, IEnumerable<Lottery> lotteries);
 
     public Task UpdateUserLotteries(ulong xuid, List<Lottery> lotteries);
 

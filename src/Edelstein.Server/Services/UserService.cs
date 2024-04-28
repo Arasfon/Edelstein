@@ -1,5 +1,6 @@
 using Edelstein.Data.Models;
 using Edelstein.Data.Models.Components;
+using Edelstein.Server.Builders;
 using Edelstein.Server.Extensions;
 using Edelstein.Server.Models;
 using Edelstein.Server.Repositories;
@@ -190,7 +191,7 @@ public class UserService : IUserService
     }
 
     public async Task<UserData> SetCardsItemsPointsCreatingIds(ulong xuid, List<Card> cards, List<Item> items,
-        List<Point> points)
+        IEnumerable<Point> points)
     {
         List<Card> cardsWithoutIds = cards.Where(x => x.Id == 0).ToList();
         List<ulong> cardIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.CardIds, (ulong)cardsWithoutIds.Count)).ToList();
@@ -205,8 +206,8 @@ public class UserService : IUserService
         return await _userDataRepository.SetCardsItemsPoints(xuid, cards, items, points);
     }
 
-    public async Task<UserData> SetGemsCardsItemsPointsLotteriesCreatingIds(ulong xuid, Gem gems, List<Card> cards, List<Item> items,
-        List<Point> points, List<Lottery> lotteries)
+    public async Task<UserData> SetGemsCardsItemsPointsLotteriesCreatingIds(ulong xuid, Gem gem, LinkedList<Card> cards,
+        LinkedList<Item> items, IEnumerable<Point> points, IEnumerable<Lottery> lotteries)
     {
         List<Card> cardsWithoutIds = cards.Where(x => x.Id == 0).ToList();
         List<ulong> cardIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.CardIds, (ulong)cardsWithoutIds.Count)).ToList();
@@ -218,7 +219,7 @@ public class UserService : IUserService
         for (int i = 0; i < itemsWithoutIds.Count; i++)
             itemsWithoutIds[i].Id = itemIds[i];
 
-        return await _userDataRepository.SetGemsCardsItemsPointsLotteries(xuid, gems, cards, items, points,
+        return await _userDataRepository.SetGemsCardsItemsPointsLotteries(xuid, gem, cards, items, points,
             lotteries);
     }
 
@@ -236,18 +237,10 @@ public class UserService : IUserService
     {
         UserData userData = (await _userDataRepository.GetByXuid(xuid))!;
 
-        if (userData.Gem.Total - gemCharge < 0)
+        (bool enoughGems, int freeCharge, int paidCharge) = ResourceConsumptionBuilder.TryDistributeConsumeGems(userData.Gem, gemCharge);
+
+        if (!enoughGems)
             return null;
-
-        int freeCharge = (int)Math.Min(userData.Gem.Free, gemCharge);
-
-        gemCharge -= freeCharge;
-
-        int paidCharge = (int)Math.Min(userData.Gem.Charge, gemCharge);
-
-        gemCharge -= paidCharge;
-
-        Debug.Assert(gemCharge == 0);
 
         return await _userDataRepository.IncrementGems(xuid, -freeCharge, -paidCharge);
     }

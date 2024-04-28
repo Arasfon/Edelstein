@@ -4,6 +4,6 @@ namespace Edelstein.Server.Models;
 
 public record LotteryDrawResult(
     LotteryDrawResultStatus Status,
-    List<LotteryItem> LotteryItems,
+    IEnumerable<LotteryItem> LotteryItems,
     UpdatedValueList Updates
 );

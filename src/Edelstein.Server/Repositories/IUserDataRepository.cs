@@ -18,8 +18,8 @@ public interface IUserDataRepository
 
     public Task<UserData> SetCardsItemsPoints(ulong xuid, IEnumerable<Card> cards, IEnumerable<Item> items, IEnumerable<Point> points);
 
-    public Task<UserData> SetGemsCardsItemsPointsLotteries(ulong xuid, Gem gems, List<Card> cards, List<Item> items, List<Point> points,
-        List<Lottery> lotteries);
+    public Task<UserData> SetGemsCardsItemsPointsLotteries(ulong xuid, Gem gem, IEnumerable<Card> cards, IEnumerable<Item> items, IEnumerable<Point> points,
+        IEnumerable<Lottery> lotteries);
 
     public Task SetCurrentLiveData(ulong xuid, CurrentLiveData? currentLiveData);
     public Task<UserData> GetByXuidRemovingCurrentLiveData(ulong xuid);

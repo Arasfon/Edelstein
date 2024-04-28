@@ -143,13 +143,13 @@ public class UserDataRepository : IUserDataRepository
             new FindOneAndUpdateOptions<UserData> { ReturnDocument = ReturnDocument.After });
     }
 
-    public async Task<UserData> SetGemsCardsItemsPointsLotteries(ulong xuid, Gem gems, List<Card> cards, List<Item> items,
-        List<Point> points, List<Lottery> lotteries)
+    public async Task<UserData> SetGemsCardsItemsPointsLotteries(ulong xuid, Gem gem, IEnumerable<Card> cards, IEnumerable<Item> items,
+        IEnumerable<Point> points, IEnumerable<Lottery> lotteries)
     {
         FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
 
         UpdateDefinition<UserData> updateDefinition = Builders<UserData>.Update
-            .Set(x => x.Gem, gems)
+            .Set(x => x.Gem, gem)
             .Set(x => x.CardList, cards)
             .Set(x => x.ItemList, items)
             .Set(x => x.PointList, points)
