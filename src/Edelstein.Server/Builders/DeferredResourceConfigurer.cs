@@ -18,7 +18,7 @@ public class DeferredResourceConfigurer : ResourceConfigurer
         return this;
     }
 
-    public DeferredResourceConfigurer MakeLimited(List<LimitedReward> limitedRewards, int maxAmount, int firstReward = 0)
+    public virtual DeferredResourceConfigurer MakeLimited(List<LimitedReward> limitedRewards, int maxAmount, int firstReward = 0)
     {
         if (!_shouldBeAdded)
             return this;
@@ -69,7 +69,7 @@ public class DeferredResourceConfigurer : ResourceConfigurer
         return this;
     }
 
-    public ResourceConfigurer Finish()
+    public virtual ResourceConfigurer Finish()
     {
         if (_shouldBeAdded)
             return ResourceAdditionBuilder.FinishDeferred(this);

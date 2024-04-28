@@ -69,6 +69,9 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
 
     public ResourceConfigurer AddPoints(PointType type, int amount)
     {
+        if (amount == 0)
+            return new NullResourceConfigurer();
+
         Reward reward = new()
         {
             Type = RewardType.Point,
@@ -105,6 +108,9 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
 
     public ResourceConfigurer AddFreeGems(int amount)
     {
+        if (amount == 0)
+            return new NullResourceConfigurer();
+
         Reward reward = new()
         {
             Type = RewardType.Gem,
@@ -122,6 +128,9 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
 
     public ResourceConfigurer AddPaidGems(int amount)
     {
+        if (amount == 0)
+            return new NullResourceConfigurer();
+
         Reward reward = new()
         {
             Type = RewardType.Gem,
@@ -147,6 +156,9 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
 
     public ResourceConfigurer AddItem(Reward reward, long? expirationTimestamp)
     {
+        if (reward.Amount == 0)
+            return new NullResourceConfigurer();
+
         Rewards?.AddLast(reward);
 
         if (UpdatedValueList.ItemList.TryGetValue(reward.Value, out Item? item))
@@ -193,6 +205,9 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
 
     private ResourceConfigurer AddCard(Reward reward, Rarity rarity)
     {
+        if (reward.Amount == 0)
+            return new NullResourceConfigurer();
+
         Rewards?.AddLast(reward);
 
         const uint penlightMasterItemId = 19100001;
@@ -305,6 +320,9 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
 
     public ResourceConfigurer Add(RewardType rewardType, uint itemId, int amount, Rarity? rarity = null)
     {
+        if (amount == 0)
+            return new NullResourceConfigurer();
+
         switch (rewardType)
         {
             case RewardType.Gem:
