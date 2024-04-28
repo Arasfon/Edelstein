@@ -198,13 +198,18 @@ public class LotteryService : ILotteryService
         var bucketsByEnsurance = (await query.ToListAsync())
             .GroupBy(x => x.Ensured)
             .OrderBy(x => x.Key)
-            .Select(g => new
+            .Select(g =>
             {
-                Ensured = g.Key,
-                Items = g.GroupBy(x => x.Id)
-                    .Select(x => x.ToList())
-                    .ToList(),
-                Ratios = g.Select(x => x.Ratio).Distinct().ToList()
+                List<IGrouping<uint, JoinedLotteryItem>> itemBuckets = g
+                    .GroupBy(item => item.Id)
+                    .ToList();
+
+                return new
+                {
+                    Ensured = g.Key,
+                    Items = itemBuckets.Select(x => x.ToList()).ToList(),
+                    Ratios = itemBuckets.Select(x => x.First().Ratio).ToList()
+                };
             })
             .ToList();
 

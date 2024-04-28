@@ -7,8 +7,11 @@ public class BucketRandom<TBucketItem>
     private readonly System.Random _random;
     private readonly int _totalSum;
 
-    public BucketRandom(IEnumerable<int> buckets, List<List<TBucketItem>> bucketCardIds)
+    public BucketRandom(List<int> buckets, List<List<TBucketItem>> bucketCardIds)
     {
+        if (buckets.Count != bucketCardIds.Count)
+            throw new ArgumentException("Buckets' count are not equal");
+
         _precalculatedBuckets = new List<int>();
         _totalSum = 0;
         foreach (int bucket in buckets)
