@@ -8,23 +8,23 @@ namespace Edelstein.Server.Builders;
 
 public class ResourceConsumptionBuilder : IResourceConsumptionBuilder
 {
-    private readonly EfficientUpdatedValueList _updatedValueList = new();
+    protected readonly EfficientUpdatedValueList UpdatedValueList = new();
 
-    private readonly LinkedList<Point> _allPoints;
-    private readonly LinkedList<Item> _allItems;
-    private readonly Gem _gem;
+    protected readonly LinkedList<Point> AllPoints;
+    protected readonly LinkedList<Item> AllItems;
+    protected readonly Gem Gem;
 
-    private readonly Dictionary<PointType, Point> _allExistingUserPoints;
-    private readonly Dictionary<uint, Item> _allExistingUserItems;
+    protected readonly Dictionary<PointType, Point> AllExistingUserPoints;
+    protected readonly Dictionary<uint, Item> AllExistingUserItems;
 
     public ResourceConsumptionBuilder(LinkedList<Point> allPoints, LinkedList<Item> allItems, Gem gem)
     {
-        _allPoints = allPoints;
-        _allItems = allItems;
-        _gem = gem;
+        AllPoints = allPoints;
+        AllItems = allItems;
+        Gem = gem;
 
-        _allExistingUserPoints = _allPoints.ToDictionary(x => x.Type);
-        _allExistingUserItems = _allItems.ToDictionary(x => x.MasterItemId);
+        AllExistingUserPoints = AllPoints.ToDictionary(x => x.Type);
+        AllExistingUserItems = AllItems.ToDictionary(x => x.MasterItemId);
     }
 
     public ResourceConsumptionBuilder(UserData userData) : this(new LinkedList<Point>(userData.PointList),
@@ -32,17 +32,17 @@ public class ResourceConsumptionBuilder : IResourceConsumptionBuilder
 
     public bool TryDistributeConsumeGems(int amount)
     {
-        (bool enoughGems, int freeCharge, int paidCharge) = TryDistributeConsumeGems(_gem, amount);
+        (bool enoughGems, int freeCharge, int paidCharge) = TryDistributeConsumeGems(Gem, amount);
 
         if (!enoughGems)
             return false;
 
-        _gem.Free -= freeCharge;
-        _gem.Charge -= paidCharge;
+        Gem.Free -= freeCharge;
+        Gem.Charge -= paidCharge;
 
-        _gem.Total = _gem.Free + _gem.Total;
+        Gem.Total = Gem.Free + Gem.Total;
 
-        _updatedValueList.Gem ??= _gem;
+        UpdatedValueList.Gem ??= Gem;
 
         return true;
     }
@@ -67,55 +67,73 @@ public class ResourceConsumptionBuilder : IResourceConsumptionBuilder
 
     public bool TryConsumeFreeGems(int amount)
     {
-        if (_gem.Free - amount < 0)
+        if (Gem.Free - amount < 0)
             return false;
 
-        _gem.Free -= amount;
-        _gem.Total -= amount;
+        Gem.Free -= amount;
+        Gem.Total -= amount;
 
-        _updatedValueList.Gem ??= _gem;
+        UpdatedValueList.Gem ??= Gem;
 
         return true;
     }
 
     public bool TryConsumePaidGems(int amount)
     {
-        if (_gem.Charge - amount < 0)
+        if (Gem.Charge - amount < 0)
             return false;
 
-        _gem.Charge -= amount;
-        _gem.Total -= amount;
+        Gem.Charge -= amount;
+        Gem.Total -= amount;
 
-        _updatedValueList.Gem ??= _gem;
+        UpdatedValueList.Gem ??= Gem;
 
         return true;
     }
 
     public bool TryConsumeItems(uint itemId, int amount)
     {
-        if (!_allExistingUserItems.TryGetValue(itemId, out Item? item))
+        if (UpdatedValueList.ItemList.TryGetValue(itemId, out Item? item))
+        {
+            if (item.Amount - amount < 0)
+                return false;
+
+            item.Amount -= amount;
+            return true;
+        }
+
+        if (!AllExistingUserItems.TryGetValue(itemId, out item))
             return false;
 
         if (item.Amount - amount < 0)
             return false;
 
-        _updatedValueList.ItemList.Add(itemId, item);
         item.Amount -= amount;
 
+        UpdatedValueList.ItemList.Add(itemId, item);
         return true;
     }
 
     public bool TryConsumePoints(PointType type, int amount)
     {
-        if (!_allExistingUserPoints.TryGetValue(type, out Point? point))
+        if (UpdatedValueList.PointList.TryGetValue(type, out Point? point))
+        {
+            if (point.Amount - amount < 0)
+                return false;
+
+            point.Amount -= amount;
+            return true;
+        }
+
+        if (!AllExistingUserPoints.TryGetValue(type, out point))
             return false;
 
         if (point.Amount - amount < 0)
             return false;
 
-        _updatedValueList.PointList.Add(type, point);
         point.Amount -= amount;
 
+        UpdatedValueList.PointList.Add(type, point);
         return true;
     }
 
@@ -141,18 +159,18 @@ public class ResourceConsumptionBuilder : IResourceConsumptionBuilder
     }
 
     public ResourceAdditionBuilder ToResourceAdditionBuilder(UserData userData, long? currentTimestamp = null, bool calculateRewards = false) =>
-        new(_updatedValueList, _allPoints, _allExistingUserPoints, _allItems, _allExistingUserItems,
-            _gem, userData, currentTimestamp, calculateRewards);
+        new(UpdatedValueList, AllPoints, AllExistingUserPoints, AllItems, AllExistingUserItems,
+            Gem, userData, currentTimestamp, calculateRewards);
 
     public ResourcesModificationResult Build() =>
         new()
         {
-            Updates = _updatedValueList.ToUpdatedValueList(),
+            Updates = UpdatedValueList.ToUpdatedValueList(),
             Rewards = null,
             Gifts = null,
-            Gem = _updatedValueList.Gem,
-            Points = _allPoints,
+            Gem = UpdatedValueList.Gem,
+            Points = AllPoints,
             Cards = null!,
-            Items = _allItems
+            Items = AllItems
         };
 }
