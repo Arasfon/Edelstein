@@ -83,6 +83,9 @@ public class LiveController : Controller
         // TODO: Fix separation of concerns (replace passing request data with parameters)
         LiveFinishResult liveFinishResult = await _liveService.SkipLive(xuid, encryptedRequest.DeserializedObject);
 
+        if (liveFinishResult.Status is not LiveFinishResultStatus.Success)
+            return EmptyEncryptedResponseFactory.Create(ErrorCode.ErrorItemShortage);
+
         return new EncryptedResponse<LiveSkipResponseData>(new LiveSkipResponseData
         {
             ItemList = liveFinishResult.ChangedItems,
@@ -131,6 +134,9 @@ public class LiveController : Controller
 
         // TODO: Fix separation of concerns (replace passing request data with parameters)
         LiveFinishResult liveFinishResult = await _liveService.FinishLive(xuid, encryptedRequest.DeserializedObject);
+
+        if (liveFinishResult.Status is not LiveFinishResultStatus.Success)
+            return EmptyEncryptedResponseFactory.Create(ErrorCode.ErrorItemShortage);
 
         return new EncryptedResponse<LiveEndResponseData>(new LiveEndResponseData
         {
