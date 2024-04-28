@@ -84,9 +84,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             return new ResourceConfigurer(this, false, reward);
         }
 
-        bool isNew = !AllExistingUserPoints.TryGetValue(type, out point);
-
-        if (isNew)
+        if (!AllExistingUserPoints.TryGetValue(type, out point))
         {
             point = new Point
             {
@@ -99,7 +97,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             return new ResourceConfigurer(this, true, reward);
         }
 
-        point!.Amount += amount;
+        point.Amount += amount;
         UpdatedValueList.PointList.Add(type, point);
 
         return new ResourceConfigurer(this, false, reward);
@@ -157,9 +155,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             return new ResourceConfigurer(this, false, reward);
         }
 
-        bool isNew = !AllExistingUserItems.TryGetValue(reward.Value, out item);
-
-        if (isNew)
+        if (!AllExistingUserItems.TryGetValue(reward.Value, out item))
         {
             item = new Item
             {
@@ -173,7 +169,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             return new ResourceConfigurer(this, true, reward);
         }
 
-        item!.Amount += reward.Amount;
+        item.Amount += reward.Amount;
         UpdatedValueList.ItemList.Add(reward.Value, item);
 
         return new ResourceConfigurer(this, false, reward);
@@ -226,9 +222,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             return new ResourceConfigurer(this, false, reward, exchangeItem);
         }
 
-        bool isNew = !AllExistingUserCardIds.Contains(reward.Value);
-
-        if (isNew)
+        if (!AllExistingUserCardIds.Contains(reward.Value))
         {
             card = new Card
             {
