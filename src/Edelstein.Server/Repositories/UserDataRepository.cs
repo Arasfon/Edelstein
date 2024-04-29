@@ -120,7 +120,11 @@ public class UserDataRepository : IUserDataRepository
             updates.Add(updateBuilder.Set(x => x.User.GuestCoolMasterCardId, guestCoolMasterCardId));
 
         if (friendRequestDisabled.HasValue)
-            updates.Add(updateBuilder.Set(x => x.User.FriendRequestDisabled, friendRequestDisabled));
+        {
+            updates.Add(!friendRequestDisabled.Value
+                ? updateBuilder.AddToSet(x => x.User.ProfileSettings, ProfileType.FriendRequest)
+                : updateBuilder.Pull(x => x.User.ProfileSettings, ProfileType.FriendRequest));
+        }
 
         UpdateDefinition<UserData> updateDefinition = updateBuilder.Combine(updates);
 
