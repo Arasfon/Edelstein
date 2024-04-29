@@ -220,7 +220,7 @@ public class LiveService : ILiveService
 
                     LiveMissionRewardMst rewardMst = liveMissionsRewardsMsts[liveMissionMst.MasterLiveMissionRewardId];
                     if (rewardMst.GiveType == GiveType.Gift)
-                        resourceAdditionBuilder.AddGift("Live mission completion reward", rewardMst.Type, rewardMst.Value, rewardMst.Amount);
+                        resourceAdditionBuilder.AddGift("ライブミッション完了報酬", rewardMst.Type, rewardMst.Value, rewardMst.Amount);
                     else
                         throw new NotImplementedException();
 
