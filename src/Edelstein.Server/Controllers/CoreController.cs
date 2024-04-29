@@ -4,6 +4,7 @@ using Edelstein.Data.Models.Components;
 using Edelstein.Data.Transport;
 using Edelstein.Server.ActionResults;
 using Edelstein.Server.Authorization;
+using Edelstein.Server.Models;
 using Edelstein.Server.Models.Endpoints.Core;
 using Edelstein.Server.Security;
 using Edelstein.Server.Services;
@@ -19,11 +20,13 @@ public class CoreController : Controller
 {
     private readonly IUserService _userService;
     private readonly ITutorialService _tutorialService;
+    private readonly IUserGiftsService _userGiftsService;
 
-    public CoreController(IUserService userService, ITutorialService tutorialService)
+    public CoreController(IUserService userService, ITutorialService tutorialService, IUserGiftsService userGiftsService)
     {
         _userService = userService;
         _tutorialService = tutorialService;
+        _userGiftsService = userGiftsService;
     }
 
     [Route("user")]
@@ -79,7 +82,7 @@ public class CoreController : Controller
 
         UserHomeDocument homeDocument = (await _userService.GetHomeByXuid(xuid))!;
 
-        IEnumerable<Gift> gifts = await _userService.GetAllGifts(xuid);
+        IEnumerable<Gift> gifts = await _userGiftsService.GetAllGifts(xuid);
 
         Home home = new()
         {
@@ -106,10 +109,19 @@ public class CoreController : Controller
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
-        return new EncryptedResponse<UserMissionsDocument?>(new UserMissionsDocument
-        {
-            MissionList = []
-        });
+        return new EncryptedResponse<UserMissionsDocument?>(new UserMissionsDocument { MissionList = [] });
+    }
+
+    [HttpPost]
+    [Route("gift")]
+    public async Task<EncryptedResult> ClaimGifts(EncryptedRequest<GiftRequestData> encryptedRequest)
+    {
+        ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
+
+        GiftClaimResult giftClaimResult = await _userGiftsService.ClaimGifts(xuid, encryptedRequest.DeserializedObject.GiftIds);
+
+        return new EncryptedResponse<GiftResponseData>(new GiftResponseData(giftClaimResult.FailedGifts, giftClaimResult.UpdatedValueList,
+            giftClaimResult.Rewards, []));
     }
 
     [Route("friend")]

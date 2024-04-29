@@ -1,5 +1,6 @@
 using Edelstein.Data.Models;
 using Edelstein.Data.Models.Components;
+using Edelstein.Data.Msts;
 
 namespace Edelstein.Server.Builders;
 
@@ -14,5 +15,8 @@ public class NullDeferredResourceConfigurer : DeferredResourceConfigurer
         this;
 
     public override ResourceConfigurer Finish() =>
+        this;
+
+    public override ResourceConfigurer SetGiveType(GiveType giveType) =>
         this;
 }

@@ -17,23 +17,30 @@ public class UserGiftsRepository : IUserGiftsRepository
         _giftsCollection = mongoDatabase.GetCollection<Gift>(CollectionNames.Gifts);
     }
 
-    public Task AddGift(ulong xuid, Gift gift) =>
-        throw new NotImplementedException();
+    public async Task AddGift(Gift gift) =>
+        await _giftsCollection.InsertOneAsync(gift);
 
-    public Task AddGifts(ulong xuid, List<Gift> gift) =>
-        throw new NotImplementedException();
+    public async Task AddGifts(IEnumerable<Gift> gifts) =>
+        await _giftsCollection.InsertManyAsync(gifts);
 
-    public Task AddGift(IClientSessionHandle session, ulong xuid, Gift gift) =>
-        throw new NotImplementedException();
+    public async Task MarkAsClaimed(ulong xuid, IEnumerable<ulong> giftIds, long? currentTimestamp = null)
+    {
+        currentTimestamp ??= DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-    public Task AddGifts(IClientSessionHandle session, ulong xuid, List<Gift> gift) =>
-        throw new NotImplementedException();
+        // There is no efficient way to confirm that gift ids provided are within limit, so this allows to bypass gift limit until excess gifts are deleted
+        // This is not a security risk as gift limit exists for efficiency, not for security
+        FilterDefinition<Gift> filterDefinition =
+            Builders<Gift>.Filter.In(x => x.Id, giftIds) &
+            Builders<Gift>.Filter.Eq(x => x.UserId, xuid) &
+            Builders<Gift>.Filter.Gt(x => x.ExpireDateTime, currentTimestamp.Value) &
+            Builders<Gift>.Filter.Eq(x => x.IsReceive, false);
 
-    public Task ClaimGift(ulong xuid, Gift gift) =>
-        throw new NotImplementedException();
+        UpdateDefinition<Gift> updateDefinition = Builders<Gift>.Update
+            .Set(x => x.IsReceive, true)
+            .Set(x => x.ReceivedDateTime, currentTimestamp);
 
-    public Task ClaimAll(ulong xuid) =>
-        throw new NotImplementedException();
+        await _giftsCollection.UpdateManyAsync(filterDefinition, updateDefinition);
+    }
 
     public async Task<IEnumerable<Gift>> GetAllByXuid(ulong xuid, long? currentTimestamp = null)
     {
@@ -63,5 +70,19 @@ public class UserGiftsRepository : IUserGiftsRepository
             await _giftsCollection.Find(claimHistoryFilterDefinition).Sort(claimHistorySortDefinition).Limit(30).ToListAsync();
 
         return nonClaimedGifts.Concat(claimHistoryGifts);
+    }
+
+    public async Task<List<Gift>> GetManyByIds(IEnumerable<ulong> ids, long? currentTimestamp = null)
+    {
+        currentTimestamp ??= DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+        // There is no efficient way to confirm that gift ids provided are within limit, so this allows to bypass gift limit until excess gifts are deleted
+        // This is not a security risk as gift limit exists for efficiency, not for security
+        FilterDefinition<Gift> filterDefinition =
+            Builders<Gift>.Filter.In(x => x.Id, ids) &
+            Builders<Gift>.Filter.Gt(x => x.ExpireDateTime, currentTimestamp.Value) &
+            Builders<Gift>.Filter.Eq(x => x.IsReceive, false);
+
+        return await _giftsCollection.Find(filterDefinition).ToListAsync();
     }
 }

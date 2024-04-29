@@ -69,10 +69,10 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             Rewards = [];
     }
 
-    public ResourceConfigurer AddCoinPoints(int amount, bool hidden = false) =>
-        AddPoints(PointType.Coin, amount, hidden);
+    public ResourceConfigurer AddCoinPoints(int amount, bool hidden = false, bool preventGiftConversionOnLimit = false) =>
+        AddPoints(PointType.Coin, amount, hidden, preventGiftConversionOnLimit);
 
-    public ResourceConfigurer AddPoints(PointType type, int amount, bool hidden = false)
+    public ResourceConfigurer AddPoints(PointType type, int amount, bool hidden = false, bool preventGiftConversionOnLimit = false)
     {
         if (amount == 0)
             return new NullResourceConfigurer();
@@ -112,7 +112,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         return new ResourceConfigurer(this, false, reward);
     }
 
-    public ResourceConfigurer AddFreeGems(int amount)
+    public ResourceConfigurer AddFreeGems(int amount, bool preventGiftConversionOnLimit = false)
     {
         if (amount == 0)
             return new NullResourceConfigurer();
@@ -132,7 +132,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         return new ResourceConfigurer(this, false, reward);
     }
 
-    public ResourceConfigurer AddPaidGems(int amount)
+    public ResourceConfigurer AddPaidGems(int amount, bool preventGiftConversionOnLimit = false)
     {
         if (amount == 0)
             return new NullResourceConfigurer();
@@ -152,15 +152,15 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         return new ResourceConfigurer(this, false, reward);
     }
 
-    public ResourceConfigurer AddItem(uint itemId, int amount, long? expirationTimestamp = null) =>
+    public ResourceConfigurer AddItem(uint itemId, int amount, long? expirationTimestamp = null, bool preventGiftConversionOnLimit = false) =>
         AddItem(new Reward
         {
             Type = RewardType.Item,
             Value = itemId,
             Amount = amount
-        }, expirationTimestamp);
+        }, expirationTimestamp, preventGiftConversionOnLimit);
 
-    public ResourceConfigurer AddItem(Reward reward, long? expirationTimestamp)
+    public ResourceConfigurer AddItem(Reward reward, long? expirationTimestamp, bool preventGiftConversionOnLimit = false)
     {
         if (reward.Amount == 0)
             return new NullResourceConfigurer();
@@ -201,15 +201,15 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             Amount = amount
         }, expirationTimestamp);
 
-    public ResourceConfigurer AddCard(uint masterCardId, Rarity rarity) =>
+    public ResourceConfigurer AddCard(uint masterCardId, Rarity rarity, bool preventGiftConversionOnLimit = false) =>
         AddCard(new Reward
         {
             Type = RewardType.Card,
             Value = masterCardId,
             Amount = 1
-        }, rarity);
+        }, rarity, preventGiftConversionOnLimit);
 
-    private ResourceConfigurer AddCard(Reward reward, Rarity rarity)
+    private ResourceConfigurer AddCard(Reward reward, Rarity rarity, bool preventGiftConversionOnLimit = false)
     {
         if (reward.Amount == 0)
             return new NullResourceConfigurer();
@@ -290,8 +290,8 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             Amount = 1
         }, rarity);
 
-    public ResourceConfigurer AddCard(CardMst cardMst) =>
-        AddCard(cardMst.Id, cardMst.Rarity);
+    public ResourceConfigurer AddCard(CardMst cardMst, bool preventGiftConversionOnLimit = false) =>
+        AddCard(cardMst.Id, cardMst.Rarity, preventGiftConversionOnLimit);
 
     public DeferredCardResourceConfigurer AddCardDeferred(CardMst cardMst) =>
         AddCardDeferred(cardMst.Id, cardMst.Rarity);
@@ -324,7 +324,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             Amount = 1
         });
 
-    public ResourceConfigurer Add(RewardType rewardType, uint itemId, int amount, Rarity? rarity = null)
+    public ResourceConfigurer Add(RewardType rewardType, uint itemId, int amount, Rarity? cardRarity = null, long? itemExpirationTimestamp = null, bool preventGiftConversionOnLimit = false)
     {
         if (amount == 0)
             return new NullResourceConfigurer();
@@ -332,18 +332,18 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         switch (rewardType)
         {
             case RewardType.Gem:
-                return AddFreeGems(amount);
+                return AddFreeGems(amount, preventGiftConversionOnLimit);
             case RewardType.Card:
             {
-                if (rarity is null)
-                    throw new ArgumentNullException(nameof(rarity));
+                if (cardRarity is null)
+                    throw new ArgumentNullException(nameof(cardRarity));
 
-                return AddCard(itemId, rarity.Value);
+                return AddCard(itemId, cardRarity.Value, preventGiftConversionOnLimit);
             }
             case RewardType.Item:
-                return AddItem(itemId, amount);
+                return AddItem(itemId, amount, itemExpirationTimestamp, preventGiftConversionOnLimit);
             case RewardType.Point:
-                return AddPoints((PointType)itemId, amount);
+                return AddPoints((PointType)itemId, amount, preventGiftConversionOnLimit: preventGiftConversionOnLimit);
             case RewardType.ChatStamp:
                 return AddChatStamp(itemId);
             case RewardType.None:
@@ -378,6 +378,9 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             CreatedDateTime = CurrentTimestamp,
             ExpireDateTime = expirationTimestamp ?? CurrentDateTimeOffset.AddYears(1).ToUnixTimeSeconds()
         });
+
+    public ResourceConfigurer ClaimGift(Gift gift, Rarity? cardRarity = null, long? itemExpirationTimestamp = null) =>
+        Add(gift.RewardType, gift.Value, gift.Amount, cardRarity, itemExpirationTimestamp, true);
 
     public ResourceConfigurer FinishDeferred(DeferredResourceConfigurer deferredResourceConfigurer)
     {
