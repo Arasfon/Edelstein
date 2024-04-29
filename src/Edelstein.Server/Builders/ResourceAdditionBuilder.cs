@@ -31,7 +31,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         UpdatedValueList = updatedValueList;
         AllPoints = allPoints;
         AllItems = allItems;
-        AllCards = new LinkedList<Card>(userData.CardList);
+        AllCards = userData.CardList;
         Gem = gem;
 
         AllExistingUserPoints = allExistingUserPoints;
@@ -52,7 +52,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
     {
         AllPoints = userData.PointList;
         AllItems = userData.ItemList;
-        AllCards = new LinkedList<Card>(userData.CardList);
+        AllCards = userData.CardList;
         Gem = userData.Gem;
 
         AllExistingUserPoints = AllPoints.ToDictionary(x => x.Type);

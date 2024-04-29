@@ -17,7 +17,7 @@ public interface IUserService
 
     public Task<User> InitializeUserStartingCharacterAndDeck(ulong xuid);
 
-    public Task AddCards(ulong xuid, List<Card> cards, List<Card>? currentCards = null);
+    public Task AddCards(ulong xuid, List<Card> cards, LinkedList<Card>? currentCards = null);
     public Task AddCharacter(ulong xuid, uint characterId, uint experience = 0);
 
     public Task<User> UpdateUser(ulong xuid, string? name, string? comment, uint? favoriteMasterCardId, uint? guestSmileMasterCardId,

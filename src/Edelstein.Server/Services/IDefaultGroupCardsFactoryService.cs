@@ -5,5 +5,5 @@ namespace Edelstein.Server.Services;
 
 public interface IDefaultGroupCardsFactoryService
 {
-    public Task<DefaultCardRetrievalResult> GetOrCreate(BandCategory group, List<Card> existingCards);
+    public Task<DefaultCardRetrievalResult> GetOrCreate(BandCategory group, LinkedList<Card> existingCards);
 }

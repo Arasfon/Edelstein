@@ -143,7 +143,7 @@ public class UserService : IUserService
         await _userDataRepository.SetDeck(userInitializationData.Xuid, 1, cardIds.Take(9));
     }
 
-    public async Task AddCards(ulong xuid, List<Card> cards, List<Card>? currentCards = null)
+    public async Task AddCards(ulong xuid, List<Card> cards, LinkedList<Card>? currentCards = null)
     {
         if (currentCards is null)
         {
