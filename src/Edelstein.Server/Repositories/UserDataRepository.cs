@@ -87,10 +87,8 @@ public class UserDataRepository : IUserDataRepository
         UpdateDefinition<UserData> updateDefinition =
             Builders<UserData>.Update.Set(x => x.DeckList.FirstMatchingElement().MainCardIds, mainCardIds);
 
-        return (await _userDataCollection.FindOneAndUpdateAsync(filterDefinition, updateDefinition, new FindOneAndUpdateOptions<UserData>
-        {
-            ReturnDocument = ReturnDocument.After
-        })).DeckList.First(x => x.Slot == slot);
+        return (await _userDataCollection.FindOneAndUpdateAsync(filterDefinition, updateDefinition,
+            new FindOneAndUpdateOptions<UserData> { ReturnDocument = ReturnDocument.After })).DeckList.First(x => x.Slot == slot);
     }
 
     public async Task<User> UpdateUser(ulong xuid, string? name, string? comment, uint? favoriteMasterCardId, uint? guestSmileMasterCardId,
@@ -224,9 +222,6 @@ public class UserDataRepository : IUserDataRepository
             .Inc(x => x.Gem.Total, freeAmount + paidAmount);
 
         return (await _userDataCollection.FindOneAndUpdateAsync(filterDefinition, updateDefinition,
-            new FindOneAndUpdateOptions<UserData>
-            {
-                ReturnDocument = ReturnDocument.After
-            })).Gem;
+            new FindOneAndUpdateOptions<UserData> { ReturnDocument = ReturnDocument.After })).Gem;
     }
 }
