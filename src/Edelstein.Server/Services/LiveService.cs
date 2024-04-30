@@ -610,7 +610,7 @@ public class LiveService : ILiveService
             {
                 if (liveMissionRewardMst.GiveType == GiveType.Gift)
                 {
-                    resourceAdditionBuilder.AddGift("Live mission completion reward", liveMissionRewardMst.Type, liveMissionRewardMst.Value,
+                    resourceAdditionBuilder.AddGift("ライブミッション完了報酬", liveMissionRewardMst.Type, liveMissionRewardMst.Value,
                         liveMissionRewardMst.Amount);
                 }
                 else
