@@ -29,13 +29,13 @@ public class LiveDataRepository : ILiveDataRepository
         UpdateDefinitionBuilder<UserData> updateBuilder = Builders<UserData>.Update;
         List<UpdateDefinition<UserData>> updates = [];
 
-        if(lives.Count > 0)
+        if (lives.Count > 0)
             updates.Add(updateBuilder.Set(x => x.LiveList, lives));
 
-        if(points.Count > 0)
+        if (points.Count > 0)
             updates.Add(updateBuilder.Set(x => x.PointList, points));
 
-        if(items.Count > 0)
+        if (items.Count > 0)
             updates.Add(updateBuilder.Set(x => x.ItemList, items));
 
         updates.Add(updateBuilder.Set(x => x.Stamina, stamina));
@@ -44,15 +44,15 @@ public class LiveDataRepository : ILiveDataRepository
 
         updates.Add(updateBuilder.Set(x => x.Gem, gem));
 
-        if(characters.Count > 0)
+        if (characters.Count > 0)
             updates.Add(updateBuilder.Set(x => x.CharacterList, characters));
 
-        if(liveMissions.Count > 0)
+        if (liveMissions.Count > 0)
             updates.Add(updateBuilder.Set(x => x.LiveMissionList, liveMissions));
 
         updates.Add(updateBuilder.Set(x => x.User.LastLoginTime, currentTimestamp));
 
-        if(newStampIds.Count > 0)
+        if (newStampIds.Count > 0)
             updates.Add(updateBuilder.PushEach(x => x.MasterStampIds, newStampIds));
 
         UserData userData = await _userDataCollection.FindOneAndUpdateAsync(userDataFilter, updateBuilder.Combine(updates),

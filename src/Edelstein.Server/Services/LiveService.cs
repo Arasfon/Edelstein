@@ -79,7 +79,8 @@ public class LiveService : ILiveService
             return new LiveFinishResult(LiveFinishResultStatus.NotEnoughResources);
 
         // Create resource addition builder
-        ResourceAdditionBuilder resourceAdditionBuilder = resourceConsumptionBuilder.ToResourceAdditionBuilder(userData, currentTimestamp, true);
+        ResourceAdditionBuilder resourceAdditionBuilder =
+            resourceConsumptionBuilder.ToResourceAdditionBuilder(userData, currentTimestamp, true);
 
         // Update coins
         resourceAdditionBuilder.AddCoinPoints(750 * multiplier, true);
@@ -608,7 +609,10 @@ public class LiveService : ILiveService
             void AddLiveMissionReward(LiveMissionRewardMst liveMissionRewardMst)
             {
                 if (liveMissionRewardMst.GiveType == GiveType.Gift)
-                    resourceAdditionBuilder.AddGift("Live mission completion reward", liveMissionRewardMst.Type, liveMissionRewardMst.Value, liveMissionRewardMst.Amount);
+                {
+                    resourceAdditionBuilder.AddGift("Live mission completion reward", liveMissionRewardMst.Type, liveMissionRewardMst.Value,
+                        liveMissionRewardMst.Amount);
+                }
                 else
                     throw new NotImplementedException();
             }

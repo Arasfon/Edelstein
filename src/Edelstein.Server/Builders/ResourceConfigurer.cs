@@ -14,7 +14,8 @@ public class ResourceConfigurer
     protected readonly IResourceAdditionBuilder ResourceAdditionBuilder;
     protected readonly Reward? Reward;
 
-    public ResourceConfigurer(IResourceAdditionBuilder resourceAdditionBuilder, bool isResourceNew, Reward? reward = null, ExchangeItem? exchangeItem = null, bool isAdded = true, bool isResourceConvertedToGift = false)
+    public ResourceConfigurer(IResourceAdditionBuilder resourceAdditionBuilder, bool isResourceNew, Reward? reward = null,
+        ExchangeItem? exchangeItem = null, bool isAdded = true, bool isResourceConvertedToGift = false)
     {
         IsResourceNew = isResourceNew;
         ResourceAdditionBuilder = resourceAdditionBuilder;

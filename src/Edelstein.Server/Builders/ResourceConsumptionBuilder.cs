@@ -158,7 +158,8 @@ public class ResourceConsumptionBuilder : IResourceConsumptionBuilder
         }
     }
 
-    public ResourceAdditionBuilder ToResourceAdditionBuilder(UserData userData, long? currentTimestamp = null, bool calculateRewards = false) =>
+    public ResourceAdditionBuilder ToResourceAdditionBuilder(UserData userData, long? currentTimestamp = null,
+        bool calculateRewards = false) =>
         new(UpdatedValueList, AllPoints, AllExistingUserPoints, AllItems, AllExistingUserItems,
             Gem, userData, currentTimestamp, calculateRewards);
 

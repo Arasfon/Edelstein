@@ -123,6 +123,8 @@ public class UserService : IUserService
             }
             else
                 penlightItem.Amount += 20 * defaultCardsRetrievalResult.DuplicateCount;
+
+            // TODO: FORGOT TO ADD ITEMS HERE
         }
 
         await AddCards(userInitializationData.Xuid, defaultCardsRetrievalResult.Cards, currentUserData.CardList);

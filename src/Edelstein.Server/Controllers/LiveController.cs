@@ -119,7 +119,8 @@ public class LiveController : Controller
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
-        Gem? gem = await _liveService.ContinueLive(xuid, encryptedRequest.DeserializedObject.MasterLiveId, encryptedRequest.DeserializedObject.Level);
+        Gem? gem = await _liveService.ContinueLive(xuid, encryptedRequest.DeserializedObject.MasterLiveId,
+            encryptedRequest.DeserializedObject.Level);
 
         if (gem is null)
             throw new Exception("Not enough gems available");

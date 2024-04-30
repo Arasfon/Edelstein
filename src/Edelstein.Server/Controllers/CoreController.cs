@@ -139,7 +139,8 @@ public class CoreController : Controller
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
-        Deck deck = await _userService.UpdateDeck(xuid, encryptedRequest.DeserializedObject.Slot, encryptedRequest.DeserializedObject.MainCardIds);
+        Deck deck = await _userService.UpdateDeck(xuid, encryptedRequest.DeserializedObject.Slot,
+            encryptedRequest.DeserializedObject.MainCardIds);
 
         return new EncryptedResponse<DeckResponseData>(new DeckResponseData(deck, []));
     }

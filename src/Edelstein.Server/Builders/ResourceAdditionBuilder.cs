@@ -152,7 +152,8 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         return new ResourceConfigurer(this, false, reward);
     }
 
-    public ResourceConfigurer AddItem(uint itemId, int amount, long? expirationTimestamp = null, bool preventGiftConversionOnLimit = false) =>
+    public ResourceConfigurer AddItem(uint itemId, int amount, long? expirationTimestamp = null,
+        bool preventGiftConversionOnLimit = false) =>
         AddItem(new Reward
         {
             Type = RewardType.Item,
@@ -256,7 +257,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
 
             return new ResourceConfigurer(this, true, reward);
         }
-        else
+
         {
             // Rarity.None is not possible in cards
             // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
@@ -324,7 +325,8 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             Amount = 1
         });
 
-    public ResourceConfigurer Add(RewardType rewardType, uint itemId, int amount, Rarity? cardRarity = null, long? itemExpirationTimestamp = null, bool preventGiftConversionOnLimit = false)
+    public ResourceConfigurer Add(RewardType rewardType, uint itemId, int amount, Rarity? cardRarity = null,
+        long? itemExpirationTimestamp = null, bool preventGiftConversionOnLimit = false)
     {
         if (amount == 0)
             return new NullResourceConfigurer();
@@ -380,7 +382,8 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         });
 
     public ResourceConfigurer ClaimGift(Gift gift, Rarity? cardRarity = null, long? itemExpirationTimestamp = null) =>
-        Add(gift.RewardType, gift.Value, gift.Amount, cardRarity, itemExpirationTimestamp, true);
+        Add(gift.RewardType, gift.Value, gift.Amount, cardRarity, itemExpirationTimestamp,
+            true);
 
     public ResourceConfigurer FinishDeferred(DeferredResourceConfigurer deferredResourceConfigurer)
     {

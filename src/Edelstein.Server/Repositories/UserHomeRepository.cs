@@ -20,10 +20,7 @@ public class UserHomeRepository : IUserHomeRepository
     }
 
     public async Task Create(ulong xuid) =>
-        await _userHomeCollection.InsertOneAsync(new UserHomeDocument
-        {
-            Xuid = xuid
-        });
+        await _userHomeCollection.InsertOneAsync(new UserHomeDocument { Xuid = xuid });
 
     public async Task<UserHomeDocument?> GetByXuid(ulong xuid) =>
         await _userHomeCollection.Find(x => x.Xuid == xuid).FirstOrDefaultAsync();
