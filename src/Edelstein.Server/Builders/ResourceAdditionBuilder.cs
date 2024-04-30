@@ -90,7 +90,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         if (UpdatedValueList.PointList.TryGetValue(type, out Point? point))
         {
             point.Amount += amount;
-            return new ResourceConfigurer(this, false, reward);
+            return new ResourceConfigurer(this, false, reward).SetGiveType(GiveType.Direct);
         }
 
         if (!AllExistingUserPoints.TryGetValue(type, out point))
@@ -103,13 +103,13 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             AllPoints.AddLast(point);
             UpdatedValueList.PointList.Add(type, point);
 
-            return new ResourceConfigurer(this, true, reward);
+            return new ResourceConfigurer(this, true, reward).SetGiveType(GiveType.Direct);
         }
 
         point.Amount += amount;
         UpdatedValueList.PointList.Add(type, point);
 
-        return new ResourceConfigurer(this, false, reward);
+        return new ResourceConfigurer(this, false, reward).SetGiveType(GiveType.Direct);
     }
 
     public ResourceConfigurer AddFreeGems(int amount, bool preventGiftConversionOnLimit = false)
@@ -129,7 +129,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         Gem.Free += amount;
         Gem.Total += amount;
 
-        return new ResourceConfigurer(this, false, reward);
+        return new ResourceConfigurer(this, false, reward).SetGiveType(GiveType.Direct);
     }
 
     public ResourceConfigurer AddPaidGems(int amount, bool preventGiftConversionOnLimit = false)
@@ -149,7 +149,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         Gem.Charge += amount;
         Gem.Total += amount;
 
-        return new ResourceConfigurer(this, false, reward);
+        return new ResourceConfigurer(this, false, reward).SetGiveType(GiveType.Direct);
     }
 
     public ResourceConfigurer AddItem(uint itemId, int amount, long? expirationTimestamp = null,
@@ -171,7 +171,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         if (UpdatedValueList.ItemList.TryGetValue(reward.Value, out Item? item))
         {
             item.Amount += reward.Amount;
-            return new ResourceConfigurer(this, false, reward);
+            return new ResourceConfigurer(this, false, reward).SetGiveType(GiveType.Direct);
         }
 
         if (!AllExistingUserItems.TryGetValue(reward.Value, out item))
@@ -185,13 +185,13 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             AllItems.AddLast(item);
             UpdatedValueList.ItemList.Add(reward.Value, item);
 
-            return new ResourceConfigurer(this, true, reward);
+            return new ResourceConfigurer(this, true, reward).SetGiveType(GiveType.Direct);
         }
 
         item.Amount += reward.Amount;
         UpdatedValueList.ItemList.Add(reward.Value, item);
 
-        return new ResourceConfigurer(this, false, reward);
+        return new ResourceConfigurer(this, false, reward).SetGiveType(GiveType.Direct);
     }
 
     public DeferredItemResourceConfigurer AddItemDeferred(uint itemId, int amount, long? expirationTimestamp = null) =>
@@ -241,7 +241,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
 
             reward.ExchangeItem = exchangeItem;
 
-            return new ResourceConfigurer(this, false, reward, exchangeItem);
+            return new ResourceConfigurer(this, false, reward, exchangeItem).SetGiveType(GiveType.Direct);
         }
 
         if (!AllExistingUserCardIds.Contains(reward.Value))
@@ -255,7 +255,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             AllCards.AddLast(card);
             UpdatedValueList.CardList.Add(reward.Value, card);
 
-            return new ResourceConfigurer(this, true, reward);
+            return new ResourceConfigurer(this, true, reward).SetGiveType(GiveType.Direct);
         }
 
         {
@@ -279,7 +279,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
 
             reward.ExchangeItem = exchangeItem;
 
-            return new ResourceConfigurer(this, false, reward, exchangeItem);
+            return new ResourceConfigurer(this, false, reward, exchangeItem).SetGiveType(GiveType.Direct);
         }
     }
 
@@ -310,11 +310,11 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         Rewards?.AddLast(reward);
 
         if (AllExistingChatStampIds.Contains(reward.Value))
-            return new ResourceConfigurer(this, false, reward);
+            return new ResourceConfigurer(this, false, reward).SetGiveType(GiveType.Direct);
 
         UpdatedValueList.MasterStampIds.Add(reward.Value);
 
-        return new ResourceConfigurer(this, true, reward);
+        return new ResourceConfigurer(this, true, reward).SetGiveType(GiveType.Direct);
     }
 
     public DeferredResourceConfigurer AddChatStampDeferred(uint chatStampId) =>
@@ -354,22 +354,33 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         }
     }
 
-    public void AddGemsAsGift(string reason, int amount, long? expirationTimestamp = null) =>
+    public ResourceConfigurer AddGemsAsGift(string reason, int amount, long? expirationTimestamp = null) =>
         AddGift(reason, RewardType.Gem, 1, amount, expirationTimestamp);
 
-    public void AddCoinPointsAsGift(string reason, int amount, long? expirationTimestamp = null) =>
+    public ResourceConfigurer AddCoinPointsAsGift(string reason, int amount, long? expirationTimestamp = null) =>
         AddPointsAsGift(reason, PointType.Coin, amount, expirationTimestamp);
 
-    public void AddPointsAsGift(string reason, PointType type, int amount, long? expirationTimestamp = null) =>
+    public ResourceConfigurer AddPointsAsGift(string reason, PointType type, int amount, long? expirationTimestamp = null) =>
         AddGift(reason, RewardType.Point, (uint)type, amount, expirationTimestamp);
 
-    public void AddItemAsGift(string reason, uint itemId, int amount, long? expirationTimestamp = null) =>
+    public ResourceConfigurer AddItemAsGift(string reason, uint itemId, int amount, long? expirationTimestamp = null) =>
         AddGift(reason, RewardType.Item, itemId, amount, expirationTimestamp);
 
-    public void AddCardAsGift(string reason, uint cardId, long? expirationTimestamp = null) =>
+    public ResourceConfigurer AddCardAsGift(string reason, uint cardId, long? expirationTimestamp = null) =>
         AddGift(reason, RewardType.Card, cardId, 1, expirationTimestamp);
 
-    public void AddGift(string reason, RewardType type, uint itemId, int amount, long? expirationTimestamp = null) =>
+    public ResourceConfigurer AddGift(string reason, RewardType type, uint itemId, int amount, long? expirationTimestamp = null, bool isGiftConversion = false)
+    {
+        Reward reward = new()
+        {
+            Type = type,
+            Value = itemId,
+            Amount = amount,
+            GiveType = isGiftConversion ? GiveType.IntoGift : GiveType.Gift
+        };
+
+        Rewards?.AddLast(reward);
+
         Gifts.AddLast(new Gift
         {
             IsReceive = false,
@@ -380,6 +391,9 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             CreatedDateTime = CurrentTimestamp,
             ExpireDateTime = expirationTimestamp ?? CurrentDateTimeOffset.AddYears(1).ToUnixTimeSeconds()
         });
+
+        return new ResourceConfigurer(this, false, reward, isResourceConvertedToGift: isGiftConversion);
+    }
 
     public ResourceConfigurer ClaimGift(Gift gift, Rarity? cardRarity = null, long? itemExpirationTimestamp = null) =>
         Add(gift.RewardType, gift.Value, gift.Amount, cardRarity, itemExpirationTimestamp,

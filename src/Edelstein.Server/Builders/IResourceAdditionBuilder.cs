@@ -26,15 +26,15 @@ public interface IResourceAdditionBuilder
     public ResourceConfigurer Add(RewardType rewardType, uint itemId, int amount, Rarity? cardRarity = null,
         long? itemExpirationTimestamp = null, bool preventGiftConversionOnLimit = false);
 
-    public void AddGemsAsGift(string reason, int amount, long? expirationTimestamp = null);
+    public ResourceConfigurer AddGemsAsGift(string reason, int amount, long? expirationTimestamp = null);
 
-    public void AddCoinPointsAsGift(string reason, int amount, long? expirationTimestamp = null);
-    public void AddPointsAsGift(string reason, PointType type, int amount, long? expirationTimestamp = null);
+    public ResourceConfigurer AddCoinPointsAsGift(string reason, int amount, long? expirationTimestamp = null);
+    public ResourceConfigurer AddPointsAsGift(string reason, PointType type, int amount, long? expirationTimestamp = null);
 
-    public void AddItemAsGift(string reason, uint itemId, int amount, long? expirationTimestamp = null);
-    public void AddCardAsGift(string reason, uint cardId, long? expirationTimestamp = null);
+    public ResourceConfigurer AddItemAsGift(string reason, uint itemId, int amount, long? expirationTimestamp = null);
+    public ResourceConfigurer AddCardAsGift(string reason, uint cardId, long? expirationTimestamp = null);
 
-    public void AddGift(string reason, RewardType type, uint itemId, int amount, long? expirationTimestamp = null);
+    public ResourceConfigurer AddGift(string reason, RewardType type, uint itemId, int amount, long? expirationTimestamp = null, bool isGiftConversion = false);
 
     public ResourceConfigurer ClaimGift(Gift gift, Rarity? cardRarity = null, long? itemExpirationTimestamp = null);
 
