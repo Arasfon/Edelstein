@@ -51,11 +51,11 @@ try
     WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
     // Configuration
-    builder.Services.Configure<SeqOptions>(builder.Configuration.GetSection("Seq"));
-    builder.Services.Configure<MetricsOptions>(builder.Configuration.GetSection("Metrics"));
-    builder.Services.Configure<DatabaseOptions>(builder.Configuration.GetSection("Database"));
-    builder.Services.Configure<MstDatabaseOptions>(builder.Configuration.GetSection("MstDatabase"));
-    builder.Services.Configure<OAuthOptions>(builder.Configuration.GetSection("OAuth"));
+    builder.Services.AddOptions<SeqOptions>().BindConfiguration("Seq");
+    builder.Services.AddOptions<MetricsOptions>().BindConfiguration("Metrics");
+    builder.Services.AddOptions<DatabaseOptions>().BindConfiguration("Database");
+    builder.Services.AddOptions<MstDatabaseOptions>().BindConfiguration("MstDatabase");
+    builder.Services.AddOptions<OAuthOptions>().BindConfiguration("OAuth");
 
     // Logging
     builder.Services.AddSerilog((services, loggerConfiguration) =>
