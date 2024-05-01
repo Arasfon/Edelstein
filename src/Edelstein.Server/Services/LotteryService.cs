@@ -132,13 +132,13 @@ public class LotteryService : ILotteryService
         }
 
         // Consume resources
-        ResourceConsumptionBuilder resourceConsumptionBuilder = new(userData);
+        ResourceConsumptionBuilder resourceConsumptionBuilder = new(userData, currentTimestamp);
 
         if (!resourceConsumptionBuilder.TryConsume(priceMst.ConsumeType, priceMst.MasterItemId, priceMst.Price))
             return new LotteryDrawResult(LotteryDrawResultStatus.NotEnoughItems, [], null!);
 
         // Create resource addition builder
-        ResourceAdditionBuilder resourceAdditionBuilder = resourceConsumptionBuilder.ToResourceAdditionBuilder(userData, currentTimestamp);
+        ResourceAdditionBuilder resourceAdditionBuilder = resourceConsumptionBuilder.ToResourceAdditionBuilder(userData);
 
         // Query to get all drawable items, using that MasterLotteryRarityId = Lottery.Id in msts
         IQueryable<JoinedLotteryItem> query = from r in _mstDbContext.LotteryRarityMsts

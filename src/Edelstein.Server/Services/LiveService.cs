@@ -71,7 +71,7 @@ public class LiveService : ILiveService
             return new LiveFinishResult(LiveFinishResultStatus.NotEnoughResources);
 
         // Consume tickets
-        ResourceConsumptionBuilder resourceConsumptionBuilder = new(userData);
+        ResourceConsumptionBuilder resourceConsumptionBuilder = new(userData, currentTimestamp);
 
         // Charge skip tickets
         const uint ticketItemId = 21000001;
@@ -80,7 +80,7 @@ public class LiveService : ILiveService
 
         // Create resource addition builder
         ResourceAdditionBuilder resourceAdditionBuilder =
-            resourceConsumptionBuilder.ToResourceAdditionBuilder(userData, currentTimestamp, true);
+            resourceConsumptionBuilder.ToResourceAdditionBuilder(userData, true);
 
         // Update coins
         resourceAdditionBuilder.AddCoinPoints(750 * multiplier, true);

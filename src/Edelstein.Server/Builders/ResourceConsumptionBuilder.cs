@@ -17,18 +17,22 @@ public class ResourceConsumptionBuilder : IResourceConsumptionBuilder
     protected readonly Dictionary<PointType, Point> AllExistingUserPoints;
     protected readonly Dictionary<uint, Item> AllExistingUserItems;
 
-    public ResourceConsumptionBuilder(LinkedList<Point> allPoints, LinkedList<Item> allItems, Gem gem)
+    protected readonly long CurrentTimestamp;
+
+    public ResourceConsumptionBuilder(LinkedList<Point> allPoints, LinkedList<Item> allItems, Gem gem, long currentTimestamp)
     {
         AllPoints = allPoints;
         AllItems = allItems;
         Gem = gem;
 
+        CurrentTimestamp = currentTimestamp;
+
         AllExistingUserPoints = AllPoints.ToDictionary(x => x.Type);
         AllExistingUserItems = AllItems.ToDictionary(x => x.MasterItemId);
     }
 
-    public ResourceConsumptionBuilder(UserData userData) : this(userData.PointList,
-        userData.ItemList, userData.Gem) { }
+    public ResourceConsumptionBuilder(UserData userData, long currentTimestamp) : this(userData.PointList,
+        userData.ItemList, userData.Gem, currentTimestamp) { }
 
     public bool TryDistributeConsumeGems(int amount)
     {
@@ -98,6 +102,9 @@ public class ResourceConsumptionBuilder : IResourceConsumptionBuilder
             if (item.Amount - amount < 0)
                 return false;
 
+            if (item.ExpireDateTime <= CurrentTimestamp)
+                return false;
+
             item.Amount -= amount;
             return true;
         }
@@ -106,6 +113,9 @@ public class ResourceConsumptionBuilder : IResourceConsumptionBuilder
             return false;
 
         if (item.Amount - amount < 0)
+            return false;
+
+        if (item.ExpireDateTime <= CurrentTimestamp)
             return false;
 
         item.Amount -= amount;
@@ -158,10 +168,9 @@ public class ResourceConsumptionBuilder : IResourceConsumptionBuilder
         }
     }
 
-    public ResourceAdditionBuilder ToResourceAdditionBuilder(UserData userData, long? currentTimestamp = null,
-        bool calculateRewards = false) =>
+    public ResourceAdditionBuilder ToResourceAdditionBuilder(UserData userData, bool calculateRewards = false) =>
         new(UpdatedValueList, AllPoints, AllExistingUserPoints, AllItems, AllExistingUserItems,
-            Gem, userData, currentTimestamp, calculateRewards);
+            Gem, userData, CurrentTimestamp, calculateRewards);
 
     public ResourcesModificationResult Build() =>
         new()

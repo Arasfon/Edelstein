@@ -26,7 +26,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
 
     public ResourceAdditionBuilder(EfficientUpdatedValueList updatedValueList, LinkedList<Point> allPoints,
         Dictionary<PointType, Point> allExistingUserPoints, LinkedList<Item> allItems, Dictionary<uint, Item> allExistingUserItems, Gem gem,
-        UserData userData, long? currentTimestamp = null, bool calculateRewards = false)
+        UserData userData, long currentTimestamp, bool calculateRewards = false)
     {
         UpdatedValueList = updatedValueList;
         AllPoints = allPoints;
@@ -39,10 +39,8 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         AllExistingUserCardIds = userData.CardList.Select(x => x.MasterCardId).ToHashSet();
         AllExistingChatStampIds = userData.MasterStampIds.Select(x => x).ToHashSet();
 
-        if (currentTimestamp is not null)
-            CurrentDateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(currentTimestamp.Value);
-
-        CurrentTimestamp = CurrentDateTimeOffset.ToUnixTimeSeconds();
+        CurrentDateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(currentTimestamp);
+        CurrentTimestamp = currentTimestamp;
 
         if (calculateRewards)
             Rewards = [];
