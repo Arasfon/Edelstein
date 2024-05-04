@@ -127,6 +127,8 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         Gem.Free += amount;
         Gem.Total += amount;
 
+        UpdatedValueList.Gem ??= Gem;
+
         return new ResourceConfigurer(this, false, reward).SetGiveType(GiveType.Direct);
     }
 
@@ -146,6 +148,8 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
 
         Gem.Charge += amount;
         Gem.Total += amount;
+
+        UpdatedValueList.Gem ??= Gem;
 
         return new ResourceConfigurer(this, false, reward).SetGiveType(GiveType.Direct);
     }
