@@ -1,6 +1,7 @@
 using Edelstein.Data.Configuration;
 using Edelstein.Data.Msts.Persistence;
 using Edelstein.Data.Serialization.Bson;
+using Edelstein.Data.Serialization.Json;
 using Edelstein.Server.Authorization;
 using Edelstein.Server.Configuration;
 using Edelstein.Server.Configuration.Metrics;
@@ -33,6 +34,7 @@ using Serilog.Exceptions.EntityFrameworkCore.Destructurers;
 using Serilog.Exceptions.MongoDb.Destructurers;
 
 using System.Net.Mime;
+using System.Text.Json;
 
 // Bootstrap logging
 Log.Logger = new LoggerConfiguration()
@@ -153,6 +155,12 @@ try
     // Memory cache
     builder.Services.AddMemoryCache();
 
+    // Json
+    builder.Services.ConfigureHttpJsonOptions(options =>
+    {
+        options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+    });
+
     // Authorization filters
     builder.Services.AddScoped<RsaSignatureAuthorizationFilter>();
     builder.Services.AddScoped<OAuthHmacAuthorizationFilter>();
@@ -163,15 +171,21 @@ try
 
     // Controllers
     builder.Services.AddControllers(options =>
-    {
-        options.Filters.Add(new ResponseCacheAttribute
         {
-            NoStore = true,
-            Location = ResponseCacheLocation.None
-        });
+            options.Filters.Add(new ResponseCacheAttribute
+            {
+                NoStore = true,
+                Location = ResponseCacheLocation.None
+            });
 
-        options.ModelBinderProviders.Insert(0, new EncryptedRequestModelBinderProvider());
-    });
+            options.ModelBinderProviders.Insert(0, new EncryptedRequestModelBinderProvider());
+        })
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+
+            options.JsonSerializerOptions.Converters.Add(new BooleanToIntegerJsonConverter());
+        });
 
     // Swagger
     builder.Services.AddEndpointsApiExplorer();
