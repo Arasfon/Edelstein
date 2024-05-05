@@ -16,16 +16,39 @@ public class UserGiftsService : IUserGiftsService
     private readonly IUserGiftsRepository _userGiftsRepository;
     private readonly IUserService _userService;
     private readonly MstDbContext _mstDbContext;
+    private readonly ISequenceRepository<ulong> _sequenceRepository;
 
-    public UserGiftsService(IUserGiftsRepository userGiftsRepository, IUserService userService, MstDbContext mstDbContext)
+    public UserGiftsService(IUserGiftsRepository userGiftsRepository, IUserService userService, MstDbContext mstDbContext, ISequenceRepository<ulong> sequenceRepository)
     {
         _userGiftsRepository = userGiftsRepository;
         _userService = userService;
         _mstDbContext = mstDbContext;
+        _sequenceRepository = sequenceRepository;
     }
 
     public async Task<IEnumerable<Gift>> GetAllGifts(ulong xuid) =>
         await _userGiftsRepository.GetAllByXuid(xuid);
+
+    public async Task AddGifts(ulong xuid, LinkedList<Gift> gifts)
+    {
+        if (gifts.Count == 0)
+            return;
+
+        List<Gift> giftsWithoutIds = gifts.Where(x => x.Id == 0).ToList();
+        ulong[] giftIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.GiftIds, (ulong)giftsWithoutIds.Count)).ToArray();
+        for (int i = 0; i < giftsWithoutIds.Count; i++)
+        {
+            giftsWithoutIds[i].UserId = xuid;
+            giftsWithoutIds[i].Id = giftIds[i];
+        }
+
+        int currentGifts = (int)await _userGiftsRepository.CountForUser(xuid);
+
+        if (currentGifts + gifts.Count > 100000)
+            await _userGiftsRepository.DeleteOldestForUser(xuid, currentGifts + gifts.Count - 100000);
+
+        await _userGiftsRepository.AddGifts(gifts);
+    }
 
     public async Task<GiftClaimResult> ClaimGifts(ulong xuid, HashSet<ulong> giftIds)
     {

@@ -22,9 +22,10 @@ public class LiveService : ILiveService
     private readonly MstDbContext _mstDbContext;
     private readonly IUserService _userService;
     private readonly ISequenceRepository<ulong> _sequenceRepository;
+    private readonly IUserGiftsService _userGiftsService;
 
     public LiveService(ILiveDataRepository liveDataRepository, IUserDataRepository userDataRepository, ITutorialService tutorialService,
-        MstDbContext mstDbContext, IUserService userService, ISequenceRepository<ulong> sequenceRepository)
+        MstDbContext mstDbContext, IUserService userService, ISequenceRepository<ulong> sequenceRepository, IUserGiftsService userGiftsService)
     {
         _liveDataRepository = liveDataRepository;
         _userDataRepository = userDataRepository;
@@ -32,6 +33,7 @@ public class LiveService : ILiveService
         _mstDbContext = mstDbContext;
         _userService = userService;
         _sequenceRepository = sequenceRepository;
+        _userGiftsService = userGiftsService;
     }
 
     public async Task StartLive(ulong xuid, LiveStartRequestData liveStartData) =>
@@ -789,23 +791,17 @@ public class LiveService : ILiveService
         LinkedList<Point> points, LinkedList<Item> items, Stamina stamina, int experience, Gem gem,
         List<Character> characters, List<LiveMission> liveMissions, HashSet<uint> newStampIds, LinkedList<Gift> gifts)
     {
+        // Add gifts if any
+        await _userGiftsService.AddGifts(xuid, gifts);
+
         // Add item ids for new items
         List<Item> itemsWithoutIds = items.Where(x => x.Id == 0).ToList();
         ulong[] itemIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.ItemIds, (ulong)itemsWithoutIds.Count)).ToArray();
         for (int i = 0; i < itemsWithoutIds.Count; i++)
             itemsWithoutIds[i].Id = itemIds[i];
 
-        // Add ids for gifts
-        List<Gift> giftsWithoutIds = gifts.Where(x => x.Id == 0).ToList();
-        ulong[] giftIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.GiftIds, (ulong)giftsWithoutIds.Count)).ToArray();
-        for (int i = 0; i < giftsWithoutIds.Count; i++)
-        {
-            giftsWithoutIds[i].UserId = xuid;
-            giftsWithoutIds[i].Id = giftIds[i];
-        }
-
         return await _liveDataRepository.UpdateAfterFinishedLive(xuid, currentTimestamp, lives, points, items,
             stamina, experience, gem, characters, liveMissions,
-            newStampIds, gifts);
+            newStampIds);
     }
 }

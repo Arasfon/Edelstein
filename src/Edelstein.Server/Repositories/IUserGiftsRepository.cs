@@ -4,8 +4,11 @@ namespace Edelstein.Server.Repositories;
 
 public interface IUserGiftsRepository
 {
-    public Task AddGift(Gift gift);
     public Task AddGifts(IEnumerable<Gift> gifts);
+
+    public Task<long> CountForUser(ulong xuid, long? currentTimestamp = null);
+
+    public Task DeleteOldestForUser(ulong xuid, int count, long? currentTimestamp = null);
 
     public Task MarkAsClaimed(ulong xuid, IEnumerable<ulong> giftIds, long? currentTimestamp = null);
 
