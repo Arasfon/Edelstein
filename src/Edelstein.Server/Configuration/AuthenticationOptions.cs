@@ -1,4 +1,4 @@
-namespace Edelstein.Server.Configuration.Metrics;
+namespace Edelstein.Server.Configuration;
 
 public class AuthenticationOptions
 {
