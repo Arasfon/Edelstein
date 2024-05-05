@@ -3,6 +3,8 @@ using Edelstein.Data.Models;
 
 using Microsoft.Extensions.Options;
 
+using MongoAsyncEnumerableAdapter;
+
 using MongoDB.Driver;
 
 namespace Edelstein.Server.Repositories;
@@ -65,7 +67,7 @@ public class UserGiftsRepository : IUserGiftsRepository
         await _giftsCollection.UpdateManyAsync(filterDefinition, updateDefinition);
     }
 
-    public async Task<IEnumerable<Gift>> GetAllByXuid(ulong xuid, long? currentTimestamp = null)
+    public async IAsyncEnumerable<Gift> GetAllByXuid(ulong xuid, long? currentTimestamp = null)
     {
         DateTimeOffset currentDateTimeOffset = currentTimestamp is not null ? DateTimeOffset.FromUnixTimeSeconds(currentTimestamp.Value) : DateTimeOffset.UtcNow;
         currentTimestamp ??= currentDateTimeOffset.ToUnixTimeSeconds();
@@ -79,8 +81,11 @@ public class UserGiftsRepository : IUserGiftsRepository
             .Descending(x => x.CreatedDateTime)
             .Descending(x => x.Id);
 
-        List<Gift> nonClaimedGifts =
-            await _giftsCollection.Find(nonClaimedFilterDefinition).Sort(nonClaimedSortDefinition).Limit(100000).ToListAsync();
+        IAsyncEnumerable<Gift> nonClaimedGifts =
+            (await _giftsCollection.Find(nonClaimedFilterDefinition).Sort(nonClaimedSortDefinition).Limit(100000).ToCursorAsync().ConfigureAwait(false)).ToAsyncEnumerable();
+
+        await foreach(Gift nonClaimedGift in nonClaimedGifts)
+            yield return nonClaimedGift;
 
         FilterDefinition<Gift> claimHistoryFilterDefinition =
             Builders<Gift>.Filter.Eq(x => x.UserId, xuid) &
@@ -91,18 +96,17 @@ public class UserGiftsRepository : IUserGiftsRepository
             .Descending(x => x.ReceivedDateTime)
             .Descending(x => x.Id);
 
-        List<Gift> claimHistoryGifts =
-            await _giftsCollection.Find(claimHistoryFilterDefinition).Sort(claimHistorySortDefinition).Limit(30).ToListAsync();
+        IAsyncEnumerable<Gift> claimHistoryGifts =
+            (await _giftsCollection.Find(claimHistoryFilterDefinition).Sort(claimHistorySortDefinition).Limit(30).ToCursorAsync().ConfigureAwait(false)).ToAsyncEnumerable();
 
-        return nonClaimedGifts.Concat(claimHistoryGifts);
+        await foreach(Gift claimedGift in claimHistoryGifts)
+            yield return claimedGift;
     }
 
     public async Task<List<Gift>> GetManyByIds(IEnumerable<ulong> ids, long? currentTimestamp = null)
     {
         currentTimestamp ??= DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-        // There is no efficient way to confirm that gift ids provided are within limit, so this allows to bypass gift limit until excess gifts are deleted
-        // This is not a security risk as gift limit exists for efficiency, not for security
         FilterDefinition<Gift> filterDefinition =
             Builders<Gift>.Filter.In(x => x.Id, ids) &
             Builders<Gift>.Filter.Gt(x => x.ExpireDateTime, currentTimestamp.Value) &

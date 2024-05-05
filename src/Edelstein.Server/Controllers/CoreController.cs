@@ -76,13 +76,13 @@ public class CoreController : Controller
     }
 
     [Route("home")]
-    public async Task<EncryptedResult> Home()
+    public async Task<AsyncEncryptedResult> Home()
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
-        UserHomeDocument homeDocument = (await _userService.GetHomeByXuid(xuid))!;
+        UserHomeDocument homeDocument = (await _userService.GetHomeByXuid(xuid).ConfigureAwait(false))!;
 
-        IEnumerable<Gift> gifts = await _userGiftsService.GetAllGifts(xuid);
+        IAsyncEnumerable<Gift> gifts = _userGiftsService.GetAllGifts(xuid);
 
         Home home = new()
         {
@@ -101,7 +101,9 @@ public class CoreController : Controller
             SerialCodeIdList = []
         };
 
-        return new EncryptedResponse<HomeResponseData>(new HomeResponseData(home, []));
+        ServerResponse<HomeResponseData> serverResponse = new(new HomeResponseData(home, []));
+
+        return new AsyncEncryptedResult<ServerResponse<HomeResponseData>>(StatusCodes.Status200OK, serverResponse);
     }
 
     [Route("mission")]

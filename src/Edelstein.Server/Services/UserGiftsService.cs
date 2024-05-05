@@ -26,8 +26,8 @@ public class UserGiftsService : IUserGiftsService
         _sequenceRepository = sequenceRepository;
     }
 
-    public async Task<IEnumerable<Gift>> GetAllGifts(ulong xuid) =>
-        await _userGiftsRepository.GetAllByXuid(xuid);
+    public IAsyncEnumerable<Gift> GetAllGifts(ulong xuid) =>
+        _userGiftsRepository.GetAllByXuid(xuid);
 
     public async Task AddGifts(ulong xuid, LinkedList<Gift> gifts)
     {

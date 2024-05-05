@@ -5,7 +5,7 @@ namespace Edelstein.Server.Services;
 
 public interface IUserGiftsService
 {
-    public Task<IEnumerable<Gift>> GetAllGifts(ulong xuid);
+    public IAsyncEnumerable<Gift> GetAllGifts(ulong xuid);
 
     /// <summary>
     /// Add gifts to the user assigning <see cref="Gift.UserId"/> and creating <see cref="Gift.Id"/>
