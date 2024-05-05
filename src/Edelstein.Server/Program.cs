@@ -11,6 +11,7 @@ using Edelstein.Server.ModelBinders;
 using Edelstein.Server.Repositories;
 using Edelstein.Server.Services;
 
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
@@ -160,6 +161,13 @@ try
     // Memory cache
     builder.Services.AddMemoryCache();
 
+    // Forwarded headers
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders =
+            ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    });
+
     // Json
     builder.Services.ConfigureHttpJsonOptions(options =>
     {
@@ -199,6 +207,8 @@ try
     // Configure the HTTP request pipeline
     WebApplication app = builder.Build();
 
+    app.UseForwardedHeaders();
+
     app.UseSerilogRequestLogging();
 
     if (app.Environment.IsDevelopment())
@@ -230,6 +240,8 @@ try
             }
         }
     });
+
+    app.UseRouting();
 
     app.UseWhen(context => context.Request.Path.StartsWithSegments("/metrics"), builder =>
     {
