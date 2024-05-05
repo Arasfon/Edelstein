@@ -17,12 +17,12 @@ namespace Edelstein.Server.Authorization;
 
 public class OAuthRsaAuthorizationFilter : IAsyncAuthorizationFilter
 {
-    private readonly OAuthOptions _oauthOptions;
+    private readonly IOptions<OAuthOptions> _oauthOptions;
     private readonly IUserService _userService;
 
     public OAuthRsaAuthorizationFilter(IOptions<OAuthOptions> oauthOptions, IUserService userService)
     {
-        _oauthOptions = oauthOptions.Value;
+        _oauthOptions = oauthOptions;
         _userService = userService;
     }
 
@@ -34,6 +34,8 @@ public class OAuthRsaAuthorizationFilter : IAsyncAuthorizationFilter
 
         if (hasAllowAnonymous)
             return;
+
+        OAuthOptions oauthOptions = _oauthOptions.Value;
 
         // Setup
         HttpContext httpContext = context.HttpContext;
@@ -66,8 +68,8 @@ public class OAuthRsaAuthorizationFilter : IAsyncAuthorizationFilter
         httpContext.Request.Body.Position = 0;
 
         // Replace url host e.g. if behind reverse-proxy
-        if (_oauthOptions.SigningUrlHost is { ShouldReplace: true, Replacement: not null })
-            url = url.Replace(httpContext.Request.Host.Value, _oauthOptions.SigningUrlHost.Replacement);
+        if (oauthOptions.SigningUrlHost is { ShouldReplace: true, Replacement: not null })
+            url = url.Replace(httpContext.Request.Host.Value, oauthOptions.SigningUrlHost.Replacement);
 
         // Make values
         Dictionary<string, string> requestOAuthValues = OAuth.BuildOAuthValuesFromHeader(requestAuthorizationHeader);
