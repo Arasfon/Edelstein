@@ -24,6 +24,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
+using MongoDB.Driver.Core.Configuration;
 
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -35,6 +36,7 @@ using Serilog.Exceptions.Core;
 using Serilog.Exceptions.Destructurers;
 using Serilog.Exceptions.EntityFrameworkCore.Destructurers;
 using Serilog.Exceptions.MongoDb.Destructurers;
+using Serilog.Extensions.Logging;
 
 using System.Net.Mime;
 using System.Text.Json;
@@ -126,7 +128,16 @@ try
     {
         DatabaseOptions databaseOptions = provider.GetRequiredService<IOptions<DatabaseOptions>>().Value;
 
-        return new MongoClient(databaseOptions.ConnectionString);
+        MongoUrlBuilder urlBuilder = new(databaseOptions.ConnectionString);
+
+        MongoClientSettings mongoClientSettings = new()
+        {
+            Scheme = urlBuilder.Scheme,
+            Server = urlBuilder.Server,
+            LoggingSettings = new LoggingSettings(new SerilogLoggerFactory())
+        };
+
+        return new MongoClient(mongoClientSettings);
     });
 
     // Mst database
