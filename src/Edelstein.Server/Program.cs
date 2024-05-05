@@ -17,6 +17,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 
 using MongoDB.Bson;
+using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Bson.Serialization.Serializers;
@@ -109,6 +110,8 @@ try
         });
 
     // Database
+    BsonChunkPool.Default = new BsonChunkPool(256, 64 * 1024);
+
     BsonSerializer.RegisterSerializer(new UInt64Serializer(BsonType.Int64));
     BsonSerializer.RegisterSerializer(new UInt32Serializer(BsonType.Int32));
     BsonSerializer.RegisterSerializer(new BooleanToIntegerBsonSerializer());
