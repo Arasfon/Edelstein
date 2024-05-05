@@ -2,12 +2,14 @@ using Edelstein.Data.Extensions;
 using Edelstein.Data.Transport;
 using Edelstein.Server.ActionResults;
 using Edelstein.Server.Authorization;
+using Edelstein.Server.Configuration.Assets;
 using Edelstein.Server.Models.Endpoints.Start;
 using Edelstein.Server.Security;
 using Edelstein.Server.Services;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Edelstein.Server.Controllers;
 
@@ -16,16 +18,15 @@ namespace Edelstein.Server.Controllers;
 [ServiceFilter<RsaSignatureAuthorizationFilter>]
 public class StartController : Controller
 {
-    private const string AndroidAssetHash = "67f8f261c16b3cca63e520a25aad6c1c";
-    private const string IosAssetHash = "b8975be8300013a168d061d3fdcd4a16";
-
     private readonly IUserService _userService;
     private readonly ILotteryService _lotteryService;
+    private readonly IOptions<AssetsOptions> _assetsOptions;
 
-    public StartController(IUserService userService, ILotteryService lotteryService)
+    public StartController(IUserService userService, ILotteryService lotteryService, IOptions<AssetsOptions> assetsOptions)
     {
         _userService = userService;
         _lotteryService = lotteryService;
+        _assetsOptions = assetsOptions;
     }
 
     [HttpPost]
@@ -35,8 +36,8 @@ public class StartController : Controller
     {
         AssetHashResponseData responseData =
             HttpContext.Request.Headers[GameRequestHeaderNames.AoharuPlatform].FirstOrDefault()?.StartsWith("Android") == true
-                ? new AssetHashResponseData(AndroidAssetHash)
-                : new AssetHashResponseData(IosAssetHash);
+                ? new AssetHashResponseData(_assetsOptions.Value.Hashes.Android)
+                : new AssetHashResponseData(_assetsOptions.Value.Hashes.Ios);
 
         return new EncryptedResponse<AssetHashResponseData>(responseData);
     }
@@ -58,8 +59,8 @@ public class StartController : Controller
 
         StartResponseData responseData =
             HttpContext.Request.Headers[GameRequestHeaderNames.AoharuPlatform].FirstOrDefault()?.StartsWith("Android") == true
-                ? new StartResponseData(AndroidAssetHash, token)
-                : new StartResponseData(IosAssetHash, token);
+                ? new StartResponseData(_assetsOptions.Value.Hashes.Android, token)
+                : new StartResponseData(_assetsOptions.Value.Hashes.Ios, token);
 
         return new EncryptedResponse<StartResponseData>(responseData);
     }

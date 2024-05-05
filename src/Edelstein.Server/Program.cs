@@ -4,6 +4,7 @@ using Edelstein.Data.Serialization.Bson;
 using Edelstein.Data.Serialization.Json;
 using Edelstein.Server.Authorization;
 using Edelstein.Server.Configuration;
+using Edelstein.Server.Configuration.Assets;
 using Edelstein.Server.Configuration.Metrics;
 using Edelstein.Server.Configuration.OAuth;
 using Edelstein.Server.ModelBinders;
@@ -59,6 +60,7 @@ try
     builder.Services.AddOptions<DatabaseOptions>().BindConfiguration("Database");
     builder.Services.AddOptions<MstDatabaseOptions>().BindConfiguration("MstDatabase");
     builder.Services.AddOptions<OAuthOptions>().BindConfiguration("OAuth");
+    builder.Services.AddOptions<AssetsOptions>().BindConfiguration("Assets");
 
     // Logging
     builder.Services.AddSerilog((services, loggerConfiguration) =>
@@ -208,7 +210,8 @@ try
     app.UseHttpsRedirection();
 
     PhysicalFileProvider webRootFileProvider = new(app.Environment.WebRootPath);
-    PhysicalFileProvider assetsFileProvider = new(app.Configuration["AssetsPath"] ?? app.Environment.WebRootPath);
+    string assetsPath = app.Services.GetRequiredService<IOptions<AssetsOptions>>().Value.Path;
+    PhysicalFileProvider assetsFileProvider = new(assetsPath == "" ? app.Environment.WebRootPath : assetsPath);
     CompositeFileProvider compositeFileProvider = new(webRootFileProvider, assetsFileProvider);
 
     app.UseStaticFiles(new StaticFileOptions
