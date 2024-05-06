@@ -73,6 +73,8 @@ public class UserGiftsService : IUserGiftsService
 
         List<Gift> gifts = await _userGiftsRepository.GetManyByIds(giftIds, currentTimestamp);
 
+        List<ulong> receiveIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.ReceivedGiftIds, (ulong)gifts.Count)).ToList();
+
         List<uint> cardGiftsCardIds = gifts.Where(x => x.RewardType == RewardType.Card).Select(x => x.Value).ToList();
         Dictionary<uint, CardMst> cardMsts =
             await _mstDbContext.CardMsts.Where(x => cardGiftsCardIds.Contains(x.Id)).Distinct().ToDictionaryAsync(x => x.Id);
@@ -123,7 +125,7 @@ public class UserGiftsService : IUserGiftsService
             }
         }
 
-        await _userGiftsRepository.MarkAsClaimed(xuid, giftIds, currentTimestamp);
+        await _userGiftsRepository.MarkAsClaimed(xuid, giftIds.Zip(receiveIds), currentTimestamp);
 
         ResourcesModificationResult resourcesModificationResult = resourceAdditionBuilder.Build();
 

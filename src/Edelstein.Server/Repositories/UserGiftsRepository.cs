@@ -50,21 +50,29 @@ public class UserGiftsRepository : IUserGiftsRepository
         await _giftsCollection.DeleteManyAsync(Builders<Gift>.Filter.In(x => x.Id, giftIdsToDelete));
     }
 
-    public async Task MarkAsClaimed(ulong xuid, IEnumerable<ulong> giftIds, long? currentTimestamp = null)
+    public async Task MarkAsClaimed(ulong xuid, IEnumerable<(ulong GiftId, ulong ReceiveId)> giftIdsWithReceiveIds, long? currentTimestamp = null)
     {
         currentTimestamp ??= DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-        FilterDefinition<Gift> filterDefinition =
-            Builders<Gift>.Filter.In(x => x.Id, giftIds) &
-            Builders<Gift>.Filter.Eq(x => x.UserId, xuid) &
-            Builders<Gift>.Filter.Gt(x => x.ExpireDateTime, currentTimestamp.Value) &
-            Builders<Gift>.Filter.Eq(x => x.IsReceive, false);
+        List<WriteModel<Gift>> updates = [];
 
-        UpdateDefinition<Gift> updateDefinition = Builders<Gift>.Update
-            .Set(x => x.IsReceive, true)
-            .Set(x => x.ReceivedDateTime, currentTimestamp);
+        foreach ((ulong giftId, ulong receiveId) in giftIdsWithReceiveIds)
+        {
+            FilterDefinition<Gift> filterDefinition =
+                Builders<Gift>.Filter.Eq(x => x.Id, giftId) &
+                Builders<Gift>.Filter.Eq(x => x.UserId, xuid) &
+                Builders<Gift>.Filter.Gt(x => x.ExpireDateTime, currentTimestamp.Value) &
+                Builders<Gift>.Filter.Eq(x => x.IsReceive, false);
 
-        await _giftsCollection.UpdateManyAsync(filterDefinition, updateDefinition);
+            UpdateDefinition<Gift> updateDefinition = Builders<Gift>.Update
+                .Set(x => x.IsReceive, true)
+                .Set(x => x.ReceiveId, receiveId)
+                .Set(x => x.ReceivedDateTime, currentTimestamp);
+
+            updates.Add(new UpdateOneModel<Gift>(filterDefinition, updateDefinition));
+        }
+
+        await _giftsCollection.BulkWriteAsync(updates);
     }
 
     public async IAsyncEnumerable<Gift> GetAllByXuid(ulong xuid, long? currentTimestamp = null)
@@ -93,8 +101,7 @@ public class UserGiftsRepository : IUserGiftsRepository
             Builders<Gift>.Filter.Eq(x => x.IsReceive, true);
 
         SortDefinition<Gift> claimHistorySortDefinition = Builders<Gift>.Sort
-            .Descending(x => x.ReceivedDateTime)
-            .Descending(x => x.Id);
+            .Descending(x => x.ReceiveId);
 
         IAsyncEnumerable<Gift> claimHistoryGifts =
             (await _giftsCollection.Find(claimHistoryFilterDefinition).Sort(claimHistorySortDefinition).Limit(30).ToCursorAsync().ConfigureAwait(false)).ToAsyncEnumerable();
