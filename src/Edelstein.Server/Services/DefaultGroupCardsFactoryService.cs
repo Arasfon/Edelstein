@@ -36,8 +36,8 @@ public class DefaultGroupCardsFactoryService : IDefaultGroupCardsFactoryService
             .ExceptBy(groupCardsToCreateMasterIds, existingDefaultCards.Select(x => x.MasterCardId), x => x)
             .ToList();
 
-        ulong[] cardIdRange =
-            (await _sequenceRepository.GetNextRangeById(SequenceNames.CardIds, (ulong)groupCardsToCreateMasterIds.Count)).ToArray();
+        List<ulong> cardIdRange =
+            (await _sequenceRepository.GetNextRangeById(SequenceNames.CardIds, (ulong)groupCardsToCreateMasterIds.Count)).ToList();
 
         return new DefaultCardRetrievalResult(existingDefaultCards.Count, groupCardsToCreateMasterIds
             .Select((x, i) => new Card

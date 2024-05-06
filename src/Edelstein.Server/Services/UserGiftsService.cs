@@ -35,7 +35,7 @@ public class UserGiftsService : IUserGiftsService
             return;
 
         List<Gift> giftsWithoutIds = gifts.Where(x => x.Id == 0).ToList();
-        ulong[] giftIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.GiftIds, (ulong)giftsWithoutIds.Count)).ToArray();
+        List<ulong> giftIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.GiftIds, (ulong)giftsWithoutIds.Count)).ToList();
         for (int i = 0; i < giftsWithoutIds.Count; i++)
         {
             giftsWithoutIds[i].UserId = xuid;

@@ -796,7 +796,7 @@ public class LiveService : ILiveService
 
         // Add item ids for new items
         List<Item> itemsWithoutIds = items.Where(x => x.Id == 0).ToList();
-        ulong[] itemIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.ItemIds, (ulong)itemsWithoutIds.Count)).ToArray();
+        List<ulong> itemIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.ItemIds, (ulong)itemsWithoutIds.Count)).ToList();
         for (int i = 0; i < itemsWithoutIds.Count; i++)
             itemsWithoutIds[i].Id = itemIds[i];
 
