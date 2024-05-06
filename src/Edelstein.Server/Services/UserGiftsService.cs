@@ -17,13 +17,16 @@ public class UserGiftsService : IUserGiftsService
     private readonly IUserService _userService;
     private readonly MstDbContext _mstDbContext;
     private readonly ISequenceRepository<ulong> _sequenceRepository;
+    private readonly ILogger<UserGiftsService> _logger;
 
-    public UserGiftsService(IUserGiftsRepository userGiftsRepository, IUserService userService, MstDbContext mstDbContext, ISequenceRepository<ulong> sequenceRepository)
+    public UserGiftsService(IUserGiftsRepository userGiftsRepository, IUserService userService, MstDbContext mstDbContext,
+        ISequenceRepository<ulong> sequenceRepository, ILogger<UserGiftsService> logger)
     {
         _userGiftsRepository = userGiftsRepository;
         _userService = userService;
         _mstDbContext = mstDbContext;
         _sequenceRepository = sequenceRepository;
+        _logger = logger;
     }
 
     public IAsyncEnumerable<Gift> GetAllGifts(ulong xuid) =>
@@ -45,7 +48,15 @@ public class UserGiftsService : IUserGiftsService
         int currentGifts = (int)await _userGiftsRepository.CountForUser(xuid);
 
         if (currentGifts + gifts.Count > 100000)
-            await _userGiftsRepository.DeleteOldestForUser(xuid, currentGifts + gifts.Count - 100000);
+        {
+            Task oldestDeletionTask = _userGiftsRepository.DeleteOldestForUser(xuid, currentGifts + gifts.Count - 100000);
+
+            _ = oldestDeletionTask.ContinueWith(x =>
+            {
+                if (x.IsFaulted)
+                    _logger.LogError(x.Exception, "Something wrong happened while deleting oldest gifts for user {Xuid}", xuid);
+            });
+        }
 
         await _userGiftsRepository.AddGifts(gifts);
     }
