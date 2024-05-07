@@ -29,7 +29,7 @@ public class UserDataRepository : IUserDataRepository
     }
 
     public async Task<UserData?> GetByXuid(ulong xuid) =>
-        await _userDataCollection.Find(x => x.User.Id == xuid).FirstOrDefaultAsync();
+        await _userDataCollection.Find(Builders<UserData>.Filter.Eq(x => x.User.Id, xuid)).FirstOrDefaultAsync();
 
     public async Task UpdateTutorialStep(ulong xuid, uint step)
     {
