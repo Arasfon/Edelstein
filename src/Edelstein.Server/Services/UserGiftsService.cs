@@ -70,16 +70,16 @@ public class UserGiftsService : IUserGiftsService
 
         LinkedList<ulong> failedGiftIds = [];
 
-        UserData userData = (await _userService.GetUserDataByXuid(xuid))!;
-
-        ResourceAdditionBuilder resourceAdditionBuilder = new(userData, currentTimestamp, true);
-
         List<Gift> gifts = await _userGiftsRepository.GetManyByIds(giftIds, currentTimestamp);
 
         if (gifts.Count == 0)
             return new GiftClaimResult([], new UpdatedValueList(), []);
 
-        IEnumerable<ulong> receiveIds = await _sequenceRepository.GetNextRangeById(SequenceNames.ReceivedGiftIds, (ulong)gifts.Count);
+        UserData userData = (await _userService.GetUserDataByXuid(xuid))!;
+
+        ResourceAdditionBuilder resourceAdditionBuilder = new(userData, currentTimestamp, true);
+
+        IEnumerable<ulong> receiveIds = await _sequenceRepository.GetNextRangeById(SequenceNames.GiftReceiveIds, (ulong)gifts.Count);
 
         List<uint> cardGiftsCardIds = gifts.Where(x => x.RewardType == RewardType.Card)
             .Select(x => x.Value)

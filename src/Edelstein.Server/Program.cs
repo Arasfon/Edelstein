@@ -3,6 +3,7 @@ using Edelstein.Data.Msts.Persistence;
 using Edelstein.Data.Serialization.Bson;
 using Edelstein.Data.Serialization.Json;
 using Edelstein.Server.Authorization;
+using Edelstein.Server.BackroundJobs;
 using Edelstein.Server.Configuration;
 using Edelstein.Server.Configuration.Assets;
 using Edelstein.Server.Configuration.Metrics;
@@ -28,6 +29,9 @@ using MongoDB.Driver.Core.Configuration;
 
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+
+using Quartz;
+using Quartz.AspNetCore;
 
 using Serilog;
 using Serilog.Events;
@@ -171,6 +175,39 @@ try
 
     // Memory cache
     builder.Services.AddMemoryCache();
+
+    // Background jobs
+    builder.Services.AddScoped<ExpiredGiftsCleanupJob>();
+    builder.Services.AddScoped<GiftHistoryCleanupJob>();
+
+    // Quartz
+    builder.Services.AddQuartz(q =>
+    {
+        JobKey expiredGiftsCleanupJobKey = new(nameof(ExpiredGiftsCleanupJob));
+        q.AddJob<ExpiredGiftsCleanupJob>(options => options.WithIdentity(expiredGiftsCleanupJobKey));
+
+        q.AddTrigger(options =>
+                options
+                    .ForJob(expiredGiftsCleanupJobKey)
+                    .WithIdentity($"{nameof(ExpiredGiftsCleanupJob)}-trigger")
+                    .StartNow()
+            /*.WithCronSchedule("0 0 * * * ?")*/);
+
+        JobKey giftHistoryCleanupJobKey = new(nameof(GiftHistoryCleanupJob));
+        q.AddJob<GiftHistoryCleanupJob>(options => options.WithIdentity(giftHistoryCleanupJobKey));
+
+        q.AddTrigger(options =>
+                options
+                    .ForJob(giftHistoryCleanupJobKey)
+                    .WithIdentity($"{nameof(GiftHistoryCleanupJob)}-trigger")
+                    .StartNow()
+            /*.WithCronSchedule("0 0 * * * ?")*/);
+    });
+
+    builder.Services.AddQuartzServer(options =>
+    {
+        options.WaitForJobsToComplete = true;
+    });
 
     // Forwarded headers
     builder.Services.Configure<ForwardedHeadersOptions>(options =>
