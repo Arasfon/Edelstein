@@ -39,14 +39,17 @@ public class UserHomeRepository : IUserHomeRepository
 
     public async Task<ChatProgressDocument> GetChat(ulong xuid, uint chatId, uint roomId, uint chapterId)
     {
-        FilterDefinition<UserHomeDocument> filterDefinition = Builders<UserHomeDocument>.Filter.Eq(x => x.Xuid, xuid);
+        FilterDefinition<UserHomeDocument> userFlterDefinition = Builders<UserHomeDocument>.Filter.Eq(x => x.Xuid, xuid);
+        FilterDefinition<UserHomeUnwindedGetChatProjection> chatFlterDefinition =
+            Builders<UserHomeUnwindedGetChatProjection>.Filter.Eq(x => x.Chat.ChatProgress.ChatId, chatId) &
+            Builders<UserHomeUnwindedGetChatProjection>.Filter.Eq(x => x.Chat.ChatProgress.RoomId, roomId) &
+            Builders<UserHomeUnwindedGetChatProjection>.Filter.Eq(x => x.Chat.ChatProgress.ChapterId, chapterId);
 
         return (await _userHomeCollection.Aggregate()
-            .Match(filterDefinition)
+            .Match(userFlterDefinition)
             .Project(x => new UserHomeGetChatProjection(x.ChatStorage.Chats))
             .Unwind<UserHomeGetChatProjection, UserHomeUnwindedGetChatProjection>(x => x.Chat)
-            .Match(x => x.Chat.ChatProgress.ChatId == chatId && x.Chat.ChatProgress.RoomId == roomId &&
-                x.Chat.ChatProgress.ChapterId == chapterId)
+            .Match(chatFlterDefinition)
             .FirstOrDefaultAsync()).Chat;
     }
 
