@@ -44,4 +44,7 @@ public class ResourceConfigurer
 
         return this;
     }
+
+    public virtual IResourceAdditionBuilder Chain() =>
+        ResourceAdditionBuilder;
 }
