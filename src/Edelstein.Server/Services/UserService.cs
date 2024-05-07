@@ -18,6 +18,7 @@ public class UserService : IUserService
     private readonly IDefaultGroupCardsFactoryService _defaultGroupCardsFactoryService;
     private readonly ITutorialService _tutorialService;
     private readonly ISequenceRepository<ulong> _sequenceRepository;
+    private readonly IUserGiftsService _userGiftsService;
 
     public UserService(
         IAuthenticationDataRepository authenticationDataRepository,
@@ -26,7 +27,8 @@ public class UserService : IUserService
         IUserInitializationDataRepository userInitializationDataRepository,
         IDefaultGroupCardsFactoryService defaultGroupCardsFactoryService,
         ITutorialService tutorialService,
-        ISequenceRepository<ulong> sequenceRepository)
+        ISequenceRepository<ulong> sequenceRepository,
+        IUserGiftsService userGiftsService)
     {
         _authenticationDataRepository = authenticationDataRepository;
         _userDataRepository = userDataRepository;
@@ -35,6 +37,7 @@ public class UserService : IUserService
         _defaultGroupCardsFactoryService = defaultGroupCardsFactoryService;
         _tutorialService = tutorialService;
         _sequenceRepository = sequenceRepository;
+        _userGiftsService = userGiftsService;
     }
 
     public async Task<UserRegistrationResult> RegisterUser(string publicKey)
@@ -108,23 +111,13 @@ public class UserService : IUserService
             // Assuming all default characters are rare so their duplicates give 20 penlights
             const uint penlightItemId = 19100001;
 
-            Item? penlightItem = currentUserData.ItemList.FirstOrDefault(x => x.MasterItemId == penlightItemId);
+            ResourcesModificationResult resourcesModificationResult =
+                new ResourceAdditionBuilder(currentUserData)
+                    .AddItem(penlightItemId, 20 * defaultCardsRetrievalResult.DuplicateCount)
+                    .Chain()
+                    .Build();
 
-            if (penlightItem is null)
-            {
-                penlightItem = new Item
-                {
-                    Id = await _sequenceRepository.GetNextValueById(SequenceNames.ItemIds),
-                    MasterItemId = penlightItemId,
-                    Amount = 20 * defaultCardsRetrievalResult.DuplicateCount,
-                    ExpireDateTime = null
-                };
-                currentUserData.ItemList.AddLast(penlightItem);
-            }
-            else
-                penlightItem.Amount += 20 * defaultCardsRetrievalResult.DuplicateCount;
-
-            // TODO: FORGOT TO ADD ITEMS HERE
+            await UpdateResources(currentUserData.User.Id, resourcesModificationResult);
         }
 
         await AddCards(userInitializationData.Xuid, defaultCardsRetrievalResult.Cards, currentUserData.CardList);
@@ -164,6 +157,24 @@ public class UserService : IUserService
         uint? guestPureMasterCardId, uint? guestCoolMasterCardId, bool? friendRequestDisabled) =>
         await _userDataRepository.UpdateUser(xuid, name, comment, favoriteMasterCardId, guestSmileMasterCardId,
             guestPureMasterCardId, guestCoolMasterCardId, friendRequestDisabled);
+
+    public async Task<UserData> UpdateResources(ulong xuid, ResourcesModificationResult resourcesModificationResult)
+    {
+        if (resourcesModificationResult.Gifts!.Count > 0)
+            await _userGiftsService.AddGifts(xuid, resourcesModificationResult.Gifts);
+
+        List<Card> cardsWithoutIds = resourcesModificationResult.Updates.CardList.Where(x => x.Id == 0).ToList();
+        List<ulong> cardIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.CardIds, (ulong)cardsWithoutIds.Count)).ToList();
+        for (int i = 0; i < cardsWithoutIds.Count; i++)
+            cardsWithoutIds[i].Id = cardIds[i];
+
+        List<Item> itemsWithoutIds = resourcesModificationResult.Updates.ItemList.Where(x => x.Id == 0).ToList();
+        List<ulong> itemIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.ItemIds, (ulong)itemsWithoutIds.Count)).ToList();
+        for (int i = 0; i < itemsWithoutIds.Count; i++)
+            itemsWithoutIds[i].Id = itemIds[i];
+
+        return await _userDataRepository.UpdateUser(xuid, resourcesModificationResult);
+    }
 
     public async Task<List<Character>> GetDeckCharactersFromUserData(UserData? userData, uint deckSlot) =>
         await GetDeckCharactersFromUserData(userData!, userData!.DeckList.First(x => x.Slot == deckSlot));

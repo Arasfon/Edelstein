@@ -1,6 +1,7 @@
 using Edelstein.Data.Configuration;
 using Edelstein.Data.Models;
 using Edelstein.Data.Models.Components;
+using Edelstein.Server.Builders;
 
 using Microsoft.Extensions.Options;
 
@@ -130,6 +131,39 @@ public class UserDataRepository : IUserDataRepository
             new FindOneAndUpdateOptions<UserData> { ReturnDocument = ReturnDocument.After });
 
         return userData.User;
+    }
+
+    public async Task<UserData> UpdateUser(ulong xuid, ResourcesModificationResult resourcesModificationResult)
+    {
+        FilterDefinition<UserData> filterDefinition = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);
+
+        UpdateDefinitionBuilder<UserData> updateBuilder = Builders<UserData>.Update;
+        List<UpdateDefinition<UserData>> updates = [];
+
+        if (resourcesModificationResult.Updates.Gem is not null)
+            updates.Add(updateBuilder.Set(x => x.Gem, resourcesModificationResult.Gem));
+
+        if (resourcesModificationResult.Updates.PointList.Count > 0)
+            updates.Add(updateBuilder.Set(x => x.PointList, resourcesModificationResult.Points));
+
+        if (resourcesModificationResult.Updates.ItemList.Count > 0)
+            updates.Add(updateBuilder.Set(x => x.ItemList, resourcesModificationResult.Items));
+
+        if (resourcesModificationResult.Updates.CardList.Count > 0)
+            updates.Add(updateBuilder.Set(x => x.CardList, resourcesModificationResult.Cards));
+
+        if (resourcesModificationResult.Updates.MasterStampIds.Count > 0)
+            updates.Add(updateBuilder.PushEach(x => x.MasterStampIds, resourcesModificationResult.Updates.MasterStampIds));
+
+        if (resourcesModificationResult.Updates.MasterTitleIds.Count > 0)
+            updates.Add(updateBuilder.PushEach(x => x.MasterTitleIds, resourcesModificationResult.Updates.MasterTitleIds));
+
+        UpdateDefinition<UserData> updateDefinition = updateBuilder.Combine(updates);
+
+        UserData userData = await _userDataCollection.FindOneAndUpdateAsync(filterDefinition, updateDefinition,
+            new FindOneAndUpdateOptions<UserData> { ReturnDocument = ReturnDocument.After });
+
+        return userData;
     }
 
     public async Task<UserData> SetCardsItemsPoints(ulong xuid, IEnumerable<Card> cards, IEnumerable<Item> items, IEnumerable<Point> points)

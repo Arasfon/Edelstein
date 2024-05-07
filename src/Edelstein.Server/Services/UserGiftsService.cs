@@ -139,11 +139,11 @@ public class UserGiftsService : IUserGiftsService
             }
         }
 
-        // TODO: FORGOT TO UPDATE USER
-
         await _userGiftsRepository.MarkAsClaimed(xuid, giftIds.Zip(receiveIds), currentTimestamp);
 
         ResourcesModificationResult resourcesModificationResult = resourceAdditionBuilder.Build();
+
+        await _userService.UpdateResources(xuid, resourcesModificationResult);
 
         return new GiftClaimResult(failedGiftIds, resourcesModificationResult.Updates, resourcesModificationResult.Rewards ?? []);
     }

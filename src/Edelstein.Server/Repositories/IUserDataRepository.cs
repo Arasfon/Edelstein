@@ -1,5 +1,6 @@
 using Edelstein.Data.Models;
 using Edelstein.Data.Models.Components;
+using Edelstein.Server.Builders;
 
 namespace Edelstein.Server.Repositories;
 
@@ -15,6 +16,8 @@ public interface IUserDataRepository
 
     public Task<User> UpdateUser(ulong xuid, string? name, string? comment, uint? favoriteMasterCardId, uint? guestSmileMasterCardId,
         uint? guestPureMasterCardId, uint? guestCoolMasterCardId, bool? friendRequestDisabled);
+
+    public Task<UserData> UpdateUser(ulong xuid, ResourcesModificationResult resourcesModificationResult);
 
     public Task<UserData> SetCardsItemsPoints(ulong xuid, IEnumerable<Card> cards, IEnumerable<Item> items, IEnumerable<Point> points);
 

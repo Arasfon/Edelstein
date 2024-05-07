@@ -38,6 +38,9 @@ public class UnsignedLongSequenceRepository : ISequenceRepository<ulong>
 
     public async Task<IEnumerable<ulong>> GetNextRangeById(string sequenceId, ulong count, ulong initialValue = 0)
     {
+        if (count == 0)
+            return Enumerable.Empty<ulong>();
+
         Sequence<ulong>? updatedDocument = await IncrementExistingSequence(sequenceId, count);
 
         if (updatedDocument is not null)

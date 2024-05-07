@@ -1,5 +1,6 @@
 using Edelstein.Data.Models;
 using Edelstein.Data.Models.Components;
+using Edelstein.Server.Builders;
 using Edelstein.Server.Models;
 
 namespace Edelstein.Server.Services;
@@ -22,6 +23,8 @@ public interface IUserService
 
     public Task<User> UpdateUser(ulong xuid, string? name, string? comment, uint? favoriteMasterCardId, uint? guestSmileMasterCardId,
         uint? guestPureMasterCardId, uint? guestCoolMasterCardId, bool? friendRequestDisabled);
+
+    public Task<UserData> UpdateResources(ulong xuid, ResourcesModificationResult resourcesModificationResult);
 
     public Task<List<Character>> GetDeckCharactersFromUserData(UserData? userData, uint deckSlot);
     public Task<List<Character>> GetDeckCharactersFromUserData(UserData userData, Deck deck);
