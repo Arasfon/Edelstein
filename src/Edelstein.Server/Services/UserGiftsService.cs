@@ -1,4 +1,5 @@
 using Edelstein.Data.Models;
+using Edelstein.Data.Models.Components;
 using Edelstein.Data.Msts;
 using Edelstein.Data.Msts.Persistence;
 using Edelstein.Server.Builders;
@@ -37,6 +38,8 @@ public class UserGiftsService : IUserGiftsService
         if (gifts.Count == 0)
             return;
 
+        // TODO: Check for gifts.Count and reduce them to 100000 last
+
         List<Gift> giftsWithoutIds = gifts.Where(x => x.Id == 0).ToList();
         List<ulong> giftIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.GiftIds, (ulong)giftsWithoutIds.Count)).ToList();
         for (int i = 0; i < giftsWithoutIds.Count; i++)
@@ -73,15 +76,26 @@ public class UserGiftsService : IUserGiftsService
 
         List<Gift> gifts = await _userGiftsRepository.GetManyByIds(giftIds, currentTimestamp);
 
-        List<ulong> receiveIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.ReceivedGiftIds, (ulong)gifts.Count)).ToList();
+        if (gifts.Count == 0)
+            return new GiftClaimResult([], new UpdatedValueList(), []);
 
-        List<uint> cardGiftsCardIds = gifts.Where(x => x.RewardType == RewardType.Card).Select(x => x.Value).ToList();
+        IEnumerable<ulong> receiveIds = await _sequenceRepository.GetNextRangeById(SequenceNames.ReceivedGiftIds, (ulong)gifts.Count);
+
+        List<uint> cardGiftsCardIds = gifts.Where(x => x.RewardType == RewardType.Card)
+            .Select(x => x.Value)
+            .ToList();
         Dictionary<uint, CardMst> cardMsts =
-            await _mstDbContext.CardMsts.Where(x => cardGiftsCardIds.Contains(x.Id)).Distinct().ToDictionaryAsync(x => x.Id);
+            await _mstDbContext.CardMsts.Where(x => cardGiftsCardIds.Contains(x.Id))
+                .Distinct()
+                .ToDictionaryAsync(x => x.Id);
 
-        List<uint> itemGiftsItemIds = gifts.Where(x => x.RewardType == RewardType.Item).Select(x => x.Value).ToList();
+        List<uint> itemGiftsItemIds = gifts.Where(x => x.RewardType == RewardType.Item)
+            .Select(x => x.Value)
+            .ToList();
         Dictionary<uint, ItemMst> itemMsts =
-            await _mstDbContext.ItemMsts.Where(x => itemGiftsItemIds.Contains(x.Id)).Distinct().ToDictionaryAsync(x => x.Id);
+            await _mstDbContext.ItemMsts.Where(x => itemGiftsItemIds.Contains(x.Id))
+                .Distinct()
+                .ToDictionaryAsync(x => x.Id);
 
         foreach (Gift gift in gifts)
         {
@@ -124,6 +138,8 @@ public class UserGiftsService : IUserGiftsService
                 giftIds.Remove(gift.Id);
             }
         }
+
+        // TODO: FORGOT TO UPDATE USER
 
         await _userGiftsRepository.MarkAsClaimed(xuid, giftIds.Zip(receiveIds), currentTimestamp);
 
