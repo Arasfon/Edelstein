@@ -19,13 +19,11 @@ public class LotteryService : ILotteryService
 {
     private readonly MstDbContext _mstDbContext;
     private readonly IUserService _userService;
-    private readonly IUserGiftsService _userGiftsService;
 
-    public LotteryService(MstDbContext mstDbContext, IUserService userService, IUserGiftsService userGiftsService)
+    public LotteryService(MstDbContext mstDbContext, IUserService userService)
     {
         _mstDbContext = mstDbContext;
         _userService = userService;
-        _userGiftsService = userGiftsService;
     }
 
     public async Task<List<Lottery>> GetAndRefreshUserLotteriesData(ulong xuid)
@@ -232,7 +230,7 @@ public class LotteryService : ILotteryService
         ResourcesModificationResult resourcesModificationResult = resourceAdditionBuilder.Build();
 
         // Add gifts if any
-        await _userGiftsService.AddGifts(xuid, resourcesModificationResult.Gifts ?? []);
+        await _userService.AddGifts(xuid, resourcesModificationResult.Gifts ?? []);
 
         // Update full cards, items, points and lotteries of a user, creating ids for cards and items, if they do not have it.
         // As cards/items are updated in-place, then there is no need to make some complex adjustments after an update.

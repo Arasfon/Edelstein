@@ -20,13 +20,11 @@ public class CoreController : Controller
 {
     private readonly IUserService _userService;
     private readonly ITutorialService _tutorialService;
-    private readonly IUserGiftsService _userGiftsService;
 
-    public CoreController(IUserService userService, ITutorialService tutorialService, IUserGiftsService userGiftsService)
+    public CoreController(IUserService userService, ITutorialService tutorialService)
     {
         _userService = userService;
         _tutorialService = tutorialService;
-        _userGiftsService = userGiftsService;
     }
 
     [Route("user")]
@@ -82,7 +80,7 @@ public class CoreController : Controller
 
         UserHomeDocument homeDocument = (await _userService.GetHomeByXuid(xuid).ConfigureAwait(false))!;
 
-        IAsyncEnumerable<Gift> gifts = _userGiftsService.GetAllGifts(xuid);
+        IAsyncEnumerable<Gift> gifts = _userService.GetAllGifts(xuid);
 
         Home home = new()
         {
@@ -120,7 +118,7 @@ public class CoreController : Controller
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
-        GiftClaimResult giftClaimResult = await _userGiftsService.ClaimGifts(xuid, encryptedRequest.DeserializedObject.GiftIds);
+        GiftClaimResult giftClaimResult = await _userService.ClaimGifts(xuid, encryptedRequest.DeserializedObject.GiftIds);
 
         return new EncryptedResponse<GiftResponseData>(new GiftResponseData(giftClaimResult.FailedGifts, giftClaimResult.UpdatedValueList,
             giftClaimResult.Rewards, []));

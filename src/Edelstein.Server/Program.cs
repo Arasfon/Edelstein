@@ -169,7 +169,6 @@ try
     builder.Services.AddScoped<IDefaultGroupCardsFactoryService, DefaultGroupCardsFactoryService>();
     builder.Services.AddScoped<ILiveService, LiveService>();
     builder.Services.AddScoped<IChatService, ChatService>();
-    builder.Services.AddScoped<IUserGiftsService, UserGiftsService>();
 
     builder.Services.AddHostedService<ConstantsLoaderService>();
 

@@ -22,10 +22,9 @@ public class LiveService : ILiveService
     private readonly MstDbContext _mstDbContext;
     private readonly IUserService _userService;
     private readonly ISequenceRepository<ulong> _sequenceRepository;
-    private readonly IUserGiftsService _userGiftsService;
 
     public LiveService(ILiveDataRepository liveDataRepository, IUserDataRepository userDataRepository, ITutorialService tutorialService,
-        MstDbContext mstDbContext, IUserService userService, ISequenceRepository<ulong> sequenceRepository, IUserGiftsService userGiftsService)
+        MstDbContext mstDbContext, IUserService userService, ISequenceRepository<ulong> sequenceRepository)
     {
         _liveDataRepository = liveDataRepository;
         _userDataRepository = userDataRepository;
@@ -33,7 +32,6 @@ public class LiveService : ILiveService
         _mstDbContext = mstDbContext;
         _userService = userService;
         _sequenceRepository = sequenceRepository;
-        _userGiftsService = userGiftsService;
     }
 
     public async Task StartLive(ulong xuid, LiveStartRequestData liveStartData) =>
@@ -792,7 +790,7 @@ public class LiveService : ILiveService
         List<Character> characters, List<LiveMission> liveMissions, HashSet<uint> newStampIds, LinkedList<Gift> gifts)
     {
         // Add gifts if any
-        await _userGiftsService.AddGifts(xuid, gifts);
+        await _userService.AddGifts(xuid, gifts);
 
         // Add item ids for new items
         List<Item> itemsWithoutIds = items.Where(x => x.Id == 0).ToList();
