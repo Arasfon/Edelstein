@@ -786,8 +786,8 @@ public class LiveService : ILiveService
     );
 
     private async Task<UserData> UpdateUserDataAfterLiveCreatingGiftIds(ulong xuid, long currentTimestamp, List<Live> lives,
-        LinkedList<Point> points, LinkedList<Item> items, Stamina stamina, int experience, Gem gem,
-        List<Character> characters, List<LiveMission> liveMissions, HashSet<uint> newStampIds, LinkedList<Gift> gifts)
+        List<Point> points, List<Item> items, Stamina stamina, int experience, Gem gem,
+        List<Character> characters, List<LiveMission> liveMissions, HashSet<uint> newStampIds, List<Gift> gifts)
     {
         // Add gifts if any
         await _userService.AddGifts(xuid, gifts);

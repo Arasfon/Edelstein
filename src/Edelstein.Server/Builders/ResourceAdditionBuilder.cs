@@ -8,12 +8,12 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
 {
     protected readonly EfficientUpdatedValueList UpdatedValueList = new();
 
-    protected readonly LinkedList<Reward>? Rewards;
-    protected readonly LinkedList<Gift> Gifts = [];
+    protected readonly List<Reward>? Rewards;
+    protected readonly List<Gift> Gifts = [];
 
-    protected readonly LinkedList<Point> AllPoints;
-    protected readonly LinkedList<Item> AllItems;
-    protected readonly LinkedList<Card> AllCards;
+    protected readonly List<Point> AllPoints;
+    protected readonly List<Item> AllItems;
+    protected readonly List<Card> AllCards;
     protected readonly Gem Gem;
 
     protected readonly Dictionary<PointType, Point> AllExistingUserPoints;
@@ -24,8 +24,8 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
     public DateTimeOffset CurrentDateTimeOffset { get; } = DateTimeOffset.UtcNow;
     public long CurrentTimestamp { get; }
 
-    public ResourceAdditionBuilder(EfficientUpdatedValueList updatedValueList, LinkedList<Point> allPoints,
-        Dictionary<PointType, Point> allExistingUserPoints, LinkedList<Item> allItems, Dictionary<uint, Item> allExistingUserItems, Gem gem,
+    public ResourceAdditionBuilder(EfficientUpdatedValueList updatedValueList, List<Point> allPoints,
+        Dictionary<PointType, Point> allExistingUserPoints, List<Item> allItems, Dictionary<uint, Item> allExistingUserItems, Gem gem,
         UserData userData, long currentTimestamp, bool calculateRewards = false)
     {
         UpdatedValueList = updatedValueList;
@@ -83,7 +83,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         };
 
         if (!hidden)
-            Rewards?.AddLast(reward);
+            Rewards?.Add(reward);
 
         if (UpdatedValueList.PointList.TryGetValue(type, out Point? point))
         {
@@ -98,7 +98,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
                 Type = type,
                 Amount = amount
             };
-            AllPoints.AddLast(point);
+            AllPoints.Add(point);
             UpdatedValueList.PointList.Add(type, point);
 
             return new ResourceConfigurer(this, true, reward).SetGiveType(GiveType.Direct);
@@ -122,7 +122,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             Amount = amount
         };
 
-        Rewards?.AddLast(reward);
+        Rewards?.Add(reward);
 
         Gem.Free += amount;
         Gem.Total += amount;
@@ -144,7 +144,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             Amount = amount
         };
 
-        Rewards?.AddLast(reward);
+        Rewards?.Add(reward);
 
         Gem.Charge += amount;
         Gem.Total += amount;
@@ -168,7 +168,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         if (reward.Amount == 0)
             return new NullResourceConfigurer();
 
-        Rewards?.AddLast(reward);
+        Rewards?.Add(reward);
 
         if (UpdatedValueList.ItemList.TryGetValue(reward.Value, out Item? item))
         {
@@ -184,7 +184,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
                 Amount = reward.Amount,
                 ExpireDateTime = expirationTimestamp
             };
-            AllItems.AddLast(item);
+            AllItems.Add(item);
             UpdatedValueList.ItemList.Add(reward.Value, item);
 
             return new ResourceConfigurer(this, true, reward).SetGiveType(GiveType.Direct);
@@ -217,7 +217,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
         if (reward.Amount == 0)
             return new NullResourceConfigurer();
 
-        Rewards?.AddLast(reward);
+        Rewards?.Add(reward);
 
         const uint penlightMasterItemId = 19100001;
 
@@ -254,7 +254,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
                 CreatedDateTime = CurrentTimestamp
             };
 
-            AllCards.AddLast(card);
+            AllCards.Add(card);
             UpdatedValueList.CardList.Add(reward.Value, card);
 
             return new ResourceConfigurer(this, true, reward).SetGiveType(GiveType.Direct);
@@ -309,7 +309,7 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
 
     private ResourceConfigurer AddChatStamp(Reward reward)
     {
-        Rewards?.AddLast(reward);
+        Rewards?.Add(reward);
 
         if (AllExistingChatStampIds.Contains(reward.Value))
             return new ResourceConfigurer(this, false, reward).SetGiveType(GiveType.Direct);
@@ -371,7 +371,8 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
     public ResourceConfigurer AddCardAsGift(string reason, uint cardId, long? expirationTimestamp = null) =>
         AddGift(reason, RewardType.Card, cardId, 1, expirationTimestamp);
 
-    public ResourceConfigurer AddGift(string reason, RewardType type, uint itemId, int amount, long? expirationTimestamp = null, bool isGiftConversion = false)
+    public ResourceConfigurer AddGift(string reason, RewardType type, uint itemId, int amount, long? expirationTimestamp = null,
+        bool isGiftConversion = false)
     {
         Reward reward = new()
         {
@@ -381,9 +382,9 @@ public class ResourceAdditionBuilder : IResourceAdditionBuilder
             GiveType = isGiftConversion ? GiveType.IntoGift : GiveType.Gift
         };
 
-        Rewards?.AddLast(reward);
+        Rewards?.Add(reward);
 
-        Gifts.AddLast(new Gift
+        Gifts.Add(new Gift
         {
             IsReceive = false,
             ReasonText = reason,

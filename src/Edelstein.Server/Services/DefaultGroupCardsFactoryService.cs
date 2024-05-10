@@ -13,7 +13,7 @@ public class DefaultGroupCardsFactoryService : IDefaultGroupCardsFactoryService
     public DefaultGroupCardsFactoryService(ISequenceRepository<ulong> sequenceRepository) =>
         _sequenceRepository = sequenceRepository;
 
-    public async Task<DefaultCardRetrievalResult> GetOrCreate(BandCategory group, LinkedList<Card> existingCards)
+    public async Task<DefaultCardRetrievalResult> GetOrCreate(BandCategory group, List<Card> existingCards)
     {
         long currentTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 

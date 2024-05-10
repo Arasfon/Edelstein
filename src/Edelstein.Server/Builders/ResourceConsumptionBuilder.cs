@@ -10,8 +10,8 @@ public class ResourceConsumptionBuilder : IResourceConsumptionBuilder
 {
     protected readonly EfficientUpdatedValueList UpdatedValueList = new();
 
-    protected readonly LinkedList<Point> AllPoints;
-    protected readonly LinkedList<Item> AllItems;
+    protected readonly List<Point> AllPoints;
+    protected readonly List<Item> AllItems;
     protected readonly Gem Gem;
 
     protected readonly Dictionary<PointType, Point> AllExistingUserPoints;
@@ -19,7 +19,7 @@ public class ResourceConsumptionBuilder : IResourceConsumptionBuilder
 
     protected readonly long CurrentTimestamp;
 
-    public ResourceConsumptionBuilder(LinkedList<Point> allPoints, LinkedList<Item> allItems, Gem gem, long currentTimestamp)
+    public ResourceConsumptionBuilder(List<Point> allPoints, List<Item> allItems, Gem gem, long currentTimestamp)
     {
         AllPoints = allPoints;
         AllItems = allItems;

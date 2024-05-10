@@ -148,7 +148,7 @@ public class UserService : IUserService
         await _userDataRepository.SetDeck(userInitializationData.Xuid, 1, cardIds.Take(9));
     }
 
-    public async Task AddCards(ulong xuid, List<Card> cards, LinkedList<Card>? currentCards = null)
+    public async Task AddCards(ulong xuid, List<Card> cards, List<Card>? currentCards = null)
     {
         if (currentCards is null)
         {
@@ -229,8 +229,8 @@ public class UserService : IUserService
         return await _userDataRepository.SetCardsItemsPoints(xuid, cards, items, points);
     }
 
-    public async Task<UserData> SetGemsCardsItemsPointsLotteriesCreatingIds(ulong xuid, Gem gem, LinkedList<Card> cards,
-        LinkedList<Item> items, IEnumerable<Point> points, IEnumerable<Lottery> lotteries)
+    public async Task<UserData> SetGemsCardsItemsPointsLotteriesCreatingIds(ulong xuid, Gem gem, List<Card> cards,
+        List<Item> items, IEnumerable<Point> points, IEnumerable<Lottery> lotteries)
     {
         List<Card> cardsWithoutIds = cards.Where(x => x.Id == 0).ToList();
         List<ulong> cardIds = (await _sequenceRepository.GetNextRangeById(SequenceNames.CardIds, (ulong)cardsWithoutIds.Count)).ToList();
@@ -283,7 +283,7 @@ public class UserService : IUserService
     public IAsyncEnumerable<Gift> GetAllGifts(ulong xuid) =>
         _userGiftsRepository.GetAllByXuid(xuid);
 
-    public async Task AddGifts(ulong xuid, LinkedList<Gift> gifts)
+    public async Task AddGifts(ulong xuid, List<Gift> gifts)
     {
         if (gifts.Count == 0)
             return;
@@ -318,7 +318,7 @@ public class UserService : IUserService
     {
         long currentTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-        LinkedList<ulong> failedGiftIds = [];
+        List<ulong> failedGiftIds = [];
 
         List<Gift> gifts = await _userGiftsRepository.GetManyByIds(giftIds, currentTimestamp);
 
@@ -384,7 +384,7 @@ public class UserService : IUserService
 
             if (resourceConfigurer is not { IsAdded: true, IsResourceConvertedToGift: false })
             {
-                failedGiftIds.AddLast(gift.Id);
+                failedGiftIds.Add(gift.Id);
                 giftIds.Remove(gift.Id);
             }
         }

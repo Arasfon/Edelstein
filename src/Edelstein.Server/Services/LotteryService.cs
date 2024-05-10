@@ -210,14 +210,14 @@ public class LotteryService : ILotteryService
         }
 
         // Build list of LotteryItem to return
-        LinkedList<LotteryItem> lotteryItems = [];
+        List<LotteryItem> lotteryItems = [];
 
         foreach (JoinedLotteryItem joinedLotteryItem in drawedDefaultItems.Concat(drawedEnsuredItems))
         {
             ResourceConfigurer resourceConfigurer = resourceAdditionBuilder.Add(joinedLotteryItem.Type, joinedLotteryItem.Value,
                 joinedLotteryItem.Amount, joinedLotteryItem.Rarity);
 
-            lotteryItems.AddLast(new LotteryItem
+            lotteryItems.Add(new LotteryItem
             {
                 MasterLotteryItemId = joinedLotteryItem.Id,
                 MasterLotteryItemNumber = joinedLotteryItem.Number,

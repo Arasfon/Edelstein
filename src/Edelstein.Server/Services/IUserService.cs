@@ -18,7 +18,7 @@ public interface IUserService
 
     public Task<User> InitializeUserStartingCharacterAndDeck(ulong xuid);
 
-    public Task AddCards(ulong xuid, List<Card> cards, LinkedList<Card>? currentCards = null);
+    public Task AddCards(ulong xuid, List<Card> cards, List<Card>? currentCards = null);
     public Task AddCharacter(ulong xuid, uint characterId, uint experience = 0);
 
     public Task<User> UpdateUser(ulong xuid, string? name, string? comment, uint? favoriteMasterCardId, uint? guestSmileMasterCardId,
@@ -31,7 +31,7 @@ public interface IUserService
 
     public Task<UserData> SetCardsItemsPointsCreatingIds(ulong xuid, List<Card> cards, List<Item> items, IEnumerable<Point> points);
 
-    public Task<UserData> SetGemsCardsItemsPointsLotteriesCreatingIds(ulong xuid, Gem gem, LinkedList<Card> cards, LinkedList<Item> items,
+    public Task<UserData> SetGemsCardsItemsPointsLotteriesCreatingIds(ulong xuid, Gem gem, List<Card> cards, List<Item> items,
         IEnumerable<Point> points, IEnumerable<Lottery> lotteries);
 
     public Task UpdateUserLotteries(ulong xuid, List<Lottery> lotteries);
@@ -42,12 +42,10 @@ public interface IUserService
 
     public IAsyncEnumerable<Gift> GetAllGifts(ulong xuid);
 
-    /// <summary>
-    /// Add gifts to the user assigning <see cref="Gift.UserId"/> and creating <see cref="Gift.Id"/>
-    /// </summary>
+    /// <summary>Add gifts to the user assigning <see cref="Gift.UserId"/> and creating <see cref="Gift.Id"/></summary>
     /// <param name="xuid">Xiud of a user</param>
     /// <param name="gifts">Gifts to be added</param>
-    public Task AddGifts(ulong xuid, LinkedList<Gift> gifts);
+    public Task AddGifts(ulong xuid, List<Gift> gifts);
 
     public Task<GiftClaimResult> ClaimGifts(ulong xuid, HashSet<ulong> giftIds);
 }

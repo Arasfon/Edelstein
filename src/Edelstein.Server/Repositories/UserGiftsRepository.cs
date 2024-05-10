@@ -45,12 +45,14 @@ public class UserGiftsRepository : IUserGiftsRepository
 
         SortDefinition<Gift> sortDefinition = Builders<Gift>.Sort.Ascending(x => x.CreatedDateTime).Ascending(x => x.Id);
 
-        List<ulong> giftIdsToDelete = await _giftsCollection.Find(filterDefinition).Sort(sortDefinition).Limit(count).Project(x => x.Id).ToListAsync();
+        List<ulong> giftIdsToDelete =
+            await _giftsCollection.Find(filterDefinition).Sort(sortDefinition).Limit(count).Project(x => x.Id).ToListAsync();
 
         await _giftsCollection.DeleteManyAsync(Builders<Gift>.Filter.In(x => x.Id, giftIdsToDelete));
     }
 
-    public async Task MarkAsClaimed(ulong xuid, IEnumerable<(ulong GiftId, ulong ReceiveId)> giftIdsWithReceiveIds, long? currentTimestamp = null)
+    public async Task MarkAsClaimed(ulong xuid, IEnumerable<(ulong GiftId, ulong ReceiveId)> giftIdsWithReceiveIds,
+        long? currentTimestamp = null)
     {
         currentTimestamp ??= DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
@@ -77,7 +79,9 @@ public class UserGiftsRepository : IUserGiftsRepository
 
     public async IAsyncEnumerable<Gift> GetAllByXuid(ulong xuid, long? currentTimestamp = null)
     {
-        DateTimeOffset currentDateTimeOffset = currentTimestamp is not null ? DateTimeOffset.FromUnixTimeSeconds(currentTimestamp.Value) : DateTimeOffset.UtcNow;
+        DateTimeOffset currentDateTimeOffset = currentTimestamp is not null
+            ? DateTimeOffset.FromUnixTimeSeconds(currentTimestamp.Value)
+            : DateTimeOffset.UtcNow;
         currentTimestamp ??= currentDateTimeOffset.ToUnixTimeSeconds();
 
         FilterDefinition<Gift> nonClaimedFilterDefinition =
@@ -90,9 +94,13 @@ public class UserGiftsRepository : IUserGiftsRepository
             .Descending(x => x.Id);
 
         IAsyncEnumerable<Gift> nonClaimedGifts =
-            (await _giftsCollection.Find(nonClaimedFilterDefinition).Sort(nonClaimedSortDefinition).Limit(100000).ToCursorAsync().ConfigureAwait(false)).ToAsyncEnumerable();
+            (await _giftsCollection.Find(nonClaimedFilterDefinition)
+                .Sort(nonClaimedSortDefinition)
+                .Limit(100000)
+                .ToCursorAsync()
+                .ConfigureAwait(false)).ToAsyncEnumerable();
 
-        await foreach(Gift nonClaimedGift in nonClaimedGifts)
+        await foreach (Gift nonClaimedGift in nonClaimedGifts)
             yield return nonClaimedGift;
 
         FilterDefinition<Gift> claimHistoryFilterDefinition =
@@ -104,9 +112,13 @@ public class UserGiftsRepository : IUserGiftsRepository
             .Descending(x => x.ReceiveId);
 
         IAsyncEnumerable<Gift> claimHistoryGifts =
-            (await _giftsCollection.Find(claimHistoryFilterDefinition).Sort(claimHistorySortDefinition).Limit(30).ToCursorAsync().ConfigureAwait(false)).ToAsyncEnumerable();
+            (await _giftsCollection.Find(claimHistoryFilterDefinition)
+                .Sort(claimHistorySortDefinition)
+                .Limit(30)
+                .ToCursorAsync()
+                .ConfigureAwait(false)).ToAsyncEnumerable();
 
-        await foreach(Gift claimedGift in claimHistoryGifts)
+        await foreach (Gift claimedGift in claimHistoryGifts)
             yield return claimedGift;
     }
 

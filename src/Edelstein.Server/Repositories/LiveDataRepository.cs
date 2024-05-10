@@ -19,7 +19,7 @@ public class LiveDataRepository : ILiveDataRepository
     }
 
     public async Task<UserData> UpdateAfterFinishedLive(ulong xuid, long currentTimestamp, List<Live> lives,
-        LinkedList<Point> points, LinkedList<Item> items, Stamina stamina, int experience, Gem gem,
+        List<Point> points, List<Item> items, Stamina stamina, int experience, Gem gem,
         List<Character> characters, List<LiveMission> liveMissions, HashSet<uint> newStampIds)
     {
         FilterDefinition<UserData> userDataFilter = Builders<UserData>.Filter.Eq(x => x.User.Id, xuid);

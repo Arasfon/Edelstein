@@ -34,7 +34,8 @@ public interface IResourceAdditionBuilder
     public ResourceConfigurer AddItemAsGift(string reason, uint itemId, int amount, long? expirationTimestamp = null);
     public ResourceConfigurer AddCardAsGift(string reason, uint cardId, long? expirationTimestamp = null);
 
-    public ResourceConfigurer AddGift(string reason, RewardType type, uint itemId, int amount, long? expirationTimestamp = null, bool isGiftConversion = false);
+    public ResourceConfigurer AddGift(string reason, RewardType type, uint itemId, int amount, long? expirationTimestamp = null,
+        bool isGiftConversion = false);
 
     public ResourceConfigurer ClaimGift(Gift gift, Rarity? cardRarity = null, long? itemExpirationTimestamp = null);
 
