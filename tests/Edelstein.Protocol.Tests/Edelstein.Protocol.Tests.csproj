@@ -7,6 +7,9 @@
 
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
+
+        <Authors>Arasfon</Authors>
+        <Copyright>Copyright 2024 © Arasfon</Copyright>
     </PropertyGroup>
 
     <ItemGroup>
