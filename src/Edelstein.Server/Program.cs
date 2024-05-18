@@ -286,7 +286,18 @@ try
                 { ".awb", MediaTypeNames.Application.Octet }
             }
         },
-        OnPrepareResponse = context => context.Context.Response.Headers.CacheControl = "public, max-age=31536000, immutable"
+        OnPrepareResponse = context =>
+        {
+            string[] exts = [".unity3d", ".ppart", ".spart", ".usm", ".acb", ".awb"];
+
+            if (exts.Contains(Path.GetExtension(context.File.Name)))
+                context.Context.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+            else if (context.File.Name == "maintenance.json")
+            {
+                context.Context.Response.Headers.CacheControl = "no-store,no-cache";
+                context.Context.Response.Headers.Pragma = "no-cache";
+            }
+        }
     });
 
     app.UseRouting();
