@@ -94,7 +94,10 @@ public class UserGiftsRepository : IUserGiftsRepository
             .Descending(x => x.Id);
 
         IAsyncEnumerable<Gift> nonClaimedGifts =
-            (await _giftsCollection.Find(nonClaimedFilterDefinition)
+            (await _giftsCollection.Find(nonClaimedFilterDefinition, new FindOptions
+                {
+                    BatchSize = 10000
+                })
                 .Sort(nonClaimedSortDefinition)
                 .Limit(100000)
                 .ToCursorAsync()
@@ -112,7 +115,10 @@ public class UserGiftsRepository : IUserGiftsRepository
             .Descending(x => x.ReceiveId);
 
         IAsyncEnumerable<Gift> claimHistoryGifts =
-            (await _giftsCollection.Find(claimHistoryFilterDefinition)
+            (await _giftsCollection.Find(claimHistoryFilterDefinition, new FindOptions
+                {
+                    BatchSize = 30
+                })
                 .Sort(claimHistorySortDefinition)
                 .Limit(30)
                 .ToCursorAsync()
