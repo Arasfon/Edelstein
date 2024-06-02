@@ -2,5 +2,10 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/Edelstein.Assets.Management" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/Edelstein.Data" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/Edelstein.Data.Msts" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/Edelstein.Data.Msts.Persistence" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/Edelstein.Security" vcs="Git" />
   </component>
 </project>
