@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.Security", "src\Edelstein.Security\Edelstein.Security.csproj", "{1C0EC8A6-A751-439B-9795-2314A2D393F2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.Protocol.Tests", "tests\Edelstein.Protocol.Tests\Edelstein.Protocol.Tests.csproj", "{F2FD979B-2C8E-4D25-96CF-2F2D2954B8AE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Edelstein.Security.Tests", "tests\Edelstein.Security.Tests\Edelstein.Security.Tests.csproj", "{F2FD979B-2C8E-4D25-96CF-2F2D2954B8AE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{09520320-11DC-4702-98CE-C7B1C1DD6DF8}"
 EndProject
