@@ -14,6 +14,7 @@ using Edelstein.Server.Services;
 
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -229,6 +230,14 @@ try
     // Authorization middleware
     builder.Services.AddScoped<MetricsAuthorizationMiddleware>();
 
+    // Response compression
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.EnableForHttps = true;
+        options.Providers.Add<BrotliCompressionProvider>();
+        options.Providers.Add<GzipCompressionProvider>();
+    });
+
     // Controllers
     builder.Services.AddControllers(options =>
         {
@@ -265,6 +274,8 @@ try
     }
 
     app.UseHttpsRedirection();
+
+    app.UseResponseCompression();
 
     PhysicalFileProvider webRootFileProvider = new(app.Environment.WebRootPath);
     string assetsPath = app.Services.GetRequiredService<IOptions<AssetsOptions>>().Value.Path;
