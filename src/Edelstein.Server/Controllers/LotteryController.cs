@@ -30,7 +30,7 @@ public class LotteryController : Controller
 
     [HttpPost]
     [Route("get_tutorial")]
-    public async Task<EncryptedResult> GetTutorial(EncryptedRequest<LotteryTutorialRequestData> encryptedRequest)
+    public async Task<AsyncEncryptedResult> GetTutorial(EncryptedRequest<LotteryTutorialRequestData> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
@@ -39,29 +39,29 @@ public class LotteryController : Controller
 
         await _tutorialService.InitializeUserTutorialData(xuid, encryptedRequest.DeserializedObject.MasterCharacterId);
 
-        return new EncryptedResponse<LotteryTutorialResponseData>(new LotteryTutorialResponseData([tutorialLottery], []));
+        return AsyncEncryptedResult.Create(new LotteryTutorialResponseData([tutorialLottery], []));
     }
 
     [Route("")]
-    public async Task<EncryptedResult> GetLotteries()
+    public async Task<AsyncEncryptedResult> GetLotteries()
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
         List<Lottery> lotteries = await _lotteryService.GetAndRefreshUserLotteriesData(xuid);
 
-        return new EncryptedResponse<GetLotteriesResponseData>(new GetLotteriesResponseData(lotteries, []));
+        return AsyncEncryptedResult.Create(new GetLotteriesResponseData(lotteries, []));
     }
 
     [HttpPost]
     [Route("")]
-    public async Task<EncryptedResult> DrawLottery(EncryptedRequest<Lottery> encryptedRequest)
+    public async Task<AsyncEncryptedResult> DrawLottery(EncryptedRequest<Lottery> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
         LotteryDrawResult lotteryDrawResult = await _lotteryService.Draw(xuid, encryptedRequest.DeserializedObject);
 
         if (lotteryDrawResult.Status != LotteryDrawResultStatus.Success)
-            return EmptyEncryptedResponseFactory.Create(ErrorCode.ErrorItemShortage);
+            return AsyncEncryptedResult.Create(ErrorCode.ErrorItemShortage);
 
         if (await _lotteryService.IsTutorial(encryptedRequest.DeserializedObject))
         {
@@ -72,7 +72,7 @@ public class LotteryController : Controller
             await _userService.AddCharacter(xuid, urCard.MasterCardId / 10000, 1);
         }
 
-        return new EncryptedResponse<DrawLotteryResponseData>(new DrawLotteryResponseData(lotteryDrawResult.LotteryItems,
+        return AsyncEncryptedResult.Create(new DrawLotteryResponseData(lotteryDrawResult.LotteryItems,
             lotteryDrawResult.Updates, [], [], []));
     }
 }

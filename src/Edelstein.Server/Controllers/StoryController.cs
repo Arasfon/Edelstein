@@ -15,6 +15,6 @@ public class StoryController : Controller
 {
     [HttpPost]
     [Route("read")]
-    public EncryptedResult Read(EncryptedRequest encryptedRequest) =>
-        new EncryptedResponse<StoryReadResponseData>(new StoryReadResponseData([], [], new UpdatedValueList(), []));
+    public AsyncEncryptedResult Read(EncryptedRequest encryptedRequest) =>
+        AsyncEncryptedResult.Create(new StoryReadResponseData([], [], new UpdatedValueList(), []));
 }

@@ -1,11 +1,11 @@
 using Edelstein.Data.Models;
 using Edelstein.Data.Transport;
 using Edelstein.Security;
+using Edelstein.Server.ActionResults;
 using Edelstein.Server.Security;
 using Edelstein.Server.Services;
 
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Primitives;
 
@@ -56,7 +56,7 @@ public class RsaSignatureAuthorizationFilter : IAsyncAuthorizationFilter
         if (!context.HttpContext.Request.Headers.TryGetValue(GameRequestHeaderNames.AoharuUserId, out StringValues xuidStringValues) ||
             !UInt64.TryParse(xuidStringValues, out ulong xuid))
         {
-            context.Result = new BadRequestObjectResult(EmptyEncryptedResponseFactory.Create(ErrorCode.ErrorBadRequest).EncryptedString);
+            context.Result = AsyncEncryptedResult.Create(StatusCodes.Status400BadRequest, ErrorCode.ErrorBadRequest);
             return;
         }
 
@@ -66,21 +66,21 @@ public class RsaSignatureAuthorizationFilter : IAsyncAuthorizationFilter
             timestamp > (now + TimeSpan.FromSeconds(TimeoutSeconds)).ToUnixTimeSeconds() ||
             timestamp < (now - TimeSpan.FromSeconds(TimeoutSeconds)).ToUnixTimeSeconds())
         {
-            context.Result = new BadRequestObjectResult(EmptyEncryptedResponseFactory.Create(ErrorCode.ErrorBadRequest).EncryptedString);
+            context.Result = AsyncEncryptedResult.Create(StatusCodes.Status400BadRequest, ErrorCode.ErrorBadRequest);
             return;
         }
 
         if (!context.HttpContext.Request.Headers.TryGetValue(GameRequestHeaderNames.AoharuClientVersion,
             out StringValues clientVersionStringValues))
         {
-            context.Result = new BadRequestObjectResult(EmptyEncryptedResponseFactory.Create(ErrorCode.ErrorBadRequest).EncryptedString);
+            context.Result = AsyncEncryptedResult.Create(StatusCodes.Status400BadRequest, ErrorCode.ErrorBadRequest);
             return;
         }
 
         if (!context.HttpContext.Request.Headers.TryGetValue(GameRequestHeaderNames.CurrentRequestSignature,
             out StringValues signatureStringValues))
         {
-            context.Result = new BadRequestObjectResult(EmptyEncryptedResponseFactory.Create(ErrorCode.ErrorBadRequest).EncryptedString);
+            context.Result = AsyncEncryptedResult.Create(StatusCodes.Status400BadRequest, ErrorCode.ErrorBadRequest);
             return;
         }
 
@@ -89,7 +89,7 @@ public class RsaSignatureAuthorizationFilter : IAsyncAuthorizationFilter
 
         if (userAuthenticationData is null)
         {
-            context.Result = new BadRequestObjectResult(EmptyEncryptedResponseFactory.Create(ErrorCode.ErrorUserNotFound).EncryptedString);
+            context.Result = AsyncEncryptedResult.Create(StatusCodes.Status400BadRequest, ErrorCode.ErrorUserNotFound);
             return;
         }
 
@@ -100,7 +100,7 @@ public class RsaSignatureAuthorizationFilter : IAsyncAuthorizationFilter
 
         if (!isAuthorized)
         {
-            context.Result = new BadRequestObjectResult(EmptyEncryptedResponseFactory.Create(ErrorCode.ErrorUnauthorized).EncryptedString);
+            context.Result = AsyncEncryptedResult.Create(StatusCodes.Status400BadRequest, ErrorCode.ErrorUnauthorized);
             return;
         }
 

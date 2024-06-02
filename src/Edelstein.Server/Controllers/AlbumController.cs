@@ -19,8 +19,8 @@ public class AlbumController : Controller
         _webHostEnvironment = webHostEnvironment;
 
     [Route("sif")]
-    public async Task<EncryptedResult> Sif(EncryptedRequest encryptedRequest) =>
-        new EncryptedResponse<dynamic>(new
+    public async Task<AsyncEncryptedResult> Sif(EncryptedRequest encryptedRequest) =>
+        AsyncEncryptedResult.Create(new
         {
             cards = JsonSerializer.Deserialize<List<dynamic>>(
                 await System.IO.File.ReadAllTextAsync(Path.Join(_webHostEnvironment.WebRootPath, "album_sif.json")))!

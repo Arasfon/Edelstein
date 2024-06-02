@@ -25,20 +25,20 @@ public class LiveController : Controller
         _liveService = liveService;
 
     [Route("clearRate")]
-    public EncryptedResult ClearRate() =>
-        new EncryptedResponse<LiveClearRateResponseData>(new LiveClearRateResponseData(null!, MasterMusicIds.Get(), []));
+    public AsyncEncryptedResult ClearRate() =>
+        AsyncEncryptedResult.Create(new LiveClearRateResponseData(null!, MasterMusicIds.Get(), []));
 
     [Route("guest")]
-    public EncryptedResult Guest(EncryptedRequest<LiveGuestRequestData> encryptedRequest)
+    public AsyncEncryptedResult Guest(EncryptedRequest<LiveGuestRequestData> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
         //if (await _tutorialService.IsTutorialInProgress(xuid))
-        return new EncryptedResponse<LiveGuestResponseData>(new LiveGuestResponseData([Friend.GetTutorial()]));
+        return AsyncEncryptedResult.Create(new LiveGuestResponseData([Friend.GetTutorial()]));
     }
 
     [Route("mission")]
-    public EncryptedResult Mission(EncryptedRequest<LiveMissionRequestData> encryptedRequest)
+    public AsyncEncryptedResult Mission(EncryptedRequest<LiveMissionRequestData> encryptedRequest)
     {
         // TODO: Live mission ranking
         //ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
@@ -46,37 +46,37 @@ public class LiveController : Controller
         //await _liveService.GetUserMissionsRanking(xuid, encryptedRequest.DeserializedObject);
 
         // ReSharper disable once ArrangeMethodOrOperatorBody
-        return new EncryptedResponse<LiveMissionResponseData>(new LiveMissionResponseData("00.00%", "00.00%", "00.00%"));
+        return AsyncEncryptedResult.Create(new LiveMissionResponseData("00.00%", "00.00%", "00.00%"));
     }
 
     [Route("reward")]
-    public async Task<EncryptedResult> Rewards(EncryptedRequest<LiveRewardsRequestData> encryptedRequest)
+    public async Task<AsyncEncryptedResult> Rewards(EncryptedRequest<LiveRewardsRequestData> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
         LiveRewardsRetrievalResult liveRewardsRetrievalResult =
             await _liveService.GetLiveRewards(xuid, encryptedRequest.DeserializedObject.MasterLiveId);
 
-        return new EncryptedResponse<LiveRewardsResponseData>(new LiveRewardsResponseData(liveRewardsRetrievalResult.EnsuredRewards,
+        return AsyncEncryptedResult.Create(new LiveRewardsResponseData(liveRewardsRetrievalResult.EnsuredRewards,
             liveRewardsRetrievalResult.RandomRewards));
     }
 
     [Route("ranking")]
-    public EncryptedResult Ranking(EncryptedRequest<LiveRankingRequestData> encryptedRequest) =>
-        new EncryptedResponse<LiveRankingResponseData>(new LiveRankingResponseData([]));
+    public AsyncEncryptedResult Ranking(EncryptedRequest<LiveRankingRequestData> encryptedRequest) =>
+        AsyncEncryptedResult.Create(new LiveRankingResponseData([]));
 
     [Route("start")]
-    public async Task<EncryptedResult> Start(EncryptedRequest<LiveStartRequestData> encryptedRequest)
+    public async Task<AsyncEncryptedResult> Start(EncryptedRequest<LiveStartRequestData> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
         await _liveService.StartLive(xuid, encryptedRequest.DeserializedObject);
 
-        return EmptyEncryptedResponseFactory.Create();
+        return AsyncEncryptedResult.Create();
     }
 
     [Route("skip")]
-    public async Task<EncryptedResult> Skip(EncryptedRequest<LiveSkipRequestData> encryptedRequest)
+    public async Task<AsyncEncryptedResult> Skip(EncryptedRequest<LiveSkipRequestData> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
@@ -84,9 +84,9 @@ public class LiveController : Controller
         LiveFinishResult liveFinishResult = await _liveService.SkipLive(xuid, encryptedRequest.DeserializedObject);
 
         if (liveFinishResult.Status is not LiveFinishResultStatus.Success)
-            return EmptyEncryptedResponseFactory.Create(ErrorCode.ErrorItemShortage);
+            return AsyncEncryptedResult.Create(ErrorCode.ErrorItemShortage);
 
-        return new EncryptedResponse<LiveSkipResponseData>(new LiveSkipResponseData
+        return AsyncEncryptedResult.Create(new LiveSkipResponseData
         {
             ItemList = liveFinishResult.ChangedItems,
             PointList = liveFinishResult.ChangedPoints,
@@ -105,17 +105,17 @@ public class LiveController : Controller
     }
 
     [Route("retire")]
-    public async Task<EncryptedResult> Retire(EncryptedRequest<LiveRetireRequestData> encryptedRequest)
+    public async Task<AsyncEncryptedResult> Retire(EncryptedRequest<LiveRetireRequestData> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
         await _liveService.RetireLive(xuid, encryptedRequest.DeserializedObject);
 
-        return new EncryptedResponse<LiveRetireResponseData>(new LiveRetireResponseData(new Stamina(), [], []));
+        return AsyncEncryptedResult.Create(new LiveRetireResponseData(new Stamina(), [], []));
     }
 
     [Route("continue")]
-    public async Task<EncryptedResult> Continue(EncryptedRequest<LiveContinueRequestData> encryptedRequest)
+    public async Task<AsyncEncryptedResult> Continue(EncryptedRequest<LiveContinueRequestData> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
@@ -125,11 +125,11 @@ public class LiveController : Controller
         if (gem is null)
             throw new Exception("Not enough gems available");
 
-        return new EncryptedResponse<LiveContinueResponseData>(new LiveContinueResponseData(gem));
+        return AsyncEncryptedResult.Create(new LiveContinueResponseData(gem));
     }
 
     [Route("end")]
-    public async Task<EncryptedResult> End(EncryptedRequest<LiveEndRequestData> encryptedRequest)
+    public async Task<AsyncEncryptedResult> End(EncryptedRequest<LiveEndRequestData> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
@@ -137,9 +137,9 @@ public class LiveController : Controller
         LiveFinishResult liveFinishResult = await _liveService.FinishLive(xuid, encryptedRequest.DeserializedObject);
 
         if (liveFinishResult.Status is not LiveFinishResultStatus.Success)
-            return EmptyEncryptedResponseFactory.Create(ErrorCode.ErrorItemShortage);
+            return AsyncEncryptedResult.Create(ErrorCode.ErrorItemShortage);
 
-        return new EncryptedResponse<LiveEndResponseData>(new LiveEndResponseData
+        return AsyncEncryptedResult.Create(new LiveEndResponseData
         {
             Gem = liveFinishResult.ChangedGem,
             ItemList = liveFinishResult.ChangedItems,

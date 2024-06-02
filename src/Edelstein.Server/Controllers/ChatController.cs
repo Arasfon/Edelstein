@@ -25,38 +25,38 @@ public class ChatController : Controller
 
     [HttpPost]
     [Route("home")]
-    public async Task<EncryptedResult> Home()
+    public async Task<AsyncEncryptedResult> Home()
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
         AllChatsResult allChats = await _chatService.GetAll(xuid);
 
-        return new EncryptedResponse<ChatHomeResponseData>(new ChatHomeResponseData(allChats.ChatProgresses, allChats.ChatIds,
+        return AsyncEncryptedResult.Create(new ChatHomeResponseData(allChats.ChatProgresses, allChats.ChatIds,
             MasterStampIds.Get(), []));
     }
 
     [HttpPost]
     [Route("talk/start")]
-    public async Task<EncryptedResult> TalkStart(EncryptedRequest<ChatTalkStartRequestData> encryptedRequest)
+    public async Task<AsyncEncryptedResult> TalkStart(EncryptedRequest<ChatTalkStartRequestData> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
         ChatProgressDocument chat = await _chatService.GetChat(xuid, encryptedRequest.DeserializedObject.ChatId,
             encryptedRequest.DeserializedObject.RoomId, encryptedRequest.DeserializedObject.ChapterId);
 
-        return new EncryptedResponse<ChatTalkStartResponseData>(new ChatTalkStartResponseData(chat.SelectTalkIdList, chat.GetItemList,
+        return AsyncEncryptedResult.Create(new ChatTalkStartResponseData(chat.SelectTalkIdList, chat.GetItemList,
             chat.ChatProgress.IsRead));
     }
 
     [HttpPost]
     [Route("talk/end")]
-    public async Task<EncryptedResult> TalkEnd(EncryptedRequest<ChatTalkEndRequestData> encryptedRequest)
+    public async Task<AsyncEncryptedResult> TalkEnd(EncryptedRequest<ChatTalkEndRequestData> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
         await _chatService.EndTalk(xuid, encryptedRequest.DeserializedObject.ChatId, encryptedRequest.DeserializedObject.RoomId,
             encryptedRequest.DeserializedObject.ChapterId, encryptedRequest.DeserializedObject.SelectTalkIdList);
 
-        return EmptyEncryptedResponseFactory.Create();
+        return AsyncEncryptedResult.Create();
     }
 }

@@ -32,19 +32,19 @@ public class StartController : Controller
     [HttpPost]
     [Route("assetHash")]
     [AllowAnonymous]
-    public EncryptedResult AssetHash(EncryptedRequest<AssetHashRequestData> encryptedRequest)
+    public AsyncEncryptedResult AssetHash(EncryptedRequest<AssetHashRequestData> encryptedRequest)
     {
         AssetHashResponseData responseData =
             HttpContext.Request.Headers[GameRequestHeaderNames.AoharuPlatform].FirstOrDefault()?.StartsWith("Android") == true
                 ? new AssetHashResponseData(_assetsOptions.Value.Hashes.Android)
                 : new AssetHashResponseData(_assetsOptions.Value.Hashes.Ios);
 
-        return new EncryptedResponse<AssetHashResponseData>(responseData);
+        return AsyncEncryptedResult.Create(responseData);
     }
 
     [HttpPost]
     [Route("")]
-    public async Task<EncryptedResult> Start(EncryptedRequest<StartRequestData> encryptedRequest)
+    public async Task<AsyncEncryptedResult> Start(EncryptedRequest<StartRequestData> encryptedRequest)
     {
         // TODO: token was ae72a65f58f0ff9d50d4bb0b3cfa71d34cfd3f94 some time ago, does it actually do something?
         // TODO: token was ae68f469da9e68ed6ce1f7c983e4c9181538336a even earlier
@@ -62,10 +62,10 @@ public class StartController : Controller
                 ? new StartResponseData(_assetsOptions.Value.Hashes.Android, token)
                 : new StartResponseData(_assetsOptions.Value.Hashes.Ios, token);
 
-        return new EncryptedResponse<StartResponseData>(responseData);
+        return AsyncEncryptedResult.Create(responseData);
     }
 
     [Route("refundBalance")]
-    public EncryptedResult RefundBalance() =>
-        new EncryptedResponse<RefundBalanceResponseData>(new RefundBalanceResponseData("0", "0", "0", "payback"));
+    public AsyncEncryptedResult RefundBalance() =>
+        AsyncEncryptedResult.Create(new RefundBalanceResponseData("0", "0", "0", "payback"));
 }

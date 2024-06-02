@@ -28,18 +28,18 @@ public class CoreController : Controller
     }
 
     [Route("user")]
-    public async Task<EncryptedResult> GetUser()
+    public async Task<AsyncEncryptedResult> GetUser()
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
         UserData? userData = await _userService.GetUserDataByXuid(xuid);
 
-        return new EncryptedResponse<UserData?>(userData);
+        return AsyncEncryptedResult.Create(userData);
     }
 
     [HttpPost]
     [Route("user")]
-    public async Task<EncryptedResult> UpdateUser(EncryptedRequest<UserUpdateRequestData> encryptedRequest)
+    public async Task<AsyncEncryptedResult> UpdateUser(EncryptedRequest<UserUpdateRequestData> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
@@ -48,29 +48,29 @@ public class CoreController : Controller
             encryptedRequest.DeserializedObject.GuestSmileMasterCardId, encryptedRequest.DeserializedObject.GuestPureMasterCardId,
             encryptedRequest.DeserializedObject.GuestCoolMasterCardId, encryptedRequest.DeserializedObject.FriendRequestDisabled);
 
-        return new EncryptedResponse<UserUpdateResponseData>(new UserUpdateResponseData(user, []));
+        return AsyncEncryptedResult.Create(new UserUpdateResponseData(user, []));
     }
 
     [HttpPost]
     [Route("user/initialize")]
-    public async Task<EncryptedResult> InitializeUser(EncryptedRequest<UserInitializationRequestData> encryptedRequest)
+    public async Task<AsyncEncryptedResult> InitializeUser(EncryptedRequest<UserInitializationRequestData> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
         User updatedUser = await _userService.InitializeUserStartingCharacterAndDeck(xuid);
 
-        return new EncryptedResponse<User>(updatedUser);
+        return AsyncEncryptedResult.Create(updatedUser);
     }
 
     [HttpPost]
     [Route("tutorial")]
-    public async Task<EncryptedResult> Tutorial(EncryptedRequest<TutorialRequestData> encryptedRequest)
+    public async Task<AsyncEncryptedResult> Tutorial(EncryptedRequest<TutorialRequestData> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
         await _tutorialService.UpdateTutorialStep(xuid, encryptedRequest.DeserializedObject.Step);
 
-        return EmptyEncryptedResponseFactory.Create();
+        return AsyncEncryptedResult.Create();
     }
 
     [Route("home")]
@@ -99,49 +99,47 @@ public class CoreController : Controller
             SerialCodeIdList = []
         };
 
-        ServerResponse<HomeResponseData> serverResponse = new(new HomeResponseData(home, []));
-
-        return new AsyncEncryptedResult<ServerResponse<HomeResponseData>>(StatusCodes.Status200OK, serverResponse);
+        return AsyncEncryptedResult.Create(new HomeResponseData(home, []));
     }
 
     [Route("mission")]
-    public EncryptedResult Mission()
+    public AsyncEncryptedResult Mission()
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
-        return new EncryptedResponse<UserMissionsDocument?>(new UserMissionsDocument { MissionList = [] });
+        return AsyncEncryptedResult.Create(new UserMissionsDocument { MissionList = [] });
     }
 
     [HttpPost]
     [Route("gift")]
-    public async Task<EncryptedResult> ClaimGifts(EncryptedRequest<GiftRequestData> encryptedRequest)
+    public async Task<AsyncEncryptedResult> ClaimGifts(EncryptedRequest<GiftRequestData> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
         GiftClaimResult giftClaimResult = await _userService.ClaimGifts(xuid, encryptedRequest.DeserializedObject.GiftIds);
 
-        return new EncryptedResponse<GiftResponseData>(new GiftResponseData(giftClaimResult.FailedGifts, giftClaimResult.UpdatedValueList,
+        return AsyncEncryptedResult.Create(new GiftResponseData(giftClaimResult.FailedGifts, giftClaimResult.UpdatedValueList,
             giftClaimResult.Rewards, []));
     }
 
     [Route("friend")]
-    public EncryptedResult Friend() =>
-        new EncryptedResponse<FriendResponseData>(new FriendResponseData([]));
+    public AsyncEncryptedResult Friend() =>
+        AsyncEncryptedResult.Create(new FriendResponseData([]));
 
     [HttpPost]
     [Route("login_bonus")]
-    public EncryptedResult LoginBonus() =>
-        new EncryptedResponse<LoginBonusResponseData>(new LoginBonusResponseData([], 0, []));
+    public AsyncEncryptedResult LoginBonus() =>
+        AsyncEncryptedResult.Create(new LoginBonusResponseData([], 0, []));
 
     [HttpPost]
     [Route("deck")]
-    public async Task<EncryptedResult> SetDeck(EncryptedRequest<DeckRequestData> encryptedRequest)
+    public async Task<AsyncEncryptedResult> SetDeck(EncryptedRequest<DeckRequestData> encryptedRequest)
     {
         ulong xuid = User.FindFirst(ClaimNames.Xuid).As<ulong>();
 
         Deck deck = await _userService.UpdateDeck(xuid, encryptedRequest.DeserializedObject.Slot,
             encryptedRequest.DeserializedObject.MainCardIds);
 
-        return new EncryptedResponse<DeckResponseData>(new DeckResponseData(deck, []));
+        return AsyncEncryptedResult.Create(new DeckResponseData(deck, []));
     }
 }

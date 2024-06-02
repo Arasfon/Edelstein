@@ -20,20 +20,19 @@ public class AsyncEncryptedResult<T> : AsyncEncryptedResult
 
     public override async Task ExecuteResultAsync(ActionContext context)
     {
-        context.HttpContext.Response.ContentType = "application/json";
+        context.HttpContext.Response.ContentType = "application/json; charset=utf-8";
         context.HttpContext.Response.StatusCode = _statusCode;
 
         Pipe resultPipe = new(new PipeOptions(writerScheduler: PipeScheduler.Inline,
             readerScheduler: PipeScheduler.Inline,
-            minimumSegmentSize: 16384,
             useSynchronizationContext: false));
 
         await using Stream resultReaderStream = resultPipe.Reader.AsStream();
 
         Task serializationTask = SerializeJsonToPipe(resultPipe);
-        Task encryptionTask = PayloadCryptor.Encrypt(resultReaderStream, context.HttpContext.Response.Body);
+        Task encryptionTask = PayloadCryptor.EncryptAsync(resultReaderStream, context.HttpContext.Response.Body);
 
-        await Task.WhenAll(serializationTask, encryptionTask);
+        await Task.WhenAll(serializationTask, encryptionTask).ConfigureAwait(false);
     }
 
     private async Task SerializeJsonToPipe(Pipe resultPipe)
